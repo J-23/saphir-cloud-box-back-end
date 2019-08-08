@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp2.2</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Common\Anthill.Common.Services\Anthill.Common.Services.csproj" />
+    <ProjectReference Include="..\SaphirCloudBox.Data.Contracts\SaphirCloudBox.Data.Contracts.csproj" />
+    <ProjectReference Include="..\SaphirCloudBox.Data\SaphirCloudBox.Data.csproj" />
+    <ProjectReference Include="..\SaphirCloudBox.Models\SaphirCloudBox.Models.csproj" />
+    <ProjectReference Include="..\SaphirCloudBox.Services.Contracts\SaphirCloudBox.Services.Contracts.csproj" />
+  </ItemGroup>
+
+</Project>

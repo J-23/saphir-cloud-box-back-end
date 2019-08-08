@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp2.2</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Common\Anthill.Common.Data\Anthill.Common.Data.csproj" />
+    <ProjectReference Include="..\SaphirCloudBox.Data.Contracts\SaphirCloudBox.Data.Contracts.csproj" />
+    <ProjectReference Include="..\SaphirCloudBox.Models\SaphirCloudBox.Models.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Identity" Version="2.2.0" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Proxies" Version="2.2.6" />
+  </ItemGroup>
+
+</Project>

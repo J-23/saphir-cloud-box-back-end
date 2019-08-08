@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp2.1</TargetFramework>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <PackageOutputPath>C:\Nuget\Packages</PackageOutputPath>
+    <Authors>Anthill</Authors>
+    <Description>Common contracts for Repository and DataContextManager</Description>
+    <Version>1.0.1</Version>
+
+  </PropertyGroup>
+
+</Project>

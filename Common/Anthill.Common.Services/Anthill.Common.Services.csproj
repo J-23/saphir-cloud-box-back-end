@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp2.1</TargetFramework>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <PackageOutputPath>C:\Nuget\Packages</PackageOutputPath>
+    <Authors>Anthill</Authors>
+    <Description>Common libraries wrapping services layer</Description>
+    <Version>1.0.3</Version>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="AutoMapper" Version="8.1.1" />
+    <PackageReference Include="Unity" Version="5.11.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Anthill.Common.Data.Contracts\Anthill.Common.Data.Contracts.csproj" />
+    <ProjectReference Include="..\Anthill.Common.Services.Contracts\Anthill.Common.Services.Contracts.csproj" />
+  </ItemGroup>
+  
+
+</Project>
