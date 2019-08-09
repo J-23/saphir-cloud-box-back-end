@@ -33,13 +33,13 @@ namespace SaphirCloudBox.Services.Services
                 throw new FoundSameObjectException();
             }
 
-            client = new Client
+            var newClient = new Client
             {
                 Name = clientDto.Name,
                 CreateDate = DateTime.Now
             };
 
-            await clientRepository.Add(client);
+            await clientRepository.Add(newClient);
         }
 
         public async Task<IEnumerable<ClientDto>> GetAll()

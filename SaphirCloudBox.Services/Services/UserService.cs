@@ -92,7 +92,7 @@ namespace SaphirCloudBox.Services.Services
 
             if (user == null)
             {
-                throw new ArgumentException(nameof(user));
+                throw new NotFoundException();
             }
 
             return await _userManager.GeneratePasswordResetTokenAsync(user);
@@ -106,9 +106,10 @@ namespace SaphirCloudBox.Services.Services
 
             foreach (var user in users)
             {
+                var userDto = MapperFactory.CreateMapper<IUserMapper>().MapToModel(user);
+
                 var userRoles = await _userManager.GetRolesAsync(user);
 
-                var userDto = MapperFactory.CreateMapper<IUserMapper>().MapToModel(user);
                 userDto.Role = roles.Where(x => userRoles.Contains(x.Name))
                     .Select(r => new RoleDto
                     {
@@ -129,7 +130,7 @@ namespace SaphirCloudBox.Services.Services
 
             if (user == null)
             {
-                throw new ArgumentException(nameof(user));
+                throw new NotFoundException();
             }
 
             return MapperFactory.CreateMapper<IUserMapper>().MapToModel(user);
@@ -141,7 +142,7 @@ namespace SaphirCloudBox.Services.Services
 
             if (user == null)
             {
-                throw new ArgumentException(nameof(user));
+                throw new NotFoundException();
             }
 
             return MapperFactory.CreateMapper<IUserMapper>().MapToModel(user);
@@ -153,7 +154,7 @@ namespace SaphirCloudBox.Services.Services
 
             if (user == null)
             {
-                throw new ArgumentException(nameof(user));
+                throw new NotFoundException();
             }
 
             var result = await _signInManager.PasswordSignInAsync(user, password, false, false);
@@ -192,7 +193,7 @@ namespace SaphirCloudBox.Services.Services
 
             if (user == null)
             {
-                throw new ArgumentException(nameof(user));
+                throw new NotFoundException();
             }
 
             var result = await _userManager.ResetPasswordAsync(user, resetPasswordUserDto.Code, resetPasswordUserDto.Password);

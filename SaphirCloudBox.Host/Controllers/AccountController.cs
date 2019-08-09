@@ -14,6 +14,7 @@ using SaphirCloudBox.Host.Helpers;
 using SaphirCloudBox.Host.Infractructure;
 using SaphirCloudBox.Host.Models;
 using SaphirCloudBox.Services.Contracts.Dtos;
+using SaphirCloudBox.Services.Contracts.Exceptions;
 using SaphirCloudBox.Services.Contracts.Services;
 
 namespace SaphirCloudBox.Host.Controllers
@@ -57,7 +58,7 @@ namespace SaphirCloudBox.Host.Controllers
 
                 return Ok(response);
             }
-            catch (ArgumentException)
+            catch (NotFoundException)
             {
                 return Unauthorized(ResponseMessage.NOT_FOUNT.ToString());
             }
@@ -90,7 +91,7 @@ namespace SaphirCloudBox.Host.Controllers
 
                 return Ok(response);
             }
-            catch (ArgumentException)
+            catch (NotFoundException)
             {
                 return Unauthorized(ResponseMessage.NOT_FOUNT.ToString());
             }
@@ -122,7 +123,7 @@ namespace SaphirCloudBox.Host.Controllers
 
                 return Ok(response);
             }
-            catch (ArgumentException)
+            catch (NotFoundException)
             {
                 return Unauthorized(ResponseMessage.NOT_FOUNT.ToString());
             }
@@ -139,7 +140,7 @@ namespace SaphirCloudBox.Host.Controllers
                 return Ok();
 
             }
-            catch (ArgumentException)
+            catch (NotFoundException)
             {
                 return Unauthorized(ResponseMessage.NOT_FOUNT.ToString());
             }
@@ -159,7 +160,6 @@ namespace SaphirCloudBox.Host.Controllers
             if (userId == null)
             {
                 return BadRequest();
-
             }
 
             try
@@ -167,7 +167,7 @@ namespace SaphirCloudBox.Host.Controllers
                 var user = await _userService.GetById(Int32.Parse(userId.Value));
                 return Ok(user);
             }
-            catch (ArgumentException)
+            catch (NotFoundException)
             {
                 return Unauthorized(ResponseMessage.NOT_FOUNT.ToString());
             }

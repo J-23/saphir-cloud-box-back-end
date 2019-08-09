@@ -17,14 +17,6 @@ namespace SaphirCloudBox.Data.Repositories
         {
         }
 
-        public async Task Add(Department department)
-        {
-            await Context.Set<Department>()
-                .AddAsync(department);
-
-            await Context.SaveChangesAsync();
-        }
-
         public async Task<IEnumerable<Department>> GetAll()
         {
             return await Context.Set<Department>()
