@@ -18,5 +18,7 @@ namespace SaphirCloudBox.Host.Infractructure
         public string FrontEndUrl { get; set; }
 
         public string CommonPassword { get; set; }
+
+        public string CommonRole { get; set; }
     }
 }

@@ -8,7 +8,7 @@ namespace SaphirCloudBox.Services.Contracts.Services
 {
     public interface IUserService
     {
-        Task Register(RegisterUserDto userDto);
+        Task Register(RegisterUserDto userDto, string commonRole);
 
         Task<UserDto> Login(string email, string password);
 

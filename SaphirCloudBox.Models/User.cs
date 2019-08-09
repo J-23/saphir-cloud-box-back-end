@@ -15,6 +15,8 @@ namespace SaphirCloudBox.Models
 
         public DateTime? UpdateDate { get; set; }
 
+        public string ResetPasswordCode { get; set; }
+
         public virtual Client Client { get; set; }
 
         public virtual Department Department { get; set; }

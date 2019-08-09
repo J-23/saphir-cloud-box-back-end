@@ -76,7 +76,7 @@ namespace SaphirCloudBox.Host.Controllers
         {
             try
             {
-                await _userService.Register(userDto);
+                await _userService.Register(userDto, _appSettings.CommonRole);
 
                 var identity = await GetIdentity(userDto.Email, userDto.Password);
 
@@ -90,6 +90,10 @@ namespace SaphirCloudBox.Host.Controllers
                 };
 
                 return Ok(response);
+            }
+            catch (FoundSameObjectException)
+            {
+                return Unauthorized(ResponseMessage.SAME_NAME.ToString());
             }
             catch (NotFoundException)
             {
@@ -126,6 +130,10 @@ namespace SaphirCloudBox.Host.Controllers
             catch (NotFoundException)
             {
                 return Unauthorized(ResponseMessage.NOT_FOUNT.ToString());
+            }
+            catch (UpdateException)
+            {
+                return Unauthorized(ResponseMessage.SERVER_ERROR.ToString());
             }
         }
 

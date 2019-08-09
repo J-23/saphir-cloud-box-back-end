@@ -12,6 +12,7 @@ using SaphirCloudBox.Services.Contracts.Services;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 using System.Transactions;
@@ -25,7 +26,7 @@ namespace SaphirCloudBox.Services.Services
         private readonly SignInManager<User> _signInManager;
         private readonly RoleManager<IdentityRole<int>> _roleManager;
 
-        public UserService(IUnityContainer container, 
+        public UserService(IUnityContainer container,
             ISaphirCloudBoxDataContextManager dataContextManager,
             UserManager<User> userManager,
             SignInManager<User> signInManager,
@@ -70,7 +71,7 @@ namespace SaphirCloudBox.Services.Services
                     scope.Dispose();
                     throw new AddException();
                 }
-                
+
                 try
                 {
                     await AddUserToRole(newUser, role);
@@ -95,7 +96,16 @@ namespace SaphirCloudBox.Services.Services
                 throw new NotFoundException();
             }
 
-            return await _userManager.GeneratePasswordResetTokenAsync(user);
+            user.ResetPasswordCode = GenerateForgotPassowrdCodeToken();
+
+            var result = await _userManager.UpdateAsync(user);
+
+            if (!result.Succeeded)
+            {
+                throw new UpdateException();
+            }
+
+            return user.ResetPasswordCode;
         }
 
         public async Task<IEnumerable<UserDto>> GetAll()
@@ -145,7 +155,22 @@ namespace SaphirCloudBox.Services.Services
                 throw new NotFoundException();
             }
 
-            return MapperFactory.CreateMapper<IUserMapper>().MapToModel(user);
+            var userDto = MapperFactory.CreateMapper<IUserMapper>().MapToModel(user);
+
+            var userRoles = await _userManager.GetRolesAsync(user);
+
+            if (userRoles.Count > 0)
+            {
+                var role = await _roleManager.FindByNameAsync(userRoles.FirstOrDefault());
+
+                userDto.Role = new RoleDto
+                {
+                    Id = role.Id,
+                    Name = role.Name
+                };
+            }
+
+            return userDto;
         }
 
         public async Task<UserDto> Login(string email, string password)
@@ -167,24 +192,53 @@ namespace SaphirCloudBox.Services.Services
             return MapperFactory.CreateMapper<IUserMapper>().MapToModel(user);
         }
 
-        public async Task Register(RegisterUserDto userDto)
+        public async Task Register(RegisterUserDto userDto, string commonRole)
         {
-            var user = new User
+            var user = await _userManager.FindByEmailAsync(userDto.Email);
+
+            if (user != null)
+            {
+                throw new FoundSameObjectException();
+            }
+
+            var newUser = new User
             {
                 UserName = userDto.UserName,
                 Email = userDto.Email,
                 CreateDate = DateTime.Now,
-                ClientId = userDto.ClientId
+                ClientId = (await GetClientById(userDto.ClientId)).Id,
+                DepartmentId = (await GetDepartmentById(userDto.DepartmentId))?.Id
             };
 
-            var result = await _userManager.CreateAsync(user);
+            var role = await _roleManager.FindByNameAsync(commonRole);
 
-            if (!result.Succeeded)
+            if (role == null)
             {
-                throw new UnauthorizedAccessException();
+                throw new NotFoundException();
             }
 
-            await _signInManager.SignInAsync(user, false);
+            using (var scope = new TransactionScope(TransactionScopeAsyncFlowOption.Enabled))
+            {
+                var result = await _userManager.CreateAsync(newUser, userDto.Password);
+
+                if (!result.Succeeded)
+                {
+                    scope.Dispose();
+                    throw new UnauthorizedAccessException();
+                }
+
+                result = await _userManager.AddToRoleAsync(newUser, role.Name);
+
+                if (!result.Succeeded)
+                {
+                    scope.Dispose();
+                    throw new UnauthorizedAccessException();
+                }
+
+                scope.Complete();
+            }
+
+            await _signInManager.SignInAsync(newUser, false);
         }
 
         public async Task ResetPassword(ResetPasswordUserDto resetPasswordUserDto)
@@ -196,8 +250,9 @@ namespace SaphirCloudBox.Services.Services
                 throw new NotFoundException();
             }
 
-            var result = await _userManager.ResetPasswordAsync(user, resetPasswordUserDto.Code, resetPasswordUserDto.Password);
-
+            user.PasswordHash = _userManager.PasswordHasher.HashPassword(user, resetPasswordUserDto.Password);
+            user.ResetPasswordCode = null;
+            var result = await _userManager.UpdateAsync(user);
             if (!result.Succeeded)
             {
                 throw new UnauthorizedAccessException();
@@ -354,6 +409,17 @@ namespace SaphirCloudBox.Services.Services
                 }
 
                 await AddUserToRole(user, role);
+            }
+        }
+
+        private string GenerateForgotPassowrdCodeToken()
+        {
+            var randomNumber = new byte[32];
+
+            using (var rng = RandomNumberGenerator.Create())
+            {
+                rng.GetBytes(randomNumber);
+                return Convert.ToBase64String(randomNumber);
             }
         }
     }

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -16,6 +17,7 @@ namespace SaphirCloudBox.Host.Controllers
     [Route("api/client")]
     [ApiController]
     [EnableCors("CorsPolicy")]
+    [Authorize(Policy = "Bearer")]
     public class ClientController : ControllerBase
     {
         private readonly IClientService _clientService;
@@ -27,6 +29,7 @@ namespace SaphirCloudBox.Host.Controllers
 
         [HttpGet]
         [Route("list")]
+        [AllowAnonymous]
         public async Task<ActionResult> GetClientList()
         {
             var clients = await _clientService.GetAll();

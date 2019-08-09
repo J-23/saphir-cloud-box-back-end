@@ -61,23 +61,24 @@ namespace SaphirCloudBox.Host
 
 
             services.AddAuthentication(options =>
-            {
-                options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
-            })
-            .AddJwtBearer(options =>
-            {
-                options.RequireHttpsMetadata = false;
-                options.TokenValidationParameters = new TokenValidationParameters
                 {
-                    ValidateIssuer = true,
-                    ValidIssuer = Constants.ISSUER,
-                    ValidateAudience = true,
-                    ValidAudience = Constants.AUDIENCE,
-                    ValidateLifetime = true,
-                    IssuerSigningKey = Constants.GetSymmetricSecurityKey(),
-                    ValidateIssuerSigningKey = true,
-                };
-            });
+                    options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
+                })
+                .AddCookie(IdentityConstants.ApplicationScheme)
+                .AddJwtBearer(options =>
+                {
+                    options.RequireHttpsMetadata = false;
+                    options.TokenValidationParameters = new TokenValidationParameters
+                    {
+                        ValidateIssuer = true,
+                        ValidIssuer = Constants.ISSUER,
+                        ValidateAudience = true,
+                        ValidAudience = Constants.AUDIENCE,
+                        ValidateLifetime = true,
+                        IssuerSigningKey = Constants.GetSymmetricSecurityKey(),
+                        ValidateIssuerSigningKey = true,
+                    };
+                });
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

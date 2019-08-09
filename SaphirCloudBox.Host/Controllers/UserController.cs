@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -16,6 +17,7 @@ namespace SaphirCloudBox.Host.Controllers
     [Route("api/user")]
     [ApiController]
     [EnableCors("CorsPolicy")]
+    [Authorize(Policy = "Bearer")]
     public class UserController : ControllerBase
     {
         private readonly IUserService _userService;
