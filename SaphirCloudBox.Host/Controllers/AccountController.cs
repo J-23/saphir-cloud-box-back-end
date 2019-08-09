@@ -133,7 +133,7 @@ namespace SaphirCloudBox.Host.Controllers
             }
             catch (UpdateException)
             {
-                return Unauthorized(ResponseMessage.SERVER_ERROR.ToString());
+                return Unauthorized(ResponseMessage.UNATHORIZED.ToString());
             }
         }
 

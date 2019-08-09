@@ -12,6 +12,7 @@
     "IIS Express": {
       "commandName": "IISExpress",
       "environmentVariables": {
+        "Key": "Value",
         "ASPNETCORE_ENVIRONMENT": "Development"
       }
     },

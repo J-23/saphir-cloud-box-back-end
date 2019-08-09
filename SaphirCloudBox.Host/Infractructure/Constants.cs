@@ -10,7 +10,7 @@ namespace SaphirCloudBox.Host.Infractructure
     public class Constants
     {
         public const string ISSUER = "SaphirCloudBox";
-        public const string AUDIENCE = "http://saphir-cloud-box-ui/"; // потребитель токена
+        public const string AUDIENCE = "http://saphir-cloud-box-ui.azurewebsites.net"; // потребитель токена
         const string KEY = "r#ryLh?wwJ2;7,7m6[MU&`R";   // ключ для шифрации
         public const int LIFETIME = 1440;
 
