@@ -29,7 +29,6 @@ namespace SaphirCloudBox.Data
             container.RegisterType<SaphirCloudBoxDataContext>();
             container.RegisterType<ISaphirCloudBoxDataContextManager, SaphirCloudBoxDataContextManager>(new TLifetime());
 
-
             container.RegisterType<IRoleStore<IdentityRole<int>>, RoleStore<IdentityRole<int>, SaphirCloudBoxDataContext, int>>();
             container.RegisterType<IUserClaimsPrincipalFactory<User>, UserClaimsPrincipalFactory<User, IdentityRole<int>>>();
             container.RegisterType<IHttpContextAccessor, HttpContextAccessor>();
@@ -42,6 +41,9 @@ namespace SaphirCloudBox.Data
 
             container.RegisterType<IClientRepository, ClientRepository>(new TLifetime());
             container.RegisterType<IDepartmentRepository, DepartmentRepository>(new TLifetime());
+            container.RegisterType<ILogRepository, LogRepository>(new TLifetime());
+            container.RegisterType<IFileStorageRepository, FileStorageRepository>(new TLifetime());
+            container.RegisterType<IUserRepository, UserRepository>(new TLifetime());
         }
 
         public class LookupNormalizer : ILookupNormalizer

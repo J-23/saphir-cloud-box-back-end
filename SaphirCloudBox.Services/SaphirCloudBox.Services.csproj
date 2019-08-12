@@ -5,6 +5,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Common\Anthill.Common.AzureBlob\Anthill.Common.AzureBlob.csproj" />
     <ProjectReference Include="..\Common\Anthill.Common.Services\Anthill.Common.Services.csproj" />
     <ProjectReference Include="..\SaphirCloudBox.Data.Contracts\SaphirCloudBox.Data.Contracts.csproj" />
     <ProjectReference Include="..\SaphirCloudBox.Data\SaphirCloudBox.Data.csproj" />

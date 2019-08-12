@@ -27,6 +27,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Anthill.Common.Services", "
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Anthill.Common.Services.Contracts", "Common\Anthill.Common.Services.Contracts\Anthill.Common.Services.Contracts.csproj", "{BFC4C07A-738F-4DD3-B040-09502BA981D0}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Anthill.Common.AzureBlob", "Common\Anthill.Common.AzureBlob\Anthill.Common.AzureBlob.csproj", "{D215BEA6-9BDE-4F83-9615-97B938D061DF}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -77,6 +79,10 @@ Global
 		{BFC4C07A-738F-4DD3-B040-09502BA981D0}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{BFC4C07A-738F-4DD3-B040-09502BA981D0}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{BFC4C07A-738F-4DD3-B040-09502BA981D0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D215BEA6-9BDE-4F83-9615-97B938D061DF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D215BEA6-9BDE-4F83-9615-97B938D061DF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D215BEA6-9BDE-4F83-9615-97B938D061DF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D215BEA6-9BDE-4F83-9615-97B938D061DF}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -86,6 +92,7 @@ Global
 		{16287995-11F3-460D-8443-523556127DDF} = {7BD58C04-F046-4910-9D16-9E121C2B3A7D}
 		{A7D954F7-8408-41A3-9CC3-1A09688FBF41} = {7BD58C04-F046-4910-9D16-9E121C2B3A7D}
 		{BFC4C07A-738F-4DD3-B040-09502BA981D0} = {7BD58C04-F046-4910-9D16-9E121C2B3A7D}
+		{D215BEA6-9BDE-4F83-9615-97B938D061DF} = {7BD58C04-F046-4910-9D16-9E121C2B3A7D}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {AE8F7825-1B08-4055-9C21-A94F9E24148F}

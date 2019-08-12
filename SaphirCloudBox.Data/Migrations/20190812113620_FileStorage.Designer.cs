@@ -3,15 +3,17 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using SaphirCloudBox.Data;
 
 namespace SaphirCloudBox.Data.Migrations
 {
     [DbContext(typeof(SaphirCloudBoxDataContext))]
-    partial class SaphirCloudBoxDataContextModelSnapshot : ModelSnapshot
+    [Migration("20190812113620_FileStorage")]
+    partial class FileStorage
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

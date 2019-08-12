@@ -4,8 +4,6 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
-using log4net;
-using log4net.Config;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
@@ -103,12 +101,6 @@ namespace SaphirCloudBox.Host
 
         public void ConfigureContainer(IUnityContainer container)
         {
-            var logRepository = LogManager.GetRepository(Assembly.GetEntryAssembly());
-            XmlConfigurator.Configure(logRepository, new FileInfo("log4net.config"));
-
-            var log = LogManager.GetLogger(Assembly.GetEntryAssembly(), "Logger");
-            container.RegisterInstance(log);
-
             var appSettings = _appConfiguration.GetSection("AppSettings");
             container.RegisterInstance(appSettings.Get<AppSettings>());
 

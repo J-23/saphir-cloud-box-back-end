@@ -28,5 +28,23 @@ Sie haben sich auf unserer Webseite {1} registriert. Um Ihre Registrierung abzus
 
             public const string ResetPasswordUrl = @"/auth/reset-password?code={0}";
         }
+
+        public class Extension
+        {
+            public static Dictionary<string, string> TYPES = new Dictionary<string, string>
+            {
+                {".txt", "text/plain"},
+                {".pdf", "application/pdf"},
+                {".doc", "application/vnd.ms-word"},
+                {".docx", "application/vnd.ms-word"},
+                {".xls", "application/vnd.ms-excel"},
+                {".xlsx", "application/vnd.openxmlformatsofficedocument.spreadsheetml.sheet"},
+                {".png", "image/png"},
+                {".jpg", "image/jpeg"},
+                {".jpeg", "image/jpeg"},
+                {".gif", "image/gif"},
+                {".csv", "text/csv"}
+            };
+        }
     }
 }
