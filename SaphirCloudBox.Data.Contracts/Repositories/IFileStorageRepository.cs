@@ -9,14 +9,16 @@ namespace SaphirCloudBox.Data.Contracts.Repositories
 {
     public interface IFileStorageRepository: IRepository
     {
-        Task<IEnumerable<FileStorage>> GetByParentId(int parentId, int userId);
+        Task<IEnumerable<FileStorage>> GetByParentId(int parentId, int userId, int clientId);
 
-        Task<FileStorage> GetById(int id, int userId);
+        Task<FileStorage> GetById(int id, int userId, int clientId);
 
         Task Add(FileStorage fileStorage);
 
         Task Update(FileStorage fileStorage);
 
         Task Remove(FileStorage fileStorage);
+
+        Task<Boolean> UserHasFolder(int id);
     }
 }

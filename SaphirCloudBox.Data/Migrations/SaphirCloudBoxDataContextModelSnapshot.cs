@@ -175,12 +175,13 @@ namespace SaphirCloudBox.Data.Migrations
                         .ValueGeneratedOnAdd()
                         .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
-                    b.Property<int>("AccessType");
+                    b.Property<Guid?>("BlobName");
+
+                    b.Property<int?>("ClientId");
+
+                    b.Property<int>("CreateById");
 
                     b.Property<DateTime>("CreateDate");
-
-                    b.Property<string>("Extension")
-                        .HasMaxLength(100);
 
                     b.Property<bool>("IsDirectory");
 
@@ -188,13 +189,25 @@ namespace SaphirCloudBox.Data.Migrations
                         .IsRequired()
                         .HasMaxLength(255);
 
+                    b.Property<int?>("OwnerId");
+
                     b.Property<int?>("ParentFileStorageId");
+
+                    b.Property<int?>("UpdateById");
 
                     b.Property<DateTime?>("UpdateDate");
 
                     b.HasKey("Id");
 
+                    b.HasIndex("ClientId");
+
+                    b.HasIndex("CreateById");
+
+                    b.HasIndex("OwnerId");
+
                     b.HasIndex("ParentFileStorageId");
+
+                    b.HasIndex("UpdateById");
 
                     b.ToTable("FileStorage");
 
@@ -202,59 +215,14 @@ namespace SaphirCloudBox.Data.Migrations
                         new
                         {
                             Id = 1,
-                            AccessType = 0,
-                            CreateDate = new DateTime(2019, 8, 12, 14, 36, 20, 57, DateTimeKind.Local).AddTicks(1724),
+                            CreateById = 3,
+                            CreateDate = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             IsDirectory = true,
                             Name = "root"
-                        },
-                        new
-                        {
-                            Id = 2,
-                            AccessType = 0,
-                            CreateDate = new DateTime(2019, 8, 12, 14, 36, 20, 57, DateTimeKind.Local).AddTicks(6374),
-                            IsDirectory = true,
-                            Name = "Saphir",
-                            ParentFileStorageId = 1
-                        },
-                        new
-                        {
-                            Id = 3,
-                            AccessType = 0,
-                            CreateDate = new DateTime(2019, 8, 12, 14, 36, 20, 57, DateTimeKind.Local).AddTicks(6814),
-                            IsDirectory = true,
-                            Name = "Автопарк",
-                            ParentFileStorageId = 1
-                        },
-                        new
-                        {
-                            Id = 4,
-                            AccessType = 0,
-                            CreateDate = new DateTime(2019, 8, 12, 14, 36, 20, 57, DateTimeKind.Local).AddTicks(6822),
-                            IsDirectory = true,
-                            Name = "Контроль времени",
-                            ParentFileStorageId = 1
-                        },
-                        new
-                        {
-                            Id = 5,
-                            AccessType = 2,
-                            CreateDate = new DateTime(2019, 8, 12, 14, 36, 20, 57, DateTimeKind.Local).AddTicks(6823),
-                            IsDirectory = true,
-                            Name = "Моя папка",
-                            ParentFileStorageId = 1
-                        },
-                        new
-                        {
-                            Id = 6,
-                            AccessType = 0,
-                            CreateDate = new DateTime(2019, 8, 12, 14, 36, 20, 57, DateTimeKind.Local).AddTicks(6823),
-                            IsDirectory = true,
-                            Name = "Общая информация",
-                            ParentFileStorageId = 1
                         });
                 });
 
-            modelBuilder.Entity("SaphirCloudBox.Models.FileStorageAccess", b =>
+            modelBuilder.Entity("SaphirCloudBox.Models.FileStorageAccessUser", b =>
                 {
                     b.Property<int>("FileStorageId");
 
@@ -264,7 +232,7 @@ namespace SaphirCloudBox.Data.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("FileStorageAccess");
+                    b.ToTable("FileStorageAccessUser");
                 });
 
             modelBuilder.Entity("SaphirCloudBox.Models.Log", b =>
@@ -405,15 +373,32 @@ namespace SaphirCloudBox.Data.Migrations
 
             modelBuilder.Entity("SaphirCloudBox.Models.FileStorage", b =>
                 {
+                    b.HasOne("SaphirCloudBox.Models.Client", "Client")
+                        .WithMany()
+                        .HasForeignKey("ClientId");
+
+                    b.HasOne("SaphirCloudBox.Models.User", "CreateBy")
+                        .WithMany()
+                        .HasForeignKey("CreateById")
+                        .OnDelete(DeleteBehavior.Cascade);
+
+                    b.HasOne("SaphirCloudBox.Models.User", "Owner")
+                        .WithMany()
+                        .HasForeignKey("OwnerId");
+
                     b.HasOne("SaphirCloudBox.Models.FileStorage", "ParentFileStorage")
                         .WithMany()
                         .HasForeignKey("ParentFileStorageId");
+
+                    b.HasOne("SaphirCloudBox.Models.User", "UpdateBy")
+                        .WithMany()
+                        .HasForeignKey("UpdateById");
                 });
 
-            modelBuilder.Entity("SaphirCloudBox.Models.FileStorageAccess", b =>
+            modelBuilder.Entity("SaphirCloudBox.Models.FileStorageAccessUser", b =>
                 {
                     b.HasOne("SaphirCloudBox.Models.FileStorage")
-                        .WithMany("FileStorageAccesses")
+                        .WithMany("FileStorageAccessUsers")
                         .HasForeignKey("FileStorageId")
                         .OnDelete(DeleteBehavior.Cascade);
 

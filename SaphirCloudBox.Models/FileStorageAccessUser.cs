@@ -4,7 +4,7 @@ using System.Text;
 
 namespace SaphirCloudBox.Models
 {
-    public class FileStorageAccess
+    public class FileStorageAccessUser
     {
         public int FileStorageId { get; set; }
 

@@ -189,7 +189,8 @@ namespace SaphirCloudBox.Host.Controllers
             var claims = new List<Claim>
                 {
                     new Claim(ClaimsIdentity.DefaultNameClaimType, email),
-                    new Claim("UserId", user.Id.ToString())
+                    new Claim("UserId", user.Id.ToString()),
+                    new Claim("ClientId", user.Client.Id.ToString())
                 };
 
             ClaimsIdentity claimsIdentity =

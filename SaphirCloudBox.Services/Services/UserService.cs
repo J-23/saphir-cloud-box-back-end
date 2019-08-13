@@ -189,8 +189,14 @@ namespace SaphirCloudBox.Services.Services
                 throw new UnauthorizedAccessException();
             }
 
+            await AddUserFolder(user);
+
+            var clientRepository = DataContextManager.CreateRepository<IClientRepository>();
+            user.Client = await clientRepository.GetById(user.ClientId);
+
             return MapperFactory.CreateMapper<IUserMapper>().MapToModel(user);
         }
+
 
         public async Task Register(RegisterUserDto userDto, string commonRole)
         {
@@ -239,6 +245,7 @@ namespace SaphirCloudBox.Services.Services
             }
 
             await _signInManager.SignInAsync(newUser, false);
+            await AddUserFolder(newUser);
         }
 
         public async Task ResetPassword(ResetPasswordUserDto resetPasswordUserDto)
@@ -420,6 +427,28 @@ namespace SaphirCloudBox.Services.Services
             {
                 rng.GetBytes(randomNumber);
                 return Convert.ToBase64String(randomNumber);
+            }
+        }
+
+        private async Task AddUserFolder(User user)
+        {
+            var fileStorageRepository = DataContextManager.CreateRepository<IFileStorageRepository>();
+
+            var userHasFolder = await fileStorageRepository.UserHasFolder(user.Id);
+
+            if (!userHasFolder)
+            {
+                var newFolder = new FileStorage
+                {
+                    CreateById = user.Id,
+                    CreateDate = DateTime.Now,
+                    IsDirectory = true,
+                    Name = "My Folder",
+                    OwnerId = user.Id,
+                    ParentFileStorageId = 1
+                };
+
+                await fileStorageRepository.Add(newFolder);
             }
         }
     }

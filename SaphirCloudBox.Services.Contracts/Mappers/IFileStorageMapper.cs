@@ -7,7 +7,7 @@ using System.Text;
 
 namespace SaphirCloudBox.Services.Contracts.Mappers
 {
-    public interface IFileMapper: IMapper<FileStorage, FileDto>
+    public interface IFileStorageMapper: IMapper<FileStorage, FileStorageDto.FileDto>
     {
     }
 }

@@ -33,17 +33,19 @@ namespace SaphirCloudBox.Host.Controllers
         public async Task<ActionResult> GetFolders(int parentId = 0)
         {
             var userIdClaim = User.Claims.FirstOrDefault(x => x.Type.Contains("UserId"));
+            var clientIdClaim = User.Claims.FirstOrDefault(x => x.Type.Contains("ClientId"));
 
-            if (userIdClaim == null)
+            if (userIdClaim == null || clientIdClaim == null)
             {
                 return BadRequest();
             }
 
             var userId = Convert.ToInt32(userIdClaim.Value);
+            var clientId = Convert.ToInt32(clientIdClaim.Value);
 
-            var folders = await _fileStorageService.GetByParentId(parentId, userId);
+            var fileStorages = await _fileStorageService.GetByParentId(parentId, userId, clientId);
 
-            return Ok(folders);
+            return Ok(fileStorages);
         }
 
         [HttpPost]
@@ -51,17 +53,19 @@ namespace SaphirCloudBox.Host.Controllers
         public async Task<ActionResult> AddFolder([FromBody]AddFolderDto folderDto)
         {
             var userIdClaim = User.Claims.FirstOrDefault(x => x.Type.Contains("UserId"));
+            var clientIdClaim = User.Claims.FirstOrDefault(x => x.Type.Contains("ClientId"));
 
-            if (userIdClaim == null)
+            if (userIdClaim == null || clientIdClaim == null)
             {
                 return BadRequest();
             }
 
             var userId = Convert.ToInt32(userIdClaim.Value);
+            var clientId = Convert.ToInt32(clientIdClaim.Value);
 
             try
             {
-                await _fileStorageService.AddFolder(folderDto, userId);
+                await _fileStorageService.AddFolder(folderDto, userId, clientId);
                 return Ok();
             }
             catch (NotFoundException)

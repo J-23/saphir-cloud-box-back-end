@@ -23,16 +23,22 @@ namespace SaphirCloudBox.Data.Repositories
             await Context.SaveChangesAsync();
         }
 
-        public async Task<FileStorage> GetById(int id, int userId)
+        public async Task<FileStorage> GetById(int id, int userId, int clientId)
         {
             return await Context.Set<FileStorage>()
-                .FirstOrDefaultAsync(x => x.Id == id && x.FileStorageAccesses.Any(y => y.UserId == userId));
+                .FirstOrDefaultAsync(x => x.Id == id && ((!x.ClientId.HasValue && !x.OwnerId.HasValue)
+                    || (x.ClientId.HasValue && !x.OwnerId.HasValue && x.ClientId.Value == clientId)
+                    || (!x.ClientId.HasValue && x.OwnerId.HasValue && x.OwnerId.Value == userId)));
         }
 
-        public async Task<IEnumerable<FileStorage>> GetByParentId(int parentId, int userId)
+        public async Task<IEnumerable<FileStorage>> GetByParentId(int parentId, int userId, int clientId)
         {
             return await Context.Set<FileStorage>()
-                .Where(x => x.ParentFileStorageId == parentId && x.FileStorageAccesses.Any(y => y.UserId == userId))
+                .Where(x => x.ParentFileStorageId == parentId 
+                && ((!x.ClientId.HasValue && !x.OwnerId.HasValue)
+                    || (x.ClientId.HasValue && !x.OwnerId.HasValue && x.ClientId.Value == clientId)
+                    || (!x.ClientId.HasValue && x.OwnerId.HasValue && x.OwnerId.Value == userId)))
+                .OrderBy(ord => ord.Name)
                 .ToListAsync();
         }
 
@@ -46,6 +52,12 @@ namespace SaphirCloudBox.Data.Repositories
         {
             Context.Entry(fileStorage).State = EntityState.Modified;
             await Context.SaveChangesAsync();
+        }
+
+        public async Task<bool> UserHasFolder(int id)
+        {
+            return await Context.Set<FileStorage>()
+                .AnyAsync(x => x.ParentFileStorageId == 1 && x.OwnerId == id);
         }
     }
 }

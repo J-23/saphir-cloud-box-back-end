@@ -32,8 +32,7 @@ namespace SaphirCloudBox.Services
             container.RegisterType<IClientMapper, ClientMapper>(new TLifetime());
             container.RegisterType<IDepartmentMapper, DepartmentMapper>(new TLifetime());
             container.RegisterType<IRoleMapper, RoleMapper>(new TLifetime());
-            container.RegisterType<IFolderMapper, FolderMapper>(new TLifetime());
-            container.RegisterType<IFileMapper, FileMapper>(new TLifetime());
+            container.RegisterType<IFileStorageMapper, FileStorageMapper>(new TLifetime());
 
             var configuration = container.Resolve<IConfiguration>();
             var configurationSection = configuration.GetSection("BlobSettings");

@@ -44,7 +44,7 @@ namespace SaphirCloudBox.Services.Services
         {
             var fileStorageRepository = DataContextManager.CreateRepository<IFileStorageRepository>();
 
-            var parentFileStorage = await fileStorageRepository.GetById(fileDto.ParentId, userId);
+            var parentFileStorage = await fileStorageRepository.GetById(fileDto.ParentId, userId, 1);
 
             if (parentFileStorage == null)
             {
@@ -56,7 +56,7 @@ namespace SaphirCloudBox.Services.Services
                 throw new NotFoundException();
             }
 
-            var fileStorages = await fileStorageRepository.GetByParentId(fileDto.ParentId, userId);
+            var fileStorages = await fileStorageRepository.GetByParentId(fileDto.ParentId, userId, 1);
 
             if (fileStorages.Any(x => x.IsDirectory && x.Name.Equals(fileDto.Name)))
             {
@@ -70,7 +70,7 @@ namespace SaphirCloudBox.Services.Services
                 BlobName = Guid.NewGuid(),
                 CreateDate = DateTime.Now,
                 ParentFileStorageId = parentFileStorage.Id,
-                FileStorageAccesses = await GetAccessUsers(userId, parentFileStorage.AccessType)
+                CreateById = userId
             };
 
             await _azureBlobClient.UploadFile(_blobSettings.ContainerName, newFileStorage.BlobName.ToString(), Base64ToByteArray(fileDto.Content));
@@ -78,28 +78,28 @@ namespace SaphirCloudBox.Services.Services
             await fileStorageRepository.Add(newFileStorage);
         }
 
-        public async Task AddFolder(AddFolderDto folderDto, int userId)
+        public async Task AddFolder(AddFolderDto folderDto, int userId, int clientId)
         {
             var fileStorageRepository = DataContextManager.CreateRepository<IFileStorageRepository>();
 
-            var parentFileStorage = await fileStorageRepository.GetById(folderDto.ParentId, userId);
+            var parentFileStorage = await fileStorageRepository.GetById(folderDto.ParentId, userId, clientId);
 
-            if (parentFileStorage == null)
+            if (parentFileStorage == null || parentFileStorage != null && !parentFileStorage.IsDirectory)
             {
                 throw new NotFoundException();
             }
 
-            if (!parentFileStorage.IsDirectory)
-            {
-                throw new NotFoundException();
-            }
+            var childFileStorages = await fileStorageRepository.GetByParentId(folderDto.ParentId, userId, clientId);
 
-            var fileStorages = await fileStorageRepository.GetByParentId(folderDto.ParentId, userId);
-
-            if (fileStorages.Any(x => x.IsDirectory && x.Name.Equals(folderDto.Name)))
+            if (childFileStorages.Any(x => x.IsDirectory && x.Name.Equals(folderDto.Name)))
             {
                 throw new FoundSameObjectException();
             }
+
+            var user = await _userManager.FindByIdAsync(userId.ToString());
+            var roles = await _userManager.GetRolesAsync(user);
+
+            var owners = GetOwners(parentFileStorage, roles, userId, clientId);
 
             var newFileStorage = new FileStorage
             {
@@ -107,26 +107,41 @@ namespace SaphirCloudBox.Services.Services
                 Name = folderDto.Name,
                 CreateDate = DateTime.Now,
                 ParentFileStorageId = parentFileStorage.Id,
-                AccessType = parentFileStorage.AccessType,
-                FileStorageAccesses = await GetAccessUsers(userId, parentFileStorage.AccessType)
+                CreateById = userId,
+                ClientId = owners.ClientId,
+                OwnerId = owners.OwnerId
             };
 
             await fileStorageRepository.Add(newFileStorage);
         }
 
-        public async Task<IEnumerable<FolderDto>> GetByParentId(int parentId, int userId)
+        public async Task<FileStorageDto> GetByParentId(int parentId, int userId, int clientId)
         {
             var fileStorageRepository = DataContextManager.CreateRepository<IFileStorageRepository>();
 
-            var fileStorages = await fileStorageRepository.GetByParentId(parentId, userId);
+            var parentFileStorage = await fileStorageRepository.GetById(parentId, userId, clientId);
 
-            return ConvertModelsToDtos(fileStorages);
+            if (parentFileStorage == null || parentFileStorage != null && !parentFileStorage.IsDirectory)
+            {
+                throw new NotFoundException();
+            }
+
+            var fileStorages = await fileStorageRepository.GetByParentId(parentId, userId, clientId);
+
+            var files = MapperFactory.CreateMapper<IFileStorageMapper>().MapCollectionToModel(fileStorages);
+
+            return new FileStorageDto
+            {
+                ClientId = parentFileStorage.ClientId,
+                OwnerId = parentFileStorage.OwnerId,
+                Files = files
+            };
         }
 
         public async Task<DownloadFileDto> GetFileById(int id, int userId)
         {
             var fileStorageRepository = DataContextManager.CreateRepository<IFileStorageRepository>();
-            var fileStorage = await fileStorageRepository.GetById(id, userId);
+            var fileStorage = await fileStorageRepository.GetById(id, userId, 1);
 
             if (fileStorage == null)
             {
@@ -150,7 +165,7 @@ namespace SaphirCloudBox.Services.Services
         public async Task RemoveFile(RemoveFileDto fileDto, int userId)
         {
             var fileStorageRepository = DataContextManager.CreateRepository<IFileStorageRepository>();
-            var fileStorage = await fileStorageRepository.GetById(fileDto.Id, userId);
+            var fileStorage = await fileStorageRepository.GetById(fileDto.Id, userId, 1);
 
             if (fileStorage == null)
             {
@@ -167,80 +182,58 @@ namespace SaphirCloudBox.Services.Services
             await fileStorageRepository.Remove(fileStorage);
         }
 
-        private IEnumerable<FolderDto> ConvertModelsToDtos(IEnumerable<FileStorage> fileStorages)
-        {
-            var folders = MapperFactory.CreateMapper<IFolderMapper>().MapCollectionToModel(fileStorages.Where(x => x.IsDirectory));
-
-            var fileMapper = MapperFactory.CreateMapper<IFileMapper>();
-
-            var fileGroups = fileStorages.Where(x => !x.IsDirectory).GroupBy(grp => grp.ParentFileStorageId).ToList();
-
-            foreach (var fileGroup in fileGroups)
-            {
-                var files = fileMapper.MapCollectionToModel(fileGroup.ToList());
-
-                var folder = folders.FirstOrDefault(x => x.Id == fileGroup.Key);
-                folder.Files = files;
-            }
-
-            return folders;
-        }
-
-        private async Task<IEnumerable<FileStorageAccess>> GetAccessUsers(int userId, AccessType accessType)
-        {
-            var user = await _userManager.FindByIdAsync(userId.ToString());
-
-            if (user == null)
-            {
-                //exception
-            }
-
-            var userIds = new List<int>();
-
-            if (accessType == AccessType.Common)
-            {
-                userIds = await _userManager.Users.Select(s => s.Id).ToListAsync();
-            }
-            else if (accessType == AccessType.Client)
-            {
-                var clientRepository = DataContextManager.CreateRepository<IClientRepository>();
-
-                var client = await clientRepository.GetById(user.ClientId);
-
-                if (client == null)
-                {
-                    // exception
-                }
-
-                var userRepository = DataContextManager.CreateRepository<IUserRepository>();
-                var users = await userRepository.GetUsersByClientId(client.Id);
-                userIds = users.Select(s => s.Id).ToList();
-            }
-            else if (accessType == AccessType.User)
-            {
-                userIds.Add(user.Id);
-            }
-
-            return userIds
-                .Select(usId => new FileStorageAccess
-                {
-                    UserId = usId
-                })
-                .ToList();
-        }
-
         private byte[] Base64ToByteArray(string content)
         {
             byte[] buffer = new byte[((content.Length * 3) + 3) / 4 - (content.Length > 0 && content[content.Length - 1] == '=' ?
                 content.Length > 1 && content[content.Length - 2] == '=' ? 2 : 1 : 0)];
 
             int written;
-            if(!Convert.TryFromBase64String(content, buffer, out written))
+            if (!Convert.TryFromBase64String(content, buffer, out written))
             {
                 //exception
             }
 
             return buffer;
+        }
+
+        private (int? OwnerId, int? ClientId) GetOwners(FileStorage parentFileStorage, IList<string> roles, int userId, int userClientId)
+        {
+            int? ownerId = null;
+            int? clientId = null;
+
+            if (parentFileStorage.Id == 1)
+            {
+                foreach (var role in roles)
+                {
+                    if (role.Equals(Role.SUPER_ADMIN_ROLE_NAME))
+                    {
+                        ownerId = null;
+                        clientId = null;
+                    }
+                    else if (role.Equals(Role.CLIENT_ADMIN_ROLE_NAME))
+                    {
+                        ownerId = null;
+                        clientId = userClientId;
+                    }
+                    else if (role.Equals(Role.DEPARTMENT_HEAD_ROLE_NAME) || role.Equals(Role.EMPLOYEE_ROLE_NAME))
+                    {
+                        ownerId = userId;
+                        clientId = null;
+                    }
+                    else
+                    {
+                        ownerId = userId;
+                        clientId = null;
+                    }
+                }
+            }
+            else
+            {
+                ownerId = parentFileStorage.OwnerId;
+                clientId = parentFileStorage.ClientId;
+            }
+
+            return (ownerId, clientId);
         }
     }
 }

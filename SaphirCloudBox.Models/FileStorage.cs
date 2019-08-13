@@ -13,9 +13,11 @@ namespace SaphirCloudBox.Models
 
         public string Name { get; set; }
 
-        public AccessType AccessType { get; set; }
+        public Guid? BlobName { get; set; }
 
-        public Guid BlobName { get; set; }
+        public int? ClientId { get; set; }
+
+        public int? OwnerId { get; set; }
 
         public int CreateById { get; set; }
 
@@ -27,11 +29,16 @@ namespace SaphirCloudBox.Models
 
         public int? ParentFileStorageId { get; set; }
 
+        public virtual Client Client { get; set; }
+
+        public virtual User Owner { get; set; }
+
         public virtual FileStorage ParentFileStorage { get; set; }
 
         public virtual User CreateBy { get; set; }
 
         public virtual User UpdateBy { get; set; }
-        public virtual IEnumerable<FileStorageAccess> FileStorageAccesses { get; set; }
+
+        public virtual IEnumerable<FileStorageAccessUser> FileStorageAccessUsers { get; set; }
     }
 }

@@ -39,7 +39,7 @@ namespace SaphirCloudBox.Data
             builder.ApplyConfiguration(new LogMap());
 
             builder.ApplyConfiguration(new FileStorageMap());
-            builder.ApplyConfiguration(new FileStorageAccessMap());
+            builder.ApplyConfiguration(new FileStorageAccessUserMap());
 
             /*builder.Entity<IdentityRole<int>>().HasData(
                 new IdentityRole<int> { Id = 1, Name = "SUPER ADMIN", NormalizedName = "super admin" },
@@ -48,12 +48,7 @@ namespace SaphirCloudBox.Data
                 new IdentityRole<int> { Id = 4, Name = "EMPLOYEE", NormalizedName = "employee" });*/
 
             builder.Entity<FileStorage>().HasData(
-                new FileStorage { Id = 1, Name = "root", IsDirectory = true, AccessType = AccessType.Common, CreateDate = DateTime.Now },
-                new FileStorage { Id = 2, Name = "Saphir", IsDirectory = true, AccessType = AccessType.Common, CreateDate = DateTime.Now, ParentFileStorageId = 1 },
-                new FileStorage { Id = 3, Name = "Автопарк", IsDirectory = true, AccessType = AccessType.Common, CreateDate = DateTime.Now, ParentFileStorageId = 1 },
-                new FileStorage { Id = 4, Name = "Контроль времени", IsDirectory = true, AccessType = AccessType.Common, CreateDate = DateTime.Now, ParentFileStorageId = 1 },
-                new FileStorage { Id = 5, Name = "Моя папка", IsDirectory = true, AccessType = AccessType.User, CreateDate = DateTime.Now, ParentFileStorageId = 1 },
-                new FileStorage { Id = 6, Name = "Общая информация", IsDirectory = true, AccessType = AccessType.Common, CreateDate = DateTime.Now, ParentFileStorageId = 1 });
+                new FileStorage { Id = 1, Name = "root", CreateById = 3, IsDirectory = true });
         }
     }
 }

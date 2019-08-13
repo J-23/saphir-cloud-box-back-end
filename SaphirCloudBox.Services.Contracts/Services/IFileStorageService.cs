@@ -8,9 +8,9 @@ namespace SaphirCloudBox.Services.Contracts.Services
 {
     public interface IFileStorageService
     {
-        Task<IEnumerable<FolderDto>> GetByParentId(int parentId, int userId);
+        Task<FileStorageDto> GetByParentId(int parentId, int userId, int clientId);
 
-        Task AddFolder(AddFolderDto folderDto, int userId);
+        Task AddFolder(AddFolderDto folderDto, int userId, int clientId);
 
         Task AddFile(AddFileDto fileDto, int userId);
 

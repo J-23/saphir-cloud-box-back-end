@@ -7,9 +7,9 @@ using System.Text;
 
 namespace SaphirCloudBox.Data.Mappings
 {
-    public class FileStorageAccessMap : IEntityTypeConfiguration<FileStorageAccess>
+    public class FileStorageAccessUserMap : IEntityTypeConfiguration<FileStorageAccessUser>
     {
-        public void Configure(EntityTypeBuilder<FileStorageAccess> builder)
+        public void Configure(EntityTypeBuilder<FileStorageAccessUser> builder)
         {
             builder.HasKey(x => new { x.FileStorageId, x.UserId });
 
