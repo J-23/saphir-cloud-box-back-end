@@ -20,5 +20,7 @@ namespace SaphirCloudBox.Data.Contracts.Repositories
         Task Remove(FileStorage fileStorage);
 
         Task<Boolean> UserHasFolder(int id);
+
+        Task RemoveFolder(FileStorage fileStorage);
     }
 }

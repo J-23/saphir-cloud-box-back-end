@@ -9,7 +9,7 @@ using System.Text;
 
 namespace SaphirCloudBox.Services.Mappers
 {
-    public class FileStorageMapper : AbstractMapper<FileStorage, FileStorageDto.FileDto>, IFileStorageMapper
+    public class FileStorageMapper : AbstractMapper<FileStorage, FileStorageDto.StorageDto>, IFileStorageMapper
     {
         protected override IMapper Configure()
         {
@@ -21,14 +21,15 @@ namespace SaphirCloudBox.Services.Mappers
                     .ForMember(x => x.Department, y => y.Ignore())
                     .ForMember(x => x.Role, y => y.Ignore());
 
-                cfg.CreateMap<FileStorage, FileStorageDto.FileDto>()
+                cfg.CreateMap<FileStorage, FileStorageDto.StorageDto>()
                     .ForMember(x => x.Id, y => y.MapFrom(z => z.Id))
                     .ForMember(x => x.Name, y => y.MapFrom(z => z.Name))
                     .ForMember(x => x.CreateDate, y => y.MapFrom(z => z.CreateDate))
                     .ForMember(x => x.UpdateDate, y => y.MapFrom(z => z.UpdateDate))
                     .ForMember(x => x.CreateBy, y => y.MapFrom(z => z.CreateBy))
                     .ForMember(x => x.UpdateBy, y => y.MapFrom(z => z.UpdateBy))
-                    .ForMember(x => x.IsDirectory, y => y.MapFrom(z => z.IsDirectory));
+                    .ForMember(x => x.IsDirectory, y => y.MapFrom(z => z.IsDirectory))
+                    .ForMember(x => x.Owner, y => y.MapFrom(z => z.Owner));
             });
 
 

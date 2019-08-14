@@ -7,12 +7,18 @@ namespace SaphirCloudBox.Services.Contracts.Dtos
 {
     public class FileStorageDto
     {
-        public int? OwnerId { get; set; }
+        public UserDto Owner { get; set; }
 
-        public int? ClientId { get; set; }
+        public ClientDto Client { get; set; }
 
-        public IEnumerable<FileDto> Files { get; set; }
-        public class FileDto
+        public int? ParentStorageId { get; set; }
+
+        public int Id { get; set; }
+
+        public string Name { get; set; }
+
+        public IEnumerable<StorageDto> Storages { get; set; }
+        public class StorageDto
         {
             public int Id { get; set; }
 
@@ -27,6 +33,8 @@ namespace SaphirCloudBox.Services.Contracts.Dtos
             public DateTime CreateDate { get; set; }
 
             public DateTime? UpdateDate { get; set; }
+
+            public UserDto Owner { get; set; }
         }
     }
 }

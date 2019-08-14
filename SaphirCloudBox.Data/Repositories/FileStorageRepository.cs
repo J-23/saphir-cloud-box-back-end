@@ -48,6 +48,35 @@ namespace SaphirCloudBox.Data.Repositories
             await Context.SaveChangesAsync();
         }
 
+        public async Task RemoveFolder(FileStorage fileStorage)
+        {
+            var fileStorages = await Context.Set<FileStorage>()
+                    .Where(x => x.ParentFileStorageId.HasValue && x.ParentFileStorageId.Value == fileStorage.Id)
+                    .ToListAsync();
+
+            foreach (var storage in fileStorages)
+            {
+                await RemoveChildFileStorages(storage);
+            }
+
+            Context.Set<FileStorage>().Remove(fileStorage);
+            await Context.SaveChangesAsync();
+        }
+
+        private async Task RemoveChildFileStorages(FileStorage fileStorage)
+        {
+            var fileStorages = await Context.Set<FileStorage>()
+                    .Where(x => x.ParentFileStorageId.HasValue && x.ParentFileStorageId.Value == fileStorage.Id)
+                    .ToListAsync();
+
+            foreach (var storage in fileStorages)
+            {
+                await RemoveChildFileStorages(storage);
+            }
+
+            Context.Set<FileStorage>().Remove(fileStorage);
+        }
+
         public async Task Update(FileStorage fileStorage)
         {
             Context.Entry(fileStorage).State = EntityState.Modified;

@@ -9,6 +9,8 @@ namespace SaphirCloudBox.Enums
         Create = 0,
         Update = 1,
         Remove = 2,
-        Error = 3
+        Error = 3,
+        NotFound = 4,
+        SameObject = 5,
     }
 }

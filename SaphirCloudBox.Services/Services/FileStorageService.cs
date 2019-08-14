@@ -128,13 +128,16 @@ namespace SaphirCloudBox.Services.Services
 
             var fileStorages = await fileStorageRepository.GetByParentId(parentId, userId, clientId);
 
-            var files = MapperFactory.CreateMapper<IFileStorageMapper>().MapCollectionToModel(fileStorages);
+            var storages = MapperFactory.CreateMapper<IFileStorageMapper>().MapCollectionToModel(fileStorages);
 
             return new FileStorageDto
             {
-                ClientId = parentFileStorage.ClientId,
-                OwnerId = parentFileStorage.OwnerId,
-                Files = files
+                Id = parentFileStorage.Id,
+                ParentStorageId = parentFileStorage.ParentFileStorageId,
+                Name = parentFileStorage.Name,
+                Client = MapperFactory.CreateMapper<IClientMapper>().MapToModel(parentFileStorage.Client),
+                Owner = MapperFactory.CreateMapper<IUserMapper>().MapToModel(parentFileStorage.Owner),
+                Storages = storages
             };
         }
 
@@ -162,7 +165,7 @@ namespace SaphirCloudBox.Services.Services
             };
         }
 
-        public async Task RemoveFile(RemoveFileDto fileDto, int userId)
+        public async Task RemoveFile(RemoveFileStorageDto fileDto, int userId)
         {
             var fileStorageRepository = DataContextManager.CreateRepository<IFileStorageRepository>();
             var fileStorage = await fileStorageRepository.GetById(fileDto.Id, userId, 1);
@@ -180,6 +183,46 @@ namespace SaphirCloudBox.Services.Services
             await _azureBlobClient.DeleteFile(_blobSettings.ContainerName, fileStorage.Id.ToString());
 
             await fileStorageRepository.Remove(fileStorage);
+        }
+
+        public async Task RemoveFolder(RemoveFileStorageDto folderDto, int userId, int clientId)
+        {
+            var fileStorageRepository = DataContextManager.CreateRepository<IFileStorageRepository>();
+            var fileStorage = await fileStorageRepository.GetById(folderDto.Id, userId, clientId);
+
+            if (fileStorage == null || fileStorage != null && !fileStorage.IsDirectory)
+            {
+                throw new NotFoundException();
+            }
+
+            await fileStorageRepository.RemoveFolder(fileStorage);
+        }
+
+        public async Task UpdateFolder(UpdateFolderDto folderDto, int userId, int clientId)
+        {
+            var fileStorageRepository = DataContextManager.CreateRepository<IFileStorageRepository>();
+            var fileStorage = await fileStorageRepository.GetById(folderDto.Id, userId, clientId);
+
+            if (fileStorage == null || fileStorage != null && !fileStorage.IsDirectory)
+            {
+                throw new NotFoundException();
+            }
+
+            if (fileStorage.ParentFileStorageId.HasValue)
+            {
+                var childFileStorages = await fileStorageRepository.GetByParentId(fileStorage.ParentFileStorageId.Value, userId, clientId);
+
+                if (childFileStorages.Any(x => x.Name.Equals(childFileStorages) && x.Id != folderDto.Id))
+                {
+                    throw new FoundSameObjectException();
+                }
+            }
+            
+            fileStorage.Name = folderDto.Name;
+            fileStorage.UpdateById = userId;
+            fileStorage.UpdateDate = DateTime.Now;
+
+            await fileStorageRepository.Update(fileStorage);
         }
 
         private byte[] Base64ToByteArray(string content)
