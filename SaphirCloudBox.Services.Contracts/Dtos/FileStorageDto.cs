@@ -37,6 +37,8 @@ namespace SaphirCloudBox.Services.Contracts.Dtos
 
             public UserDto Owner { get; set; }
 
+            public ClientDto Client { get; set; }
+
             public string StorageType { get; set; }
 
             public FileDto File { get; set; }

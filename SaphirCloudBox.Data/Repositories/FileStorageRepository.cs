@@ -38,7 +38,8 @@ namespace SaphirCloudBox.Data.Repositories
                 && ((!x.ClientId.HasValue && !x.OwnerId.HasValue)
                     || (x.ClientId.HasValue && !x.OwnerId.HasValue && x.ClientId.Value == clientId)
                     || (!x.ClientId.HasValue && x.OwnerId.HasValue && x.OwnerId.Value == userId)))
-                .OrderBy(ord => ord.Name)
+                .OrderBy(ord => !ord.IsDirectory)
+                .ThenBy(ord => ord.Name)
                 .ToListAsync();
         }
 

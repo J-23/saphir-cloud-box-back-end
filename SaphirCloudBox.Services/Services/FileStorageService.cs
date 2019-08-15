@@ -164,27 +164,29 @@ namespace SaphirCloudBox.Services.Services
             };
         }
 
-        public async Task<DownloadFileDto> GetFileById(int id, int userId)
+        public async Task<DownloadFileDto> GetFileById(int id, int userId, int clientId)
         {
             var fileStorageRepository = DataContextManager.CreateRepository<IFileStorageRepository>();
-            var fileStorage = await fileStorageRepository.GetById(id, userId, 1);
+            var fileStorage = await fileStorageRepository.GetById(id, userId, clientId);
 
-            if (fileStorage == null)
+            if (fileStorage == null || fileStorage != null && fileStorage.IsDirectory)
             {
                 throw new NotFoundException();
             }
 
-            if (fileStorage.IsDirectory)
+            var file = fileStorage.Files.FirstOrDefault(x => x.IsActive);
+
+            if (file == null)
             {
                 throw new NotFoundException();
             }
 
-            //var buffer = await _azureBlobClient.DownloadFile(_blobSettings.ContainerName, fileStorage.BlobName.ToString());
+            var buffer = await _azureBlobClient.DownloadFile(_blobSettings.ContainerName, file.AzureBlobStorage.BlobName.ToString());
 
             return new DownloadFileDto
             {
                 Name = fileStorage.Name,
-                Buffer = null//buffer
+                Buffer = buffer
             };
         }
 

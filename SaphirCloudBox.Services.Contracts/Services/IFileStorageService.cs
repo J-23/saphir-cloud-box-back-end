@@ -14,7 +14,7 @@ namespace SaphirCloudBox.Services.Contracts.Services
 
         Task AddFile(AddFileDto fileDto, int userId, int clientId);
 
-        Task<DownloadFileDto> GetFileById(int id, int userId);
+        Task<DownloadFileDto> GetFileById(int id, int userId, int clientId);
 
         //Task RemoveFile(RemoveFileDto fileDto, int userId);
 

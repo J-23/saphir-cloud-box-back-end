@@ -34,20 +34,17 @@ namespace SaphirCloudBox.Host.Controllers
         [Route("{parentId}")]
         public async Task<ActionResult> GetFolders(int parentId = 0)
         {
-            var userIdClaim = User.Claims.FirstOrDefault(x => x.Type.Contains("UserId"));
-            var clientIdClaim = User.Claims.FirstOrDefault(x => x.Type.Contains("ClientId"));
+            var userId = GetUser();
+            var clientId = GetClient();
 
-            if (userIdClaim == null || clientIdClaim == null)
+            if (!userId.HasValue || !clientId.HasValue)
             {
                 return BadRequest();
             }
 
-            var userId = Convert.ToInt32(userIdClaim.Value);
-            var clientId = Convert.ToInt32(clientIdClaim.Value);
-
             try
             {
-                var fileStorages = await _fileStorageService.GetByParentId(parentId, userId, clientId);
+                var fileStorages = await _fileStorageService.GetByParentId(parentId, userId.Value, clientId.Value);
 
                 return Ok(fileStorages);
             }
@@ -214,25 +211,14 @@ namespace SaphirCloudBox.Host.Controllers
         }
 
         [HttpGet]
-        [Route("file/{id}")]
-        public async Task<ActionResult> DownloadFile(int id)
+        [Route("download/file/{id}/{ownerId}/{clientId}")]
+        [AllowAnonymous]
+        public async Task<IActionResult> DownloadFile(int id, int ownerId, int clientId)
         {
-            var userIdClaim = User.Claims.FirstOrDefault(x => x.Type.Contains("UserId"));
-
-            if (userIdClaim == null)
-            {
-                return BadRequest();
-            }
-
-            var userId = Convert.ToInt32(userIdClaim.Value);
-
-            var fileDto = await _fileStorageService.GetFileById(id, userId);
+            var fileDto = await _fileStorageService.GetFileById(id, ownerId, clientId);
             var contentType = Constants.Extension.TYPES[Path.GetExtension(fileDto.Name).ToLowerInvariant()];
 
-            using (WebClient webClient = new WebClient())
-            {
-                return File(fileDto.Buffer, contentType, fileDto.Name);
-            }
+            return File(fileDto.Buffer, contentType, fileDto.Name);
         }
     }
 }
