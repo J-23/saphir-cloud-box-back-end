@@ -59,7 +59,7 @@ namespace SaphirCloudBox.Services.Services
 
             if (role == null)
             {
-                throw new NotFoundException();
+                throw new NotFoundDependencyObjectException();
             }
 
             using (var scope = new TransactionScope(TransactionScopeAsyncFlowOption.Enabled))
