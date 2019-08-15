@@ -12,7 +12,7 @@ namespace SaphirCloudBox.Services.Contracts.Services
 
         Task AddFolder(AddFolderDto folderDto, int userId, int clientId);
 
-        Task AddFile(AddFileDto fileDto, int userId);
+        Task AddFile(AddFileDto fileDto, int userId, int clientId);
 
         Task<DownloadFileDto> GetFileById(int id, int userId);
 

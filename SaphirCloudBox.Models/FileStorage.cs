@@ -13,8 +13,6 @@ namespace SaphirCloudBox.Models
 
         public string Name { get; set; }
 
-        public Guid? BlobName { get; set; }
-
         public int? ClientId { get; set; }
 
         public int? OwnerId { get; set; }
@@ -40,5 +38,7 @@ namespace SaphirCloudBox.Models
         public virtual User UpdateBy { get; set; }
 
         public virtual IEnumerable<FileStorageAccessUser> FileStorageAccessUsers { get; set; }
+
+        public virtual IEnumerable<File> Files { get; set; }
     }
 }

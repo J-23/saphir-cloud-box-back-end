@@ -41,14 +41,17 @@ namespace SaphirCloudBox.Data
             builder.ApplyConfiguration(new FileStorageMap());
             builder.ApplyConfiguration(new FileStorageAccessUserMap());
 
+            builder.ApplyConfiguration(new FileMap());
+            builder.ApplyConfiguration(new AzureBlobStorageMap());
+
             /*builder.Entity<IdentityRole<int>>().HasData(
                 new IdentityRole<int> { Id = 1, Name = "SUPER ADMIN", NormalizedName = "super admin" },
                 new IdentityRole<int> { Id = 2, Name = "CLIENT ADMIN", NormalizedName = "client admin" },
                 new IdentityRole<int> { Id = 3, Name = "DEPARTMENT HEAD", NormalizedName = "department head" },
                 new IdentityRole<int> { Id = 4, Name = "EMPLOYEE", NormalizedName = "employee" });*/
 
-            builder.Entity<FileStorage>().HasData(
-                new FileStorage { Id = 1, Name = "root", CreateById = 3, IsDirectory = true });
+            /*builder.Entity<FileStorage>().HasData(
+                new FileStorage { Id = 1, Name = "root", CreateById = 3, IsDirectory = true });*/
         }
     }
 }

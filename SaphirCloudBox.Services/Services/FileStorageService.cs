@@ -12,6 +12,7 @@ using SaphirCloudBox.Services.Contracts.Dtos;
 using SaphirCloudBox.Services.Contracts.Exceptions;
 using SaphirCloudBox.Services.Contracts.Mappers;
 using SaphirCloudBox.Services.Contracts.Services;
+using SaphirCloudBox.Services.Utils;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -40,40 +41,62 @@ namespace SaphirCloudBox.Services.Services
             _azureBlobClient = azureBlobClient ?? throw new ArgumentNullException(nameof(azureBlobClient));
         }
 
-        public async Task AddFile(AddFileDto fileDto, int userId)
+        public async Task AddFile(AddFileDto fileDto, int userId, int clientId)
         {
             var fileStorageRepository = DataContextManager.CreateRepository<IFileStorageRepository>();
 
-            var parentFileStorage = await fileStorageRepository.GetById(fileDto.ParentId, userId, 1);
+            var parentFileStorage = await fileStorageRepository.GetById(fileDto.ParentId, userId, clientId);
 
-            if (parentFileStorage == null)
+            if (parentFileStorage == null || !parentFileStorage.IsDirectory)
             {
                 throw new NotFoundException();
             }
 
-            if (!parentFileStorage.IsDirectory)
-            {
-                throw new NotFoundException();
-            }
+            var fileName = Path.GetFileNameWithoutExtension(fileDto.Name);
+            var fileExtension = Path.GetExtension(fileDto.Name);
 
-            var fileStorages = await fileStorageRepository.GetByParentId(fileDto.ParentId, userId, 1);
+            var fileStorages = await fileStorageRepository.GetByParentId(fileDto.ParentId, userId, clientId);
 
-            if (fileStorages.Any(x => x.IsDirectory && x.Name.Equals(fileDto.Name)))
+            if (fileStorages.Any(x => !x.IsDirectory && x.Name.Equals(fileName) && x.Files.Any(y => y.IsActive && y.Extension.Equals(fileExtension))))
             {
                 throw new FoundSameObjectException();
             }
 
+            var user = await _userManager.FindByIdAsync(userId.ToString());
+            var roles = await _userManager.GetRolesAsync(user);
+
+            var owners = GetOwners(parentFileStorage, roles, userId, clientId);
+            var sizeInfo = fileDto.Size.ToPrettySize();
+            var blobName = Guid.NewGuid();
+
             var newFileStorage = new FileStorage
             {
-                IsDirectory = false,
                 Name = fileDto.Name,
-                BlobName = Guid.NewGuid(),
-                CreateDate = DateTime.Now,
                 ParentFileStorageId = parentFileStorage.Id,
-                CreateById = userId
+                IsDirectory = false,
+                CreateDate = DateTime.Now,
+                CreateById = userId,
+                ClientId = owners.ClientId,
+                OwnerId = owners.OwnerId,
+                Files = new List<Models.File>
+                {
+                    new Models.File
+                    {
+                        Extension = fileExtension,
+                        Size = sizeInfo.Size,
+                        SizeType = sizeInfo.SizeType,
+                        IsActive = true,
+                        CreateById = userId,
+                        CreateDate = DateTime.Now,
+                        AzureBlobStorage = new AzureBlobStorage
+                        {
+                            BlobName = blobName
+                        }
+                    }
+                }
             };
 
-            await _azureBlobClient.UploadFile(_blobSettings.ContainerName, newFileStorage.BlobName.ToString(), Base64ToByteArray(fileDto.Content));
+            await _azureBlobClient.UploadFile(_blobSettings.ContainerName, blobName.ToString(), Base64ToByteArray(fileDto.Content));
             
             await fileStorageRepository.Add(newFileStorage);
         }
@@ -156,12 +179,12 @@ namespace SaphirCloudBox.Services.Services
                 throw new NotFoundException();
             }
 
-            var buffer = await _azureBlobClient.DownloadFile(_blobSettings.ContainerName, fileStorage.BlobName.ToString());
+            //var buffer = await _azureBlobClient.DownloadFile(_blobSettings.ContainerName, fileStorage.BlobName.ToString());
 
             return new DownloadFileDto
             {
                 Name = fileStorage.Name,
-                Buffer = buffer
+                Buffer = null//buffer
             };
         }
 

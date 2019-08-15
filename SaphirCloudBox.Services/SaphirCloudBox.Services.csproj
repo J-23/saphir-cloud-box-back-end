@@ -5,6 +5,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="System.Collections" Version="4.3.0" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\Common\Anthill.Common.AzureBlob\Anthill.Common.AzureBlob.csproj" />
     <ProjectReference Include="..\Common\Anthill.Common.Services\Anthill.Common.Services.csproj" />
     <ProjectReference Include="..\SaphirCloudBox.Data.Contracts\SaphirCloudBox.Data.Contracts.csproj" />
