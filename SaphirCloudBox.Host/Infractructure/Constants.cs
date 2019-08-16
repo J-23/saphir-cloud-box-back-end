@@ -29,6 +29,8 @@ Sie haben sich auf unserer Webseite {1} registriert. Um Ihre Registrierung abzus
             public const string ResetPasswordUrl = @"/auth/reset-password?code={0}";
         }
 
+        
+
         public class Extension
         {
             public static Dictionary<string, string> TYPES = new Dictionary<string, string>
@@ -45,6 +47,59 @@ Sie haben sich auf unserer Webseite {1} registriert. Um Ihre Registrierung abzus
                 {".gif", "image/gif"},
                 {".csv", "text/csv"}
             };
+        }
+    }
+
+    public class LogMessage
+    {
+        public const string NotFoundMessage = @"{0} with Id = {1} not found";
+        public const string NotFoundParentMessage = @"{0} with Id = {1} not found for {2} with Name = {3}";
+        public const string SuccessActionMessage = @"{0} with Name = {1} was {2} successfully by user = {3}";
+        public const string SuccessActionByIdMessage = @"{0} with Id = {1} was {2} successfully by user = {3}";
+        public const string FoundSameObjectMessage = @"{0} with Name = {1} already exists";
+        public const string NoAccessMessage = @"{0} with Id = {1} is unavailable for user with id = {2}";
+
+        public const string FileEntityName = "File";
+        public const string FolderEntityName = "Folder";
+
+        public const string CreateAction = "created";
+        public const string UpdateAction = "updated";
+        public const string RemoveAction = "removed";
+
+        public static string CreateSuccessByNameMessage(string entityName, string name, string action, int userId)
+        {
+            var result = String.Format(SuccessActionMessage, entityName, name, action, userId);
+            return result;
+        }
+
+        public static string CreateNotFoundMessage(string entityName, int id)
+        {
+            var result = String.Format(NotFoundMessage, entityName, id);
+            return result;
+        }
+
+        public static string CreateNotFoundParentMessage(string parentEntityName, int parentId, string entityName, string name)
+        {
+            var result = String.Format(NotFoundParentMessage, parentEntityName, parentId, entityName, name);
+            return result;
+        }
+
+        public static string CreateFoundSameObjectMessage(string entityName, string name)
+        {
+            var result = String.Format(FoundSameObjectMessage, entityName, name);
+            return result;
+        }
+
+        public static string CreateSuccessByIdMessage(string entityName, int id, string action, int userId)
+        {
+            var result = String.Format(SuccessActionByIdMessage, entityName, id, action, userId);
+            return result;
+        }
+
+        public static string CreateNoAccessMessage(string entityName, int id, int userId)
+        {
+            var result = String.Format(NoAccessMessage, entityName, id, userId);
+            return result;
         }
     }
 }

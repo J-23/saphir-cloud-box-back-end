@@ -22,40 +22,34 @@ namespace SaphirCloudBox.Host.Controllers
     public class FileStorageController : BaseController
     {
         private readonly IFileStorageService _fileStorageService;
-        private readonly ILogService _logService;
 
-        public FileStorageController(IFileStorageService fileStorageService, ILogService logService)
+        public FileStorageController(IFileStorageService fileStorageService, ILogService logService): base(logService)
         {
             _fileStorageService = fileStorageService ?? throw new ArgumentNullException(nameof(fileStorageService));
-            _logService = logService ?? throw new ArgumentNullException(nameof(logService));
         }
 
         [HttpGet]
         [Route("{parentId}")]
         public async Task<ActionResult> GetFolders(int parentId = 0)
         {
-            var userId = GetUser();
-            var clientId = GetClient();
-
-            if (!userId.HasValue || !clientId.HasValue)
+            if (!IsAvailableOperation())
             {
                 return BadRequest();
             }
 
             try
             {
-                var fileStorages = await _fileStorageService.GetByParentId(parentId, userId.Value, clientId.Value);
-
+                var fileStorages = await _fileStorageService.GetByParentId(parentId, UserId, ClientId);
                 return Ok(fileStorages);
             }
             catch (NotFoundException)
             {
-                await _logService.Add(Enums.LogType.NotFound, $"Directory with Id = {parentId} not found");
+                await AddLog(Enums.LogType.NotFound, LogMessage.CreateNotFoundMessage(LogMessage.FolderEntityName, parentId));
                 return StatusCode((int)HttpStatusCode.Forbidden, ResponseMessage.NOT_FOUNT.ToString());
             }
             catch(Exception ex)
             {
-                await _logService.Add(Enums.LogType.NotFound, ex.Message);
+                await AddLog(Enums.LogType.Error, ex.Message);
                 return StatusCode((int)HttpStatusCode.Forbidden, ResponseMessage.SERVER_ERROR.ToString());
             }
         }
@@ -64,63 +58,35 @@ namespace SaphirCloudBox.Host.Controllers
         [Route("add/folder")]
         public async Task<ActionResult> AddFolder([FromBody]AddFolderDto folderDto)
         {
-            var userId = GetUser();
-            var clientId = GetClient();
-
-            if (!userId.HasValue || !clientId.HasValue)
+            if (!IsAvailableOperation())
             {
                 return BadRequest();
             }
 
             try
             {
-                await _fileStorageService.AddFolder(folderDto, userId.Value, clientId.Value);
-                await _logService.Add(Enums.LogType.Create, $"Directory with Id = {folderDto.Name} was created successfully by user = {userId.Value}");
+                await _fileStorageService.AddFolder(folderDto, UserId, ClientId);
+
+                await AddLog(Enums.LogType.Create, LogMessage.CreateSuccessByNameMessage(LogMessage.FolderEntityName, 
+                    folderDto.Name, LogMessage.CreateAction, UserId));
+
                 return Ok();
             }
             catch (NotFoundException)
             {
-                await _logService.Add(Enums.LogType.NotFound, $"Directory with Id = {folderDto.ParentId} not found");
+                await AddLog(Enums.LogType.NotFound, LogMessage.CreateNotFoundParentMessage(LogMessage.FolderEntityName, folderDto.ParentId, 
+                    LogMessage.FolderEntityName, folderDto.Name));
+
                 return StatusCode((int)HttpStatusCode.Forbidden, ResponseMessage.NOT_FOUNT.ToString());
             }
             catch (FoundSameObjectException)
             {
-                await _logService.Add(Enums.LogType.SameObject, $"Failed to create directory = {folderDto.Name}. Directory already exists with that name");
+                await AddLog(Enums.LogType.SameObject, LogMessage.CreateFoundSameObjectMessage(LogMessage.FolderEntityName, folderDto.Name));
                 return StatusCode((int)HttpStatusCode.Forbidden, ResponseMessage.SAME_NAME.ToString());
             }
             catch (Exception ex)
             {
-                await _logService.Add(Enums.LogType.NotFound, ex.Message);
-                return StatusCode((int)HttpStatusCode.Forbidden, ResponseMessage.SERVER_ERROR.ToString());
-            }
-        }
-
-        [HttpPost]
-        [Route("remove/folder")]
-        public async Task<ActionResult> RemoveFolder([FromBody]RemoveFileStorageDto folderDto)
-        {
-            var userId = GetUser();
-            var clientId = GetClient();
-
-            if (!userId.HasValue || !clientId.HasValue)
-            {
-                return BadRequest();
-            }
-
-            try
-            {
-                await _fileStorageService.RemoveFolder(folderDto, userId.Value, clientId.Value);
-                await _logService.Add(Enums.LogType.Create, $"Directory with Id = {folderDto.Id} was removed successfully by user = {userId.Value}");
-                return Ok();
-            }
-            catch (NotFoundException)
-            {
-                await _logService.Add(Enums.LogType.NotFound, $"Directory with Id = {folderDto.Id} not found");
-                return StatusCode((int)HttpStatusCode.Forbidden, ResponseMessage.NOT_FOUNT.ToString());
-            }
-            catch (Exception ex)
-            {
-                await _logService.Add(Enums.LogType.NotFound, ex.Message);
+                await AddLog(Enums.LogType.Error, ex.Message);
                 return StatusCode((int)HttpStatusCode.Forbidden, ResponseMessage.SERVER_ERROR.ToString());
             }
         }
@@ -129,33 +95,62 @@ namespace SaphirCloudBox.Host.Controllers
         [Route("update/folder")]
         public async Task<ActionResult> UpdateFolder([FromBody]UpdateFolderDto folderDto)
         {
-            var userId = GetUser();
-            var clientId = GetClient();
-
-            if (!userId.HasValue || !clientId.HasValue)
+            if (!IsAvailableOperation())
             {
                 return BadRequest();
             }
 
             try
             {
-                await _fileStorageService.UpdateFolder(folderDto, userId.Value, clientId.Value);
-                await _logService.Add(Enums.LogType.Create, $"Directory with Id = {folderDto.Id} was updated successfully by user = {userId.Value}");
+                await _fileStorageService.UpdateFolder(folderDto, UserId, ClientId);
+                await AddLog(Enums.LogType.Create, LogMessage.CreateSuccessByIdMessage(LogMessage.FolderEntityName, folderDto.Id, LogMessage.CreateAction, UserId));
                 return Ok();
             }
             catch (NotFoundException)
             {
-                await _logService.Add(Enums.LogType.NotFound, $"Directory with Id = {folderDto.Id} not found");
+                await AddLog(Enums.LogType.NotFound, LogMessage.CreateNotFoundMessage(LogMessage.FolderEntityName, folderDto.Id));
                 return StatusCode((int)HttpStatusCode.Forbidden, ResponseMessage.NOT_FOUNT.ToString());
             }
             catch (FoundSameObjectException)
             {
-                await _logService.Add(Enums.LogType.SameObject, $"Failed to update directory = {folderDto.Name}. Directory already exists with that name");
+                await AddLog(Enums.LogType.SameObject, LogMessage.CreateFoundSameObjectMessage(LogMessage.FolderEntityName, folderDto.Name));
                 return StatusCode((int)HttpStatusCode.Forbidden, ResponseMessage.SAME_NAME.ToString());
             }
             catch (Exception ex)
             {
-                await _logService.Add(Enums.LogType.NotFound, ex.Message);
+                await AddLog(Enums.LogType.Error, ex.Message);
+                return StatusCode((int)HttpStatusCode.Forbidden, ResponseMessage.SERVER_ERROR.ToString());
+            }
+        }
+
+        [HttpPost]
+        [Route("remove/folder")]
+        public async Task<ActionResult> RemoveFolder([FromBody]RemoveFileStorageDto folderDto)
+        {
+            if (!IsAvailableOperation())
+            {
+                return BadRequest();
+            }
+
+            try
+            {
+                await _fileStorageService.RemoveFolder(folderDto, UserId, ClientId);
+                await AddLog(Enums.LogType.Create, LogMessage.CreateSuccessByIdMessage(LogMessage.FolderEntityName, folderDto.Id, LogMessage.RemoveAction, UserId));
+                return Ok();
+            }
+            catch (NotFoundException)
+            {
+                await AddLog(Enums.LogType.NotFound, LogMessage.CreateNotFoundMessage(LogMessage.FolderEntityName, folderDto.Id));
+                return StatusCode((int)HttpStatusCode.Forbidden, ResponseMessage.NOT_FOUNT.ToString());
+            }
+            catch(RemoveException)
+            {
+                await AddLog(Enums.LogType.NoAccess, LogMessage.CreateNoAccessMessage(LogMessage.FolderEntityName, folderDto.Id, UserId));
+                return StatusCode((int)HttpStatusCode.Forbidden, ResponseMessage.REMOVE_ERROR.ToString());
+            }
+            catch (Exception ex)
+            {
+                await AddLog(Enums.LogType.Error, ex.Message);
                 return StatusCode((int)HttpStatusCode.Forbidden, ResponseMessage.SERVER_ERROR.ToString());
             }
         }
@@ -164,50 +159,32 @@ namespace SaphirCloudBox.Host.Controllers
         [Route("add/file")]
         public async Task<ActionResult> AddFile([FromBody]AddFileDto fileDto)
         {
-            var userId = GetUser();
-            var clientId = GetClient();
-
-            if (!userId.HasValue || !clientId.HasValue)
+            if (!IsAvailableOperation())
             {
                 return BadRequest();
             }
 
             try
             {
-                await _fileStorageService.AddFile(fileDto, userId.Value, clientId.Value);
-                await _logService.Add(Enums.LogType.Create, $"File = {fileDto.Name} was created successfully by user = {userId.Value}");
+                await _fileStorageService.AddFile(fileDto, UserId, ClientId);
+                await AddLog(Enums.LogType.Create, LogMessage.CreateSuccessByNameMessage(LogMessage.FileEntityName, fileDto.Name, LogMessage.CreateAction, UserId));
                 return Ok();
             }
             catch (NotFoundException)
             {
-                await _logService.Add(Enums.LogType.NotFound, $"File storage with Id = {fileDto.ParentId} not found");
+                await AddLog(Enums.LogType.NotFound, LogMessage.CreateNotFoundParentMessage(LogMessage.FolderEntityName, fileDto.ParentId, LogMessage.FileEntityName, fileDto.Name));
                 return StatusCode((int)HttpStatusCode.Forbidden, ResponseMessage.NOT_FOUNT.ToString());
             }
             catch (FoundSameObjectException)
             {
-                await _logService.Add(Enums.LogType.SameObject, $"Failed to create file = {fileDto.Name}. File already exists with that name");
+                await AddLog(Enums.LogType.SameObject, LogMessage.CreateFoundSameObjectMessage(LogMessage.FileEntityName, fileDto.Name));
                 return StatusCode((int)HttpStatusCode.Forbidden, ResponseMessage.SAME_NAME.ToString());
             }
             catch (Exception ex)
             {
-                await _logService.Add(Enums.LogType.NotFound, ex.Message);
+                await AddLog(Enums.LogType.NotFound, ex.Message);
                 return StatusCode((int)HttpStatusCode.Forbidden, ResponseMessage.SERVER_ERROR.ToString());
             }
-        }
-
-        public async Task<ActionResult> RemoveFile([FromBody]RemoveFileStorageDto fileDto)
-        {
-            var userIdClaim = User.Claims.FirstOrDefault(x => x.Type.Contains("UserId"));
-
-            if (userIdClaim == null)
-            {
-                return BadRequest();
-            }
-
-            var userId = Convert.ToInt32(userIdClaim.Value);
-
-            //await _fileStorageService.RemoveFile(fileDto, userId);
-            return Ok();
         }
 
         [HttpGet]
@@ -215,10 +192,75 @@ namespace SaphirCloudBox.Host.Controllers
         [AllowAnonymous]
         public async Task<IActionResult> DownloadFile(int id, int ownerId, int clientId)
         {
-            var fileDto = await _fileStorageService.GetFileById(id, ownerId, clientId);
-            var contentType = Constants.Extension.TYPES[Path.GetExtension(fileDto.Name).ToLowerInvariant()];
+            try
+            {
+                var fileDto = await _fileStorageService.GetFileById(id, ownerId, clientId);
+                var contentType = Constants.Extension.TYPES[Path.GetExtension(fileDto.Name).ToLowerInvariant()];
 
-            return File(fileDto.Buffer, contentType, fileDto.Name);
+                return File(fileDto.Buffer, contentType, fileDto.Name);
+            }
+            catch (NotFoundException)
+            {
+                await AddLog(Enums.LogType.NotFound, LogMessage.CreateNotFoundMessage(LogMessage.FileEntityName, id));
+                return StatusCode((int)HttpStatusCode.Forbidden, ResponseMessage.NOT_FOUNT.ToString());
+            }
+            catch (Exception ex)
+            {
+                await AddLog(Enums.LogType.NotFound, ex.Message);
+                return StatusCode((int)HttpStatusCode.Forbidden, ResponseMessage.SERVER_ERROR.ToString());
+            }
+        }
+
+        [HttpPost]
+        [Route("update/file")]
+        public async Task<IActionResult> UpdateFile([FromBody]UpdateFileDto fileDto)
+        {
+            if (!IsAvailableOperation())
+            {
+                return BadRequest();
+            }
+
+            try
+            {
+                return Ok();
+            }
+            catch (Exception)
+            {
+
+                throw;
+            }
+        }
+
+        [HttpPost]
+        [Route("remove/file")]
+        public async Task<ActionResult> RemoveFile([FromBody]RemoveFileStorageDto fileDto)
+        {
+            if (!IsAvailableOperation())
+            {
+                return BadRequest();
+            }
+
+            try
+            {
+                await _fileStorageService.RemoveFile(fileDto, UserId, ClientId);
+                await AddLog(Enums.LogType.Remove, LogMessage.CreateSuccessByIdMessage(LogMessage.FileEntityName, fileDto.Id, LogMessage.RemoveAction, UserId));
+                return Ok();
+            }
+            catch (NotFoundException)
+            {
+                await AddLog(Enums.LogType.NotFound, LogMessage.CreateNotFoundMessage(LogMessage.FileEntityName, fileDto.Id));
+                return StatusCode((int)HttpStatusCode.Forbidden, ResponseMessage.NOT_FOUNT.ToString());
+            }
+            catch (RemoveException)
+            {
+                await AddLog(Enums.LogType.NoAccess, LogMessage.CreateNoAccessMessage(LogMessage.FileEntityName, fileDto.Id, UserId));
+                return StatusCode((int)HttpStatusCode.Forbidden, ResponseMessage.REMOVE_ERROR.ToString());
+            }
+            catch (Exception ex)
+            {
+                await AddLog(Enums.LogType.Error, ex.Message);
+                return StatusCode((int)HttpStatusCode.Forbidden, ResponseMessage.SERVER_ERROR.ToString());
+            }
         }
     }
 }

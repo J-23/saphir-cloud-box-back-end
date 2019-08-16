@@ -89,5 +89,23 @@ namespace SaphirCloudBox.Data.Repositories
             return await Context.Set<FileStorage>()
                 .AnyAsync(x => x.ParentFileStorageId == 1 && x.OwnerId == id);
         }
+
+        public async Task<IEnumerable<FileStorage>> GetAllByParentId(int id)
+        {
+            var fileStorages = await Context.Set<FileStorage>()
+                .Where(x => x.ParentFileStorageId.HasValue && x.ParentFileStorageId.Value == id)
+                .ToListAsync();
+
+            var childFileStorages = new List<FileStorage>();
+
+            foreach (var fileStorage in fileStorages)
+            {
+                childFileStorages.AddRange(await GetAllByParentId(fileStorage.Id));
+            }
+
+            fileStorages.AddRange(childFileStorages);
+
+            return fileStorages;
+        }
     }
 }

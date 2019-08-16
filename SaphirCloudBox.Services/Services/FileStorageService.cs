@@ -62,10 +62,7 @@ namespace SaphirCloudBox.Services.Services
                 throw new FoundSameObjectException();
             }
 
-            var user = await _userManager.FindByIdAsync(userId.ToString());
-            var roles = await _userManager.GetRolesAsync(user);
-
-            var owners = GetOwners(parentFileStorage, roles, userId, clientId);
+            var owners = await GetOwners(parentFileStorage, userId, clientId);
             var sizeInfo = fileDto.Size.ToPrettySize();
             var blobName = Guid.NewGuid();
 
@@ -119,10 +116,7 @@ namespace SaphirCloudBox.Services.Services
                 throw new FoundSameObjectException();
             }
 
-            var user = await _userManager.FindByIdAsync(userId.ToString());
-            var roles = await _userManager.GetRolesAsync(user);
-
-            var owners = GetOwners(parentFileStorage, roles, userId, clientId);
+            var owners = await GetOwners(parentFileStorage, userId, clientId);
 
             var newFileStorage = new FileStorage
             {
@@ -190,22 +184,26 @@ namespace SaphirCloudBox.Services.Services
             };
         }
 
-        public async Task RemoveFile(RemoveFileStorageDto fileDto, int userId)
+        public async Task RemoveFile(RemoveFileStorageDto fileDto, int userId, int clientId)
         {
             var fileStorageRepository = DataContextManager.CreateRepository<IFileStorageRepository>();
             var fileStorage = await fileStorageRepository.GetById(fileDto.Id, userId, 1);
 
-            if (fileStorage == null)
+            if (fileStorage == null || fileStorage != null && fileStorage.IsDirectory)
             {
                 throw new NotFoundException();
             }
 
-            if (fileStorage.IsDirectory)
+            var isAvailableToChange = await IsAvailableToChange(fileStorage, userId, clientId);
+            if (!isAvailableToChange)
             {
-                throw new NotFoundException();
+                throw new RemoveException();
             }
 
-            await _azureBlobClient.DeleteFile(_blobSettings.ContainerName, fileStorage.Id.ToString());
+            foreach (var file in fileStorage.Files)
+            {
+                await _azureBlobClient.DeleteFile(_blobSettings.ContainerName, file.AzureBlobStorage.BlobName.ToString());
+            }
 
             await fileStorageRepository.Remove(fileStorage);
         }
@@ -218,6 +216,13 @@ namespace SaphirCloudBox.Services.Services
             if (fileStorage == null || fileStorage != null && !fileStorage.IsDirectory)
             {
                 throw new NotFoundException();
+            }
+
+
+            var isAvailableToChange = await IsAvailableToChange(fileStorage, userId, clientId);
+            if (!isAvailableToChange)
+            {
+                throw new RemoveException();
             }
 
             await fileStorageRepository.RemoveFolder(fileStorage);
@@ -250,6 +255,52 @@ namespace SaphirCloudBox.Services.Services
             await fileStorageRepository.Update(fileStorage);
         }
 
+        public async Task UpdateFile(UpdateFileDto fileDto, int userId, int clientId)
+        {
+            var fileStorageRepository = DataContextManager.CreateRepository<IFileStorageRepository>();
+            var fileStorage = await fileStorageRepository.GetById(fileDto.Id, userId, clientId);
+
+            if (fileStorage == null || fileStorage != null && fileStorage.IsDirectory)
+            {
+                throw new NotFoundException();
+            }
+
+
+        }
+
+        private async Task<bool> IsAvailableToChange(FileStorage fileStorage, int userId, int clientId)
+        {
+            var user = await _userManager.FindByIdAsync(userId.ToString());
+            var roles = await _userManager.GetRolesAsync(user);
+
+            if (!((fileStorage.Owner == null && fileStorage.Client == null && roles.Contains(Constants.Role.SUPER_ADMIN_ROLE_NAME))
+                                || (fileStorage.Owner == null && fileStorage.Client != null && roles.Contains(Constants.Role.CLIENT_ADMIN_ROLE_NAME)
+                                        && fileStorage.ClientId == clientId)
+                                || (fileStorage.Owner != null && fileStorage.Client == null && (roles.Contains(Constants.Role.DEPARTMENT_HEAD_ROLE_NAME)
+                                        || roles.Contains(Constants.Role.EMPLOYEE_ROLE_NAME)) && fileStorage.OwnerId == userId)))
+            {
+                return false;
+            }
+
+            var fileStorageRepository = DataContextManager.CreateRepository<IFileStorageRepository>();
+
+            var childFileStorages = await fileStorageRepository.GetAllByParentId(fileStorage.Id);
+
+            foreach (var childFileStorage in childFileStorages)
+            {
+                if (!((fileStorage.Owner == null && fileStorage.Client == null && roles.Contains(Constants.Role.SUPER_ADMIN_ROLE_NAME))
+                                || (fileStorage.Owner == null && fileStorage.Client != null && roles.Contains(Constants.Role.CLIENT_ADMIN_ROLE_NAME)
+                                        && fileStorage.ClientId == clientId)
+                                || (fileStorage.Owner != null && fileStorage.Client == null && (roles.Contains(Constants.Role.DEPARTMENT_HEAD_ROLE_NAME)
+                                        || roles.Contains(Constants.Role.EMPLOYEE_ROLE_NAME)) && fileStorage.OwnerId == userId)))
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
         private byte[] Base64ToByteArray(string content)
         {
             byte[] buffer = new byte[((content.Length * 3) + 3) / 4 - (content.Length > 0 && content[content.Length - 1] == '=' ?
@@ -264,8 +315,11 @@ namespace SaphirCloudBox.Services.Services
             return buffer;
         }
 
-        private (int? OwnerId, int? ClientId) GetOwners(FileStorage parentFileStorage, IList<string> roles, int userId, int userClientId)
+        private async Task<(int? OwnerId, int? ClientId)> GetOwners(FileStorage parentFileStorage, int userId, int userClientId)
         {
+            var user = await _userManager.FindByIdAsync(userId.ToString());
+            var roles = await _userManager.GetRolesAsync(user);
+
             int? ownerId = null;
             int? clientId = null;
 
@@ -273,17 +327,17 @@ namespace SaphirCloudBox.Services.Services
             {
                 foreach (var role in roles)
                 {
-                    if (role.Equals(Role.SUPER_ADMIN_ROLE_NAME))
+                    if (role.Equals(Constants.Role.SUPER_ADMIN_ROLE_NAME))
                     {
                         ownerId = null;
                         clientId = null;
                     }
-                    else if (role.Equals(Role.CLIENT_ADMIN_ROLE_NAME))
+                    else if (role.Equals(Constants.Role.CLIENT_ADMIN_ROLE_NAME))
                     {
                         ownerId = null;
                         clientId = userClientId;
                     }
-                    else if (role.Equals(Role.DEPARTMENT_HEAD_ROLE_NAME) || role.Equals(Role.EMPLOYEE_ROLE_NAME))
+                    else if (role.Equals(Constants.Role.DEPARTMENT_HEAD_ROLE_NAME) || role.Equals(Constants.Role.EMPLOYEE_ROLE_NAME))
                     {
                         ownerId = userId;
                         clientId = null;

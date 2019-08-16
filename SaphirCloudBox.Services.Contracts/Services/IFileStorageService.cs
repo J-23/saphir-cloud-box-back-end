@@ -16,10 +16,12 @@ namespace SaphirCloudBox.Services.Contracts.Services
 
         Task<DownloadFileDto> GetFileById(int id, int userId, int clientId);
 
-        //Task RemoveFile(RemoveFileDto fileDto, int userId);
+        Task RemoveFile(RemoveFileStorageDto fileDto, int userId, int clientId);
 
         Task RemoveFolder(RemoveFileStorageDto folderDto, int userId, int clientId);
 
         Task UpdateFolder(UpdateFolderDto folderDto, int userId, int clientId);
+
+        Task UpdateFile(UpdateFileDto fileDto, int userId, int clientId);
     }
 }

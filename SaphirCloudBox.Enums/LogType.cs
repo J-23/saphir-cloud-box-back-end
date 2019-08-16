@@ -12,5 +12,6 @@ namespace SaphirCloudBox.Enums
         Error = 3,
         NotFound = 4,
         SameObject = 5,
+        NoAccess = 6,
     }
 }
