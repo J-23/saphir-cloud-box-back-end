@@ -116,6 +116,11 @@ namespace SaphirCloudBox.Host.Controllers
                 await AddLog(Enums.LogType.SameObject, LogMessage.CreateFoundSameObjectMessage(LogMessage.FolderEntityName, folderDto.Name));
                 return StatusCode((int)HttpStatusCode.Forbidden, ResponseMessage.SAME_NAME.ToString());
             }
+            catch (UpdateException)
+            {
+                await AddLog(Enums.LogType.NoAccess, LogMessage.CreateNoAccessMessage(LogMessage.FolderEntityName, folderDto.Id, UserId));
+                return StatusCode((int)HttpStatusCode.Forbidden, ResponseMessage.SERVER_ERROR.ToString());
+            }
             catch (Exception ex)
             {
                 await AddLog(Enums.LogType.Error, ex.Message);
@@ -146,7 +151,7 @@ namespace SaphirCloudBox.Host.Controllers
             catch(RemoveException)
             {
                 await AddLog(Enums.LogType.NoAccess, LogMessage.CreateNoAccessMessage(LogMessage.FolderEntityName, folderDto.Id, UserId));
-                return StatusCode((int)HttpStatusCode.Forbidden, ResponseMessage.REMOVE_ERROR.ToString());
+                return StatusCode((int)HttpStatusCode.Forbidden, ResponseMessage.SERVER_ERROR.ToString());
             }
             catch (Exception ex)
             {
@@ -222,12 +227,29 @@ namespace SaphirCloudBox.Host.Controllers
 
             try
             {
+                await _fileStorageService.UpdateFile(fileDto, UserId, ClientId);
+                await AddLog(Enums.LogType.Update, LogMessage.CreateSuccessByIdMessage(LogMessage.FileEntityName, fileDto.Id, LogMessage.UpdateAction, UserId));
                 return Ok();
             }
-            catch (Exception)
+            catch (NotFoundException)
             {
-
-                throw;
+                await AddLog(Enums.LogType.NotFound, LogMessage.CreateNotFoundMessage(LogMessage.FileEntityName, fileDto.Id));
+                return StatusCode((int)HttpStatusCode.Forbidden, ResponseMessage.NOT_FOUNT.ToString());
+            }
+            catch (UpdateException)
+            {
+                await AddLog(Enums.LogType.NoAccess, LogMessage.CreateNoAccessMessage(LogMessage.FileEntityName, fileDto.Id, UserId));
+                return StatusCode((int)HttpStatusCode.Forbidden, ResponseMessage.SERVER_ERROR.ToString());
+            }
+            catch (FoundSameObjectException)
+            {
+                await AddLog(Enums.LogType.SameObject, LogMessage.CreateFoundSameObjectMessage(LogMessage.FileEntityName, fileDto.Name));
+                return StatusCode((int)HttpStatusCode.Forbidden, ResponseMessage.SAME_NAME.ToString());
+            }
+            catch (Exception ex)
+            {
+                await AddLog(Enums.LogType.Error, ex.Message);
+                return StatusCode((int)HttpStatusCode.Forbidden, ResponseMessage.SERVER_ERROR.ToString());
             }
         }
 
@@ -254,7 +276,7 @@ namespace SaphirCloudBox.Host.Controllers
             catch (RemoveException)
             {
                 await AddLog(Enums.LogType.NoAccess, LogMessage.CreateNoAccessMessage(LogMessage.FileEntityName, fileDto.Id, UserId));
-                return StatusCode((int)HttpStatusCode.Forbidden, ResponseMessage.REMOVE_ERROR.ToString());
+                return StatusCode((int)HttpStatusCode.Forbidden, ResponseMessage.SERVER_ERROR.ToString());
             }
             catch (Exception ex)
             {

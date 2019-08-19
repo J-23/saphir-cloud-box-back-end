@@ -107,5 +107,27 @@ namespace SaphirCloudBox.Data.Repositories
 
             return fileStorages;
         }
+
+        public async Task<IEnumerable<FileStorage>> GetFilesByParentId(int parentId, int userId, int clientId)
+        {
+            var fileStorages = await Context.Set<FileStorage>()
+                .Where(x => x.ParentFileStorageId.HasValue && parentId == x.ParentFileStorageId.Value
+                    && ((!x.ClientId.HasValue && !x.OwnerId.HasValue)
+                        || (x.ClientId.HasValue && !x.OwnerId.HasValue && x.ClientId.Value == clientId)
+                        || (!x.ClientId.HasValue && x.OwnerId.HasValue && x.OwnerId.Value == userId)))
+                .ToListAsync();
+
+            var files = fileStorages.Where(x => !x.IsDirectory).ToList();
+            var folders = fileStorages.Where(x => x.IsDirectory).ToList();
+
+            foreach (var folder in folders)
+            {
+                var childFiles = await GetFilesByParentId(folder.Id, userId, clientId);
+
+                files.AddRange(childFiles);
+            }
+
+            return files;
+        }
     }
 }

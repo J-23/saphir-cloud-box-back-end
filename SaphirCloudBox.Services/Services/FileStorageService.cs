@@ -55,9 +55,10 @@ namespace SaphirCloudBox.Services.Services
             var fileName = Path.GetFileNameWithoutExtension(fileDto.Name);
             var fileExtension = Path.GetExtension(fileDto.Name);
 
-            var fileStorages = await fileStorageRepository.GetByParentId(fileDto.ParentId, userId, clientId);
+            var childFileStorages = await fileStorageRepository.GetByParentId(parentFileStorage.Id, userId, clientId);
 
-            if (fileStorages.Any(x => !x.IsDirectory && x.Name.Equals(fileName) && x.Files.Any(y => y.IsActive && y.Extension.Equals(fileExtension))))
+            if (childFileStorages.Any(x => !x.IsDirectory && x.Name.Equals(fileName) 
+                && x.Files.Any(y => y.IsActive && y.Extension.Equals(fileExtension))))
             {
                 throw new FoundSameObjectException();
             }
@@ -109,7 +110,7 @@ namespace SaphirCloudBox.Services.Services
                 throw new NotFoundException();
             }
 
-            var childFileStorages = await fileStorageRepository.GetByParentId(folderDto.ParentId, userId, clientId);
+            var childFileStorages = await fileStorageRepository.GetByParentId(parentFileStorage.Id, userId, clientId);
 
             if (childFileStorages.Any(x => x.IsDirectory && x.Name.Equals(folderDto.Name)))
             {
@@ -143,15 +144,15 @@ namespace SaphirCloudBox.Services.Services
                 throw new NotFoundException();
             }
 
-            var fileStorages = await fileStorageRepository.GetByParentId(parentId, userId, clientId);
+            var childFileStorages = await fileStorageRepository.GetByParentId(parentFileStorage.Id, userId, clientId);
 
-            var storages = MapperFactory.CreateMapper<IFileStorageMapper>().MapCollectionToModel(fileStorages);
+            var storages = MapperFactory.CreateMapper<IFileStorageMapper>().MapCollectionToModel(childFileStorages);
 
             return new FileStorageDto
             {
                 Id = parentFileStorage.Id,
-                ParentStorageId = parentFileStorage.ParentFileStorageId,
                 Name = parentFileStorage.Name,
+                ParentStorageId = parentFileStorage.ParentFileStorageId,
                 Client = MapperFactory.CreateMapper<IClientMapper>().MapToModel(parentFileStorage.Client),
                 Owner = MapperFactory.CreateMapper<IUserMapper>().MapToModel(parentFileStorage.Owner),
                 Storages = storages
@@ -225,6 +226,15 @@ namespace SaphirCloudBox.Services.Services
                 throw new RemoveException();
             }
 
+            var files = await fileStorageRepository.GetFilesByParentId(fileStorage.Id, userId, clientId);
+
+            var blobs = files.SelectMany(s => s.Files).Select(s => s.AzureBlobStorage).ToList();
+
+            foreach (var blob in blobs)
+            {
+                await _azureBlobClient.DeleteFile(_blobSettings.ContainerName, blob.BlobName.ToString());
+            }
+
             await fileStorageRepository.RemoveFolder(fileStorage);
         }
 
@@ -236,6 +246,12 @@ namespace SaphirCloudBox.Services.Services
             if (fileStorage == null || fileStorage != null && !fileStorage.IsDirectory)
             {
                 throw new NotFoundException();
+            }
+
+            var isAvailableToChange = await IsAvailableToChange(fileStorage, userId, clientId);
+            if (!isAvailableToChange)
+            {
+                throw new UpdateException();
             }
 
             if (fileStorage.ParentFileStorageId.HasValue)
@@ -265,7 +281,73 @@ namespace SaphirCloudBox.Services.Services
                 throw new NotFoundException();
             }
 
+            var isAvailableToChange = await IsAvailableToChange(fileStorage, userId, clientId);
 
+            if (!isAvailableToChange)
+            {
+                throw new UpdateException();
+            }
+
+            var fileName = Path.GetFileNameWithoutExtension(fileDto.Name);
+            var fileExtension = Path.GetExtension(fileDto.Name);
+
+            if (fileStorage.ParentFileStorageId.HasValue)
+            {
+                var fileStorages = await fileStorageRepository.GetByParentId(fileStorage.ParentFileStorageId.Value, userId, clientId);
+
+                if (fileStorages.Any(x => !x.IsDirectory && x.Name.Equals(fileName) && x.Files.Any(y => y.IsActive && y.Extension.Equals(fileExtension))))
+                {
+                    throw new FoundSameObjectException();
+                }
+            }
+
+            fileStorage.Name = fileName;
+            fileStorage.UpdateDate = DateTime.Now;
+            fileStorage.UpdateById = userId;
+
+            if (!String.IsNullOrEmpty(fileDto.Content))
+            {
+                fileStorage.Files.ToList().ForEach(file =>
+                {
+                    file.IsActive = false;
+                });
+
+                var sizeInfo = fileDto.Size.Value.ToPrettySize();
+                var blobName = Guid.NewGuid();
+
+                var newFile = new Models.File
+                {
+                    Extension = fileExtension,
+                    Size = sizeInfo.Size,
+                    SizeType = sizeInfo.SizeType,
+                    CreateById = userId,
+                    IsActive = true,
+                    CreateDate = DateTime.Now,
+                    AzureBlobStorage = new AzureBlobStorage
+                    {
+                        BlobName = blobName
+                    }
+                };
+
+                fileStorage.Files.Add(newFile);
+
+                await _azureBlobClient.UploadFile(_blobSettings.ContainerName, blobName.ToString(), Base64ToByteArray(fileDto.Content));
+            }
+            else
+            {
+                var activeFile = fileStorage.Files.FirstOrDefault();
+
+                if (activeFile == null)
+                {
+                    throw new UpdateException();
+                }
+
+                activeFile.Extension = fileExtension;
+                activeFile.UpdateById = userId;
+                activeFile.UpdateDate = DateTime.Now;
+            }
+
+            await fileStorageRepository.Update(fileStorage);
         }
 
         private async Task<bool> IsAvailableToChange(FileStorage fileStorage, int userId, int clientId)
@@ -303,16 +385,7 @@ namespace SaphirCloudBox.Services.Services
 
         private byte[] Base64ToByteArray(string content)
         {
-            byte[] buffer = new byte[((content.Length * 3) + 3) / 4 - (content.Length > 0 && content[content.Length - 1] == '=' ?
-                content.Length > 1 && content[content.Length - 2] == '=' ? 2 : 1 : 0)];
-
-            int written;
-            if (!Convert.TryFromBase64String(content, buffer, out written))
-            {
-                //exception
-            }
-
-            return buffer;
+            return Convert.FromBase64String(content);
         }
 
         private async Task<(int? OwnerId, int? ClientId)> GetOwners(FileStorage parentFileStorage, int userId, int userClientId)

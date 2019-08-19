@@ -24,5 +24,7 @@ namespace SaphirCloudBox.Data.Contracts.Repositories
         Task RemoveFolder(FileStorage fileStorage);
 
         Task<IEnumerable<FileStorage>> GetAllByParentId(int id);
+
+        Task<IEnumerable<FileStorage>> GetFilesByParentId(int id, int userId, int clientId);
     }
 }

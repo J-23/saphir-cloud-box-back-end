@@ -43,7 +43,7 @@ namespace SaphirCloudBox.Services.Mappers
                     .ForMember(x => x.IsDirectory, y => y.MapFrom(z => z.IsDirectory))
                     .ForMember(x => x.Owner, y => y.MapFrom(z => z.Owner))
                     .ForMember(x => x.Client, y => y.MapFrom(z => z.Client))
-                    .ForMember(x => x.StorageType, y => y.MapFrom(z => GetStorageType(z.IsDirectory, z.Name)))
+                    .ForMember(x => x.StorageType, y => y.MapFrom(z => GetStorageType(z.IsDirectory, z.Files)))
                     .ForMember(x => x.File, y => y.MapFrom(z => z.Files.FirstOrDefault(f => f.IsActive)));
             });
 
@@ -51,7 +51,7 @@ namespace SaphirCloudBox.Services.Mappers
             return config.CreateMapper();
         }
 
-        private string GetStorageType(bool isDirectory, string name)
+        private string GetStorageType(bool isDirectory, IEnumerable<File> files)
         {
             if (isDirectory)
             {
@@ -59,9 +59,16 @@ namespace SaphirCloudBox.Services.Mappers
             }
             else
             {
+                var file = files.FirstOrDefault(x => x.IsActive);
+
+                if (file == null)
+                {
+                    throw new ArgumentNullException(nameof(file));
+                }
+
                 foreach (var fileType in Constants.fileTypes)
                 {
-                    if (fileType.Value.Any(x => name.EndsWith(x)))
+                    if (fileType.Value.Any(x => file.Extension.Equals(x)))
                     {
                         return fileType.Key.ToString();
                     }
