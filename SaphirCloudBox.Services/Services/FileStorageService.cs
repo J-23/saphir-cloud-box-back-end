@@ -28,15 +28,18 @@ namespace SaphirCloudBox.Services.Services
         private readonly UserManager<User> _userManager;
         private readonly BlobSettings _blobSettings;
         private readonly AzureBlobClient _azureBlobClient;
+        private readonly RoleManager<Role> _roleManager;
 
         public FileStorageService(IUnityContainer container, 
             ISaphirCloudBoxDataContextManager dataContextManager, 
             UserManager<User> userManager,
+            RoleManager<Role> roleManager,
             BlobSettings blobSettings,
             AzureBlobClient azureBlobClient) 
             : base(container, dataContextManager)
         {
             _userManager = userManager ?? throw new ArgumentNullException(nameof(userManager));
+            _roleManager = roleManager ?? throw new ArgumentNullException(nameof(roleManager));
             _blobSettings = blobSettings ?? throw new ArgumentNullException(nameof(blobSettings));
             _azureBlobClient = azureBlobClient ?? throw new ArgumentNullException(nameof(azureBlobClient));
         }
@@ -69,7 +72,7 @@ namespace SaphirCloudBox.Services.Services
 
             var newFileStorage = new FileStorage
             {
-                Name = fileDto.Name,
+                Name = fileName,
                 ParentFileStorageId = parentFileStorage.Id,
                 IsDirectory = false,
                 CreateDate = DateTime.Now,
@@ -181,6 +184,7 @@ namespace SaphirCloudBox.Services.Services
             return new DownloadFileDto
             {
                 Name = fileStorage.Name,
+                Extension = file.Extension,
                 Buffer = buffer
             };
         }
@@ -353,13 +357,14 @@ namespace SaphirCloudBox.Services.Services
         private async Task<bool> IsAvailableToChange(FileStorage fileStorage, int userId, int clientId)
         {
             var user = await _userManager.FindByIdAsync(userId.ToString());
-            var roles = await _userManager.GetRolesAsync(user);
+            var roleNames = await _userManager.GetRolesAsync(user);
+            var roles = await _roleManager.Roles.Where(x => roleNames.Contains(x.Name)).ToListAsync();
 
-            if (!((fileStorage.Owner == null && fileStorage.Client == null && roles.Contains(Constants.Role.SUPER_ADMIN_ROLE_NAME))
-                                || (fileStorage.Owner == null && fileStorage.Client != null && roles.Contains(Constants.Role.CLIENT_ADMIN_ROLE_NAME)
+            if (!((fileStorage.Owner == null && fileStorage.Client == null && roles.Any(x => x.RoleType == RoleType.SuperAdmin))
+                                || (fileStorage.Owner == null && fileStorage.Client != null && roles.Any(x => x.RoleType == RoleType.ClientAdmin)
                                         && fileStorage.ClientId == clientId)
-                                || (fileStorage.Owner != null && fileStorage.Client == null && (roles.Contains(Constants.Role.DEPARTMENT_HEAD_ROLE_NAME)
-                                        || roles.Contains(Constants.Role.EMPLOYEE_ROLE_NAME)) && fileStorage.OwnerId == userId)))
+                                || (fileStorage.Owner != null && fileStorage.Client == null && (roles.Any(x => x.RoleType == RoleType.DepartmentHead)
+                                        || roles.Any(x => x.RoleType == RoleType.Employee) || fileStorage.OwnerId == userId))))
             {
                 return false;
             }
@@ -370,11 +375,11 @@ namespace SaphirCloudBox.Services.Services
 
             foreach (var childFileStorage in childFileStorages)
             {
-                if (!((fileStorage.Owner == null && fileStorage.Client == null && roles.Contains(Constants.Role.SUPER_ADMIN_ROLE_NAME))
-                                || (fileStorage.Owner == null && fileStorage.Client != null && roles.Contains(Constants.Role.CLIENT_ADMIN_ROLE_NAME)
+                if (!((fileStorage.Owner == null && fileStorage.Client == null && roles.Any(x => x.RoleType == RoleType.SuperAdmin))
+                                || (fileStorage.Owner == null && fileStorage.Client != null && roles.Any(x => x.RoleType == RoleType.ClientAdmin)
                                         && fileStorage.ClientId == clientId)
-                                || (fileStorage.Owner != null && fileStorage.Client == null && (roles.Contains(Constants.Role.DEPARTMENT_HEAD_ROLE_NAME)
-                                        || roles.Contains(Constants.Role.EMPLOYEE_ROLE_NAME)) && fileStorage.OwnerId == userId)))
+                                || (fileStorage.Owner != null && fileStorage.Client == null && (roles.Any(x => x.RoleType == RoleType.DepartmentHead)
+                                        || roles.Any(x => x.RoleType == RoleType.Employee)) && fileStorage.OwnerId == userId)))
                 {
                     return false;
                 }
@@ -391,7 +396,8 @@ namespace SaphirCloudBox.Services.Services
         private async Task<(int? OwnerId, int? ClientId)> GetOwners(FileStorage parentFileStorage, int userId, int userClientId)
         {
             var user = await _userManager.FindByIdAsync(userId.ToString());
-            var roles = await _userManager.GetRolesAsync(user);
+            var roleNames = await _userManager.GetRolesAsync(user);
+            var roles = await _roleManager.Roles.Where(x => roleNames.Contains(x.Name)).ToListAsync();
 
             int? ownerId = null;
             int? clientId = null;
@@ -400,17 +406,17 @@ namespace SaphirCloudBox.Services.Services
             {
                 foreach (var role in roles)
                 {
-                    if (role.Equals(Constants.Role.SUPER_ADMIN_ROLE_NAME))
+                    if (role.RoleType == RoleType.SuperAdmin)
                     {
                         ownerId = null;
                         clientId = null;
                     }
-                    else if (role.Equals(Constants.Role.CLIENT_ADMIN_ROLE_NAME))
+                    else if (role.RoleType == RoleType.ClientAdmin)
                     {
                         ownerId = null;
                         clientId = userClientId;
                     }
-                    else if (role.Equals(Constants.Role.DEPARTMENT_HEAD_ROLE_NAME) || role.Equals(Constants.Role.EMPLOYEE_ROLE_NAME))
+                    else if (role.RoleType == RoleType.DepartmentHead || role.RoleType == RoleType.Employee)
                     {
                         ownerId = userId;
                         clientId = null;

@@ -200,9 +200,9 @@ namespace SaphirCloudBox.Host.Controllers
             try
             {
                 var fileDto = await _fileStorageService.GetFileById(id, ownerId, clientId);
-                var contentType = Constants.Extension.TYPES[Path.GetExtension(fileDto.Name).ToLowerInvariant()];
+                var contentType = Constants.Extension.TYPES[Path.GetExtension(fileDto.Extension).ToLowerInvariant()];
 
-                return File(fileDto.Buffer, contentType, fileDto.Name);
+                return File(fileDto.Buffer, contentType, fileDto.Name + fileDto.Extension);
             }
             catch (NotFoundException)
             {

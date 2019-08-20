@@ -10,7 +10,7 @@ using Unity;
 namespace SaphirCloudBox.Data
 {
     public class SaphirCloudBoxDataContextManager : 
-        AbstractDataContextManager<SaphirCloudBoxDataContext, User, IdentityRole<int>, int>, ISaphirCloudBoxDataContextManager
+        AbstractDataContextManager<SaphirCloudBoxDataContext, User, Role, int>, ISaphirCloudBoxDataContextManager
     {
         public SaphirCloudBoxDataContextManager(IUnityContainer container) 
             : base(container)

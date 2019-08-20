@@ -18,12 +18,12 @@ namespace SaphirCloudBox.Services.Services
 {
     public class RoleService : AbstractService, IRoleService
     {
-        private readonly RoleManager<IdentityRole<int>> _roleManager;
+        private readonly RoleManager<Role> _roleManager;
         private readonly UserManager<User> _userManager;
 
         public RoleService(IUnityContainer container,
             ISaphirCloudBoxDataContextManager dataContextManager, 
-            RoleManager<IdentityRole<int>> roleManager,
+            RoleManager<Role> roleManager,
             UserManager<User> userManager) : base(container, dataContextManager)
         {
             _roleManager = roleManager ?? throw new ArgumentNullException(nameof(roleManager));
@@ -39,7 +39,10 @@ namespace SaphirCloudBox.Services.Services
                 throw new FoundSameObjectException();
             }
 
-            role = new IdentityRole<int>(roleDto.Name);
+            role = new Role {
+                Name = roleDto.Name,
+                RoleType = Enums.RoleType.Employee
+            };
 
             var result = await _roleManager.CreateAsync(role);
 

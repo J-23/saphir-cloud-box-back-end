@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 
 namespace SaphirCloudBox.Data.Repositories
 {
-    public class FileStorageRepository : AbstractRepository<User, IdentityRole<int>, int>, IFileStorageRepository
+    public class FileStorageRepository : AbstractRepository<User, Role, int>, IFileStorageRepository
     {
         public FileStorageRepository(SaphirCloudBoxDataContext context) : base(context)
         {

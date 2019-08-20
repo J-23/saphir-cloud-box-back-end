@@ -8,6 +8,8 @@ namespace SaphirCloudBox.Services.Contracts.Dtos
     {
         public string Name { get; set; }
 
+        public string Extension { get; set; }
+
         public byte[] Buffer { get; set; }
     }
 }

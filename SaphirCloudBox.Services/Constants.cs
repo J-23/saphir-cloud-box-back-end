@@ -16,16 +16,5 @@ namespace SaphirCloudBox.Services
             { FileStorageType.picture_as_pdf, new List<string> { ".pdf" } },
             { FileStorageType.videocam, new List<string> { ".mp4", ".wmv", ".avi", ".webm", ".mov" } },
         };
-
-        public class Role
-        {
-            public const string SUPER_ADMIN_ROLE_NAME = "SUPER ADMIN";
-
-            public const string CLIENT_ADMIN_ROLE_NAME = "CLIENT ADMIN";
-
-            public const string DEPARTMENT_HEAD_ROLE_NAME = "DEPARTMENT HEAD";
-
-            public const string EMPLOYEE_ROLE_NAME = "EMPLOYEE";
-        }
     }
 }

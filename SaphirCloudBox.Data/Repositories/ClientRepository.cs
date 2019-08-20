@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 
 namespace SaphirCloudBox.Data.Repositories
 {
-    public class ClientRepository : AbstractRepository<User, IdentityRole<int>, int>, IClientRepository
+    public class ClientRepository : AbstractRepository<User, Role, int>, IClientRepository
     {
         public ClientRepository(SaphirCloudBoxDataContext context) 
             : base(context)

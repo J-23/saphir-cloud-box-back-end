@@ -29,15 +29,15 @@ namespace SaphirCloudBox.Data
             container.RegisterType<SaphirCloudBoxDataContext>();
             container.RegisterType<ISaphirCloudBoxDataContextManager, SaphirCloudBoxDataContextManager>(new TLifetime());
 
-            container.RegisterType<IRoleStore<IdentityRole<int>>, RoleStore<IdentityRole<int>, SaphirCloudBoxDataContext, int>>();
-            container.RegisterType<IUserClaimsPrincipalFactory<User>, UserClaimsPrincipalFactory<User, IdentityRole<int>>>();
+            container.RegisterType<IRoleStore<Role>, RoleStore<Role, SaphirCloudBoxDataContext, int>>();
+            container.RegisterType<IUserClaimsPrincipalFactory<User>, UserClaimsPrincipalFactory<User, Role>>();
             container.RegisterType<IHttpContextAccessor, HttpContextAccessor>();
             container.RegisterType<ILookupNormalizer, LookupNormalizer>();
             container.RegisterType<IPasswordHasher<User>, PasswordHasher<User>>();
-            container.RegisterType<IUserStore<User>, UserStore<User, IdentityRole<int>, SaphirCloudBoxDataContext, int>>();
+            container.RegisterType<IUserStore<User>, UserStore<User, Role, SaphirCloudBoxDataContext, int>>();
             container.RegisterType<UserManager<User>>();
             container.RegisterType<SignInManager<User>>();
-            container.RegisterType<RoleManager<IdentityRole<int>>>();
+            container.RegisterType<RoleManager<Role>>();
 
             container.RegisterType<IClientRepository, ClientRepository>(new TLifetime());
             container.RegisterType<IDepartmentRepository, DepartmentRepository>(new TLifetime());

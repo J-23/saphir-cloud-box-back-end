@@ -24,13 +24,13 @@ namespace SaphirCloudBox.Services.Services
     {
         private readonly UserManager<User> _userManager;
         private readonly SignInManager<User> _signInManager;
-        private readonly RoleManager<IdentityRole<int>> _roleManager;
+        private readonly RoleManager<Role> _roleManager;
 
         public UserService(IUnityContainer container,
             ISaphirCloudBoxDataContextManager dataContextManager,
             UserManager<User> userManager,
             SignInManager<User> signInManager,
-            RoleManager<IdentityRole<int>> roleManager) : base(container, dataContextManager)
+            RoleManager<Role> roleManager) : base(container, dataContextManager)
         {
             _userManager = userManager ?? throw new ArgumentNullException(nameof(userManager));
             _signInManager = signInManager ?? throw new ArgumentNullException(nameof(signInManager));
@@ -392,7 +392,7 @@ namespace SaphirCloudBox.Services.Services
             return department;
         }
 
-        private async Task AddUserToRole(User user, IdentityRole<int> role)
+        private async Task AddUserToRole(User user, Role role)
         {
             var result = await _userManager.AddToRoleAsync(user, role.Name);
 
@@ -402,7 +402,7 @@ namespace SaphirCloudBox.Services.Services
             }
         }
 
-        private async Task UpdateUserRole(User user, IdentityRole<int> role)
+        private async Task UpdateUserRole(User user, Role role)
         {
             var roles = await _userManager.GetRolesAsync(user);
 

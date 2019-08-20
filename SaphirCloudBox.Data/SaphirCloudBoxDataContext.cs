@@ -13,7 +13,7 @@ using System.Text;
 namespace SaphirCloudBox.Data
 {
     public class SaphirCloudBoxDataContext 
-        : AbstractDataContext<User, IdentityRole<int>, int>
+        : AbstractDataContext<User, Role, int>
     {
         public SaphirCloudBoxDataContext(ISaphirCloudBoxConnectionConfiguration configuration) 
             : base(configuration)
@@ -33,6 +33,7 @@ namespace SaphirCloudBox.Data
             base.OnModelCreating(builder);
 
             builder.ApplyConfiguration(new UserMap());
+            builder.ApplyConfiguration(new RoleMap());
             builder.ApplyConfiguration(new ClientMap());
             builder.ApplyConfiguration(new DepartmentMap());
 

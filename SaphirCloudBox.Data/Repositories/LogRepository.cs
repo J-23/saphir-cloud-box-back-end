@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace SaphirCloudBox.Data.Repositories
 {
-    public class LogRepository : AbstractRepository<User, IdentityRole<int>, int>, ILogRepository
+    public class LogRepository : AbstractRepository<User, Role, int>, ILogRepository
     {
         public LogRepository(SaphirCloudBoxDataContext context) : base(context)
         {
