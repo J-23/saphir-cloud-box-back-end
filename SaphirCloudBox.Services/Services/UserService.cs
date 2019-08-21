@@ -166,7 +166,8 @@ namespace SaphirCloudBox.Services.Services
                 userDto.Role = new RoleDto
                 {
                     Id = role.Id,
-                    Name = role.Name
+                    Name = role.Name,
+                    RoleType = role.RoleType
                 };
             }
 
@@ -283,6 +284,7 @@ namespace SaphirCloudBox.Services.Services
             }
 
             user.UserName = userDto.UserName;
+            user.Email = userDto.Email;
             user.UpdateDate = DateTime.Now;
             user.ClientId = (await GetClientById(userDto.ClientId)).Id;
             user.DepartmentId = (await GetDepartmentById(userDto.DepartmentId))?.Id;

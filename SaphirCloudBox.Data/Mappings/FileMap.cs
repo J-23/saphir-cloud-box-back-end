@@ -17,7 +17,7 @@ namespace SaphirCloudBox.Data.Mappings
 
             builder.Property(x => x.Size).IsRequired();
 
-            builder.Property(x => x.SizeType).HasMaxLength(2).IsRequired();
+            builder.Property(x => x.SizeType).HasMaxLength(5).IsRequired();
 
             builder.HasOne(x => x.FileStorage).WithMany(x => x.Files).HasForeignKey(x => x.FileStorageId);
 

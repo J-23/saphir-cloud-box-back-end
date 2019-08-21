@@ -379,7 +379,7 @@ namespace SaphirCloudBox.Services.Services
                                 || (fileStorage.Owner == null && fileStorage.Client != null && roles.Any(x => x.RoleType == RoleType.ClientAdmin)
                                         && fileStorage.ClientId == clientId)
                                 || (fileStorage.Owner != null && fileStorage.Client == null && (roles.Any(x => x.RoleType == RoleType.DepartmentHead)
-                                        || roles.Any(x => x.RoleType == RoleType.Employee)) && fileStorage.OwnerId == userId)))
+                                        || roles.Any(x => x.RoleType == RoleType.Employee) || fileStorage.OwnerId == userId))))
                 {
                     return false;
                 }
