@@ -48,6 +48,8 @@ namespace SaphirCloudBox.Services.Contracts.Dtos
             public class PermissionDto
             {
                 public virtual UserDto Recipient { get; set; }
+
+                public PermissionType Type { get; set; }
             }
         }
     }

@@ -21,36 +21,6 @@ namespace SaphirCloudBox.Services.Utils
             _roleManager = roleManager ?? throw new ArgumentNullException(nameof(roleManager));
         }
 
-        public async Task<bool> IsAvailableToChange(FileStorage fileStorage, IEnumerable<FileStorage> childFileStorages, int userId, int clientId)
-        {
-            var user = await _userManager.FindByIdAsync(userId.ToString());
-            var roleNames = await _userManager.GetRolesAsync(user);
-            var roles = await _roleManager.Roles.Where(x => roleNames.Contains(x.Name)).ToListAsync();
-
-            if (!((fileStorage.Owner == null && fileStorage.Client == null && roles.Any(x => x.RoleType == RoleType.SuperAdmin))
-                                || (fileStorage.Owner == null && fileStorage.Client != null && roles.Any(x => x.RoleType == RoleType.ClientAdmin)
-                                        && fileStorage.ClientId == clientId)
-                                || (fileStorage.Owner != null && fileStorage.Client == null && (roles.Any(x => x.RoleType == RoleType.DepartmentHead)
-                                        || roles.Any(x => x.RoleType == RoleType.Employee) || fileStorage.OwnerId == userId))))
-            {
-                return false;
-            }
-
-            foreach (var childFileStorage in childFileStorages)
-            {
-                if (!((fileStorage.Owner == null && fileStorage.Client == null && roles.Any(x => x.RoleType == RoleType.SuperAdmin))
-                                || (fileStorage.Owner == null && fileStorage.Client != null && roles.Any(x => x.RoleType == RoleType.ClientAdmin)
-                                        && fileStorage.ClientId == clientId)
-                                || (fileStorage.Owner != null && fileStorage.Client == null && (roles.Any(x => x.RoleType == RoleType.DepartmentHead)
-                                        || roles.Any(x => x.RoleType == RoleType.Employee) || fileStorage.OwnerId == userId))))
-                {
-                    return false;
-                }
-            }
-
-            return true;
-        }
-
         public async Task<(int? OwnerId, int? ClientId)> GetOwners(FileStorage parentFileStorage, int userId, int userClientId)
         {
             var user = await _userManager.FindByIdAsync(userId.ToString());

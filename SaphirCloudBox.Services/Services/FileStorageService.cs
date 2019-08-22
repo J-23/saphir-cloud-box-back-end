@@ -20,6 +20,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Transactions;
 using Unity;
 
 namespace SaphirCloudBox.Services.Services
@@ -202,7 +203,7 @@ namespace SaphirCloudBox.Services.Services
                 throw new NotFoundException();
             }
 
-            var isAvailableToChange = await IsAvailableToChange(fileStorage, userId, clientId);
+            var isAvailableToChange = await fileStorageRepository.IsAvailableToChange(fileStorage.Id, userId, clientId);
 
             if (!isAvailableToChange)
             {
@@ -227,7 +228,7 @@ namespace SaphirCloudBox.Services.Services
                 throw new NotFoundException();
             }
 
-            var isAvailableToChange = await IsAvailableToChange(fileStorage, userId, clientId);
+            var isAvailableToChange = await fileStorageRepository.IsAvailableToChange(fileStorage.Id, userId, clientId);
 
             if (!isAvailableToChange)
             {
@@ -256,8 +257,8 @@ namespace SaphirCloudBox.Services.Services
                 throw new NotFoundException();
             }
 
-            var isAvailableToChange = await IsAvailableToChange(fileStorage, userId, clientId);
-            
+            var isAvailableToChange = await fileStorageRepository.IsAvailableToChange(fileStorage.Id, userId, clientId);
+
             if (!isAvailableToChange)
             {
                 throw new UpdateException();
@@ -290,7 +291,7 @@ namespace SaphirCloudBox.Services.Services
                 throw new NotFoundException();
             }
 
-            var isAvailableToChange = await IsAvailableToChange(fileStorage, userId, clientId);
+            var isAvailableToChange = await fileStorageRepository.IsAvailableToChange(fileStorage.Id, userId, clientId);
 
             if (!isAvailableToChange)
             {
@@ -364,7 +365,7 @@ namespace SaphirCloudBox.Services.Services
             var fileStorageRepository = DataContextManager.CreateRepository<IFileStorageRepository>();
             var fileStorage = await fileStorageRepository.GetById(permissionDto.FileStorageId, userId, clientId);
 
-            var isAvailableToChange = await IsAvailableToChange(fileStorage, userId, clientId);
+            var isAvailableToChange = await fileStorageRepository.IsAvailableToChange(fileStorage.Id, userId, clientId);
 
             if (!isAvailableToChange)
             {
@@ -389,7 +390,7 @@ namespace SaphirCloudBox.Services.Services
             var fileStorageRepository = DataContextManager.CreateRepository<IFileStorageRepository>();
             var fileStorage = await fileStorageRepository.GetById(permissionDto.FileStorageId, userId, clientId);
 
-            var isAvailableToChange = await IsAvailableToChange(fileStorage, userId, clientId);
+            var isAvailableToChange = await fileStorageRepository.IsAvailableToChange(fileStorage.Id, userId, clientId);
 
             if (!isAvailableToChange)
             {
@@ -416,7 +417,7 @@ namespace SaphirCloudBox.Services.Services
             var fileStorageRepository = DataContextManager.CreateRepository<IFileStorageRepository>();
             var fileStorage = await fileStorageRepository.GetById(permissionDto.FileStorageId, userId, clientId);
 
-            var isAvailableToChange = await IsAvailableToChange(fileStorage, userId, clientId);
+            var isAvailableToChange = await fileStorageRepository.IsAvailableToChange(fileStorage.Id, userId, clientId);
 
             if (!isAvailableToChange)
             {
@@ -435,13 +436,6 @@ namespace SaphirCloudBox.Services.Services
             fileStoragePermission.EndDate = DateTime.Now;
 
             await fileStorageRepository.Update(fileStorage);
-        }
-
-        private async Task<Boolean> IsAvailableToChange(FileStorage fileStorage, int userId, int clientId)
-        {
-            var fileStorageRepository = DataContextManager.CreateRepository<IFileStorageRepository>();
-            var childFileStorages = await fileStorageRepository.GetAllByParentId(fileStorage.Id);
-            return await _permissionHelper.IsAvailableToChange(fileStorage, childFileStorages, userId, clientId);
         }
     }
 }

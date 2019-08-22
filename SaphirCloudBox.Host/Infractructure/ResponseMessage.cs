@@ -16,7 +16,6 @@ namespace SaphirCloudBox.Host.Infractructure
         ADD_ERROR,
         NOT_FOUNT_DEPENDENCY_OBJECT,
         EXIST_DEPENDENCY_ERROR,
-        NOT_FOUND_USER,
-        ADD_PERMISSION_ERROR
+        NOT_FOUND_USER
     }
 }

@@ -287,9 +287,14 @@ namespace SaphirCloudBox.Host.Controllers
         }
 
         [HttpPost]
-        [Route("add-permission")]
+        [Route("add/permission")]
         public async Task<ActionResult> AddPermission([FromBody]AddPermissionDto permissionDto)
         {
+            if (!IsAvailableOperation())
+            {
+                return BadRequest();
+            }
+
             try
             {
                 await _fileStorageService.AddPermission(permissionDto, UserId, ClientId);
@@ -299,7 +304,7 @@ namespace SaphirCloudBox.Host.Controllers
             catch (AddException)
             {
                 await AddLog(Enums.LogType.NoAccess, LogMessage.CreateUnavailablePermissionMessage(UserId, LogMessage.CreateVerb, permissionDto.RecipientEmail));
-                return StatusCode((int)HttpStatusCode.Forbidden, ResponseMessage.ADD_PERMISSION_ERROR.ToString());
+                return StatusCode((int)HttpStatusCode.Forbidden, ResponseMessage.ADD_ERROR.ToString());
             }
             catch (NotFoundException)
             {
@@ -314,7 +319,7 @@ namespace SaphirCloudBox.Host.Controllers
         }
 
         [HttpPost]
-        [Route("update-permission")]
+        [Route("update/permission")]
         public async Task<ActionResult> UpdatePermission([FromBody]UpdatePermissionDto permissionDto)
         {
             try
@@ -326,7 +331,7 @@ namespace SaphirCloudBox.Host.Controllers
             catch (UpdateException)
             {
                 await AddLog(Enums.LogType.NoAccess, LogMessage.CreateUnavailablePermissionMessage(UserId, LogMessage.CreateVerb, permissionDto.RecipientEmail));
-                return StatusCode((int)HttpStatusCode.Forbidden, ResponseMessage.ADD_PERMISSION_ERROR.ToString());
+                return StatusCode((int)HttpStatusCode.Forbidden, ResponseMessage.UPDATE_ERROR.ToString());
             }
             catch (NotFoundException)
             {
@@ -341,7 +346,7 @@ namespace SaphirCloudBox.Host.Controllers
         }
 
         [HttpPost]
-        [Route("remove-permission")]
+        [Route("remove/permission")]
         public async Task<ActionResult> RemovePermission([FromBody]RemovePermissionDto permissionDto)
         {
             try
@@ -353,7 +358,7 @@ namespace SaphirCloudBox.Host.Controllers
             catch (RemoveException)
             {
                 await AddLog(Enums.LogType.NoAccess, LogMessage.CreateUnavailablePermissionMessage(UserId, LogMessage.CreateVerb, permissionDto.RecipientEmail));
-                return StatusCode((int)HttpStatusCode.Forbidden, ResponseMessage.ADD_PERMISSION_ERROR.ToString());
+                return StatusCode((int)HttpStatusCode.Forbidden, ResponseMessage.REMOVE_ERROR.ToString());
             }
             catch (NotFoundException)
             {

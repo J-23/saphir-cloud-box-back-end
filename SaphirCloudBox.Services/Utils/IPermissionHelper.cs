@@ -8,8 +8,6 @@ namespace SaphirCloudBox.Services.Utils
 {
     public interface IPermissionHelper
     {
-        Task<bool> IsAvailableToChange(FileStorage fileStorage, IEnumerable<FileStorage> childFileStorages, int userId, int clientId);
-
         Task<(int? OwnerId, int? ClientId)> GetOwners(FileStorage parentFileStorage, int userId, int userClientId);
     }
 }
