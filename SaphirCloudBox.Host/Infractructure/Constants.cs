@@ -53,18 +53,26 @@ Sie haben sich auf unserer Webseite {1} registriert. Um Ihre Registrierung abzus
     public class LogMessage
     {
         public const string NotFoundMessage = @"{0} with Id = {1} not found";
+        public const string NotFoundByEmailMeesage = @"{0} with Email = {1} not found";
         public const string NotFoundParentMessage = @"{0} with Id = {1} not found for {2} with Name = {3}";
         public const string SuccessActionMessage = @"{0} with Name = {1} was {2} successfully by user = {3}";
         public const string SuccessActionByIdMessage = @"{0} with Id = {1} was {2} successfully by user = {3}";
         public const string FoundSameObjectMessage = @"{0} with Name = {1} already exists";
         public const string NoAccessMessage = @"{0} with Id = {1} is unavailable for user with id = {2}";
+        public const string PermissionMessage = @"Permission for file storage with id = {0} was {1} successfully by user with id = {2}";
+        public const string UnavailablePermissionMessage = @"User with id = {0} can't {1} permission for user with email = {2}";
 
         public const string FileEntityName = "File";
         public const string FolderEntityName = "Folder";
+        public const string UserEntityName = "User";
 
         public const string CreateAction = "created";
         public const string UpdateAction = "updated";
         public const string RemoveAction = "removed";
+
+        public const string CreateVerb = "create";
+        public const string UpdateVerb = "update";
+        public const string RemoveVerb = "remove";
 
         public static string CreateSuccessByNameMessage(string entityName, string name, string action, int userId)
         {
@@ -76,6 +84,11 @@ Sie haben sich auf unserer Webseite {1} registriert. Um Ihre Registrierung abzus
         {
             var result = String.Format(NotFoundMessage, entityName, id);
             return result;
+        }
+
+        public static string CreateNotFoundByEmailMessage(string entityName, string email)
+        {
+            return String.Format(NotFoundByEmailMeesage, entityName, email);
         }
 
         public static string CreateNotFoundParentMessage(string parentEntityName, int parentId, string entityName, string name)
@@ -100,6 +113,16 @@ Sie haben sich auf unserer Webseite {1} registriert. Um Ihre Registrierung abzus
         {
             var result = String.Format(NoAccessMessage, entityName, id, userId);
             return result;
+        }
+
+        public static string CreatePermissionMessage(int fileStorageId, string action, int userId)
+        {
+            return String.Format(PermissionMessage, fileStorageId, action, userId);
+        }
+
+        public static string CreateUnavailablePermissionMessage(int senderId, string actionVerb, string recipientEmail)
+        {
+            return string.Format(UnavailablePermissionMessage, senderId, actionVerb, recipientEmail);
         }
     }
 }

@@ -5,6 +5,7 @@ using SaphirCloudBox.Services.Contracts.Mappers;
 using SaphirCloudBox.Services.Contracts.Services;
 using SaphirCloudBox.Services.Mappers;
 using SaphirCloudBox.Services.Services;
+using SaphirCloudBox.Services.Utils;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -27,12 +28,14 @@ namespace SaphirCloudBox.Services
             container.RegisterType<IRoleService, RoleService>(new TLifetime());
             container.RegisterType<ILogService, LogService>(new TLifetime());
             container.RegisterType<IFileStorageService, FileStorageService>(new TLifetime());
+            container.RegisterType<ISharedFileService, SharedFileService>(new TLifetime());
 
             container.RegisterType<IUserMapper, UserMapper>(new TLifetime());
             container.RegisterType<IClientMapper, ClientMapper>(new TLifetime());
             container.RegisterType<IDepartmentMapper, DepartmentMapper>(new TLifetime());
             container.RegisterType<IRoleMapper, RoleMapper>(new TLifetime());
             container.RegisterType<IFileStorageMapper, FileStorageMapper>(new TLifetime());
+            container.RegisterType<ISharedFileMapper, SharedFileMapper>(new TLifetime());
 
             var configuration = container.Resolve<IConfiguration>();
             var configurationSection = configuration.GetSection("BlobSettings");
@@ -40,6 +43,8 @@ namespace SaphirCloudBox.Services
 
             var blobSettings = container.Resolve<BlobSettings>();
             container.RegisterType<AzureBlobClient>(new TLifetime(), new InjectionConstructor(blobSettings.ConnectionString));
+
+            container.RegisterType<IPermissionHelper, PermissionHelper>();
         }
     }
 }

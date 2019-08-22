@@ -19,7 +19,7 @@ namespace SaphirCloudBox.Data.Mappings
 
             builder.HasOne(x => x.ParentFileStorage).WithMany().HasForeignKey(x => x.ParentFileStorageId);
 
-            builder.HasMany(x => x.FileStorageAccessUsers).WithOne().HasForeignKey(x => x.FileStorageId);
+            builder.HasMany(x => x.Permissions).WithOne(x => x.FileStorage).HasForeignKey(x => x.FileStorageId);
 
             builder.HasOne(x => x.CreateBy).WithMany().HasForeignKey(x => x.CreateById);
 

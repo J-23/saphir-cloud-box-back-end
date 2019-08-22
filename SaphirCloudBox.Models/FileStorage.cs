@@ -37,7 +37,7 @@ namespace SaphirCloudBox.Models
 
         public virtual User UpdateBy { get; set; }
 
-        public virtual IEnumerable<FileStorageAccessUser> FileStorageAccessUsers { get; set; }
+        public virtual ICollection<FileStoragePermission> Permissions { get; set; }
 
         public virtual ICollection<File> Files { get; set; }
     }

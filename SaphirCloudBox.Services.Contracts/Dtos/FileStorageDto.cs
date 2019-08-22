@@ -43,15 +43,11 @@ namespace SaphirCloudBox.Services.Contracts.Dtos
 
             public FileDto File { get; set; }
 
-            public class FileDto
+            public IEnumerable<PermissionDto> Permissions { get; set; }
+
+            public class PermissionDto
             {
-                public int Id { get; set; }
-
-                public string Extension { get; set; }
-
-                public int Size { get; set; }
-
-                public string SizeType { get; set; }
+                public virtual UserDto Recipient { get; set; }
             }
         }
     }

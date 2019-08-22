@@ -95,7 +95,7 @@ namespace SaphirCloudBox.Host.Controllers
             catch (NotFoundException)
             {
                 await _logService.Add(Enums.LogType.NotFound, $"Role with Id = {roleDto.Id} not found");
-                return StatusCode((int)HttpStatusCode.Forbidden, ResponseMessage.NOT_FOUNT.ToString());
+                return StatusCode((int)HttpStatusCode.Forbidden, ResponseMessage.NOT_FOUND.ToString());
             }
             catch (FoundSameObjectException)
             {
@@ -136,7 +136,7 @@ namespace SaphirCloudBox.Host.Controllers
             catch (NotFoundException)
             {
                 await _logService.Add(Enums.LogType.NotFound, $"Role with Id = {roleDto.Id} not found");
-                return StatusCode((int)HttpStatusCode.Forbidden, ResponseMessage.NOT_FOUNT.ToString());
+                return StatusCode((int)HttpStatusCode.Forbidden, ResponseMessage.NOT_FOUND.ToString());
             }
             catch (ExistDependencyException)
             {

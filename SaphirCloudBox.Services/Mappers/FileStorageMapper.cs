@@ -4,6 +4,7 @@ using SaphirCloudBox.Enums;
 using SaphirCloudBox.Models;
 using SaphirCloudBox.Services.Contracts.Dtos;
 using SaphirCloudBox.Services.Contracts.Mappers;
+using SaphirCloudBox.Services.Utils;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -27,11 +28,14 @@ namespace SaphirCloudBox.Services.Mappers
                     .ForMember(x => x.Id, y => y.MapFrom(z => z.Id))
                     .ForMember(x => x.Name, y => y.MapFrom(z => z.Name));
 
-                cfg.CreateMap<File, FileStorageDto.StorageDto.FileDto>()
+                cfg.CreateMap<File, FileDto>()
                     .ForMember(x => x.Id, y => y.MapFrom(z => z.Id))
                     .ForMember(x => x.Extension, y => y.MapFrom(z => z.Extension))
                     .ForMember(x => x.Size, y => y.MapFrom(z => z.Size))
                     .ForMember(x => x.SizeType, y => y.MapFrom(z => z.SizeType));
+
+                cfg.CreateMap<FileStoragePermission, FileStorageDto.StorageDto.PermissionDto>()
+                    .ForMember(x => x.Recipient, y => y.MapFrom(x => x.Recipient));
 
                 cfg.CreateMap<FileStorage, FileStorageDto.StorageDto>()
                     .ForMember(x => x.Id, y => y.MapFrom(z => z.Id))
@@ -43,39 +47,13 @@ namespace SaphirCloudBox.Services.Mappers
                     .ForMember(x => x.IsDirectory, y => y.MapFrom(z => z.IsDirectory))
                     .ForMember(x => x.Owner, y => y.MapFrom(z => z.Owner))
                     .ForMember(x => x.Client, y => y.MapFrom(z => z.Client))
-                    .ForMember(x => x.StorageType, y => y.MapFrom(z => GetStorageType(z.IsDirectory, z.Files)))
-                    .ForMember(x => x.File, y => y.MapFrom(z => z.Files.FirstOrDefault(f => f.IsActive)));
+                    .ForMember(x => x.StorageType, y => y.MapFrom(z => StorageTypeUtil.GetStorageType(z.IsDirectory, z.Files)))
+                    .ForMember(x => x.File, y => y.MapFrom(z => z.Files.FirstOrDefault(f => f.IsActive)))
+                    .ForMember(x => x.Permissions, y => y.MapFrom(z => z.Permissions.Where(x => !x.EndDate.HasValue).ToList()));
             });
 
 
             return config.CreateMapper();
-        }
-
-        private string GetStorageType(bool isDirectory, IEnumerable<File> files)
-        {
-            if (isDirectory)
-            {
-                return FileStorageType.folder.ToString();
-            }
-            else
-            {
-                var file = files.FirstOrDefault(x => x.IsActive);
-
-                if (file == null)
-                {
-                    throw new ArgumentNullException(nameof(file));
-                }
-
-                foreach (var fileType in Constants.fileTypes)
-                {
-                    if (fileType.Value.Any(x => file.Extension.Equals(x)))
-                    {
-                        return fileType.Key.ToString();
-                    }
-                }
-            }
-
-            return FileStorageType.insert_drive_file.ToString();
         }
     }
 }

@@ -1,7 +1,5 @@
 ﻿using SaphirCloudBox.Services.Contracts.Dtos;
-using System;
-using System.Collections.Generic;
-using System.Text;
+using SaphirCloudBox.Services.Contracts.Dtos.Permission;
 using System.Threading.Tasks;
 
 namespace SaphirCloudBox.Services.Contracts.Services
@@ -23,5 +21,11 @@ namespace SaphirCloudBox.Services.Contracts.Services
         Task UpdateFolder(UpdateFolderDto folderDto, int userId, int clientId);
 
         Task UpdateFile(UpdateFileDto fileDto, int userId, int clientId);
+
+        Task AddPermission(AddPermissionDto permissionDto, int userId, int clientId);
+
+        Task UpdatePermission(UpdatePermissionDto permissionDto, int userId, int clientId);
+
+        Task RemovePermission(RemovePermissionDto permissionDto, int userId, int clientId);
     }
 }

@@ -9,6 +9,7 @@ using SaphirCloudBox.Enums;
 using SaphirCloudBox.Models;
 using SaphirCloudBox.Services.Contracts;
 using SaphirCloudBox.Services.Contracts.Dtos;
+using SaphirCloudBox.Services.Contracts.Dtos.Permission;
 using SaphirCloudBox.Services.Contracts.Exceptions;
 using SaphirCloudBox.Services.Contracts.Mappers;
 using SaphirCloudBox.Services.Contracts.Services;
@@ -25,23 +26,25 @@ namespace SaphirCloudBox.Services.Services
 {
     public class FileStorageService : AbstractService, IFileStorageService
     {
-        private readonly UserManager<User> _userManager;
+        private readonly IUserService _userService;
+
         private readonly BlobSettings _blobSettings;
         private readonly AzureBlobClient _azureBlobClient;
-        private readonly RoleManager<Role> _roleManager;
+
+        private readonly IPermissionHelper _permissionHelper;
 
         public FileStorageService(IUnityContainer container, 
             ISaphirCloudBoxDataContextManager dataContextManager, 
-            UserManager<User> userManager,
-            RoleManager<Role> roleManager,
             BlobSettings blobSettings,
-            AzureBlobClient azureBlobClient) 
+            AzureBlobClient azureBlobClient,
+            IPermissionHelper permissionHelper,
+            IUserService userService) 
             : base(container, dataContextManager)
         {
-            _userManager = userManager ?? throw new ArgumentNullException(nameof(userManager));
-            _roleManager = roleManager ?? throw new ArgumentNullException(nameof(roleManager));
+            _userService = userService ?? throw new ArgumentNullException(nameof(userService));
             _blobSettings = blobSettings ?? throw new ArgumentNullException(nameof(blobSettings));
             _azureBlobClient = azureBlobClient ?? throw new ArgumentNullException(nameof(azureBlobClient));
+            _permissionHelper = permissionHelper ?? throw new ArgumentNullException(nameof(permissionHelper));
         }
 
         public async Task AddFile(AddFileDto fileDto, int userId, int clientId)
@@ -66,7 +69,7 @@ namespace SaphirCloudBox.Services.Services
                 throw new FoundSameObjectException();
             }
 
-            var owners = await GetOwners(parentFileStorage, userId, clientId);
+            var owners = await _permissionHelper.GetOwners(parentFileStorage, userId, clientId);
             var sizeInfo = fileDto.Size.ToPrettySize();
             var blobName = Guid.NewGuid();
 
@@ -97,7 +100,7 @@ namespace SaphirCloudBox.Services.Services
                 }
             };
 
-            await _azureBlobClient.UploadFile(_blobSettings.ContainerName, blobName.ToString(), Base64ToByteArray(fileDto.Content));
+            await _azureBlobClient.UploadFile(_blobSettings.ContainerName, blobName.ToString(), fileDto.Content.ToByteArray());
             
             await fileStorageRepository.Add(newFileStorage);
         }
@@ -120,7 +123,7 @@ namespace SaphirCloudBox.Services.Services
                 throw new FoundSameObjectException();
             }
 
-            var owners = await GetOwners(parentFileStorage, userId, clientId);
+            var owners = await _permissionHelper.GetOwners(parentFileStorage, userId, clientId);
 
             var newFileStorage = new FileStorage
             {
@@ -200,6 +203,7 @@ namespace SaphirCloudBox.Services.Services
             }
 
             var isAvailableToChange = await IsAvailableToChange(fileStorage, userId, clientId);
+
             if (!isAvailableToChange)
             {
                 throw new RemoveException();
@@ -223,8 +227,8 @@ namespace SaphirCloudBox.Services.Services
                 throw new NotFoundException();
             }
 
-
             var isAvailableToChange = await IsAvailableToChange(fileStorage, userId, clientId);
+
             if (!isAvailableToChange)
             {
                 throw new RemoveException();
@@ -253,6 +257,7 @@ namespace SaphirCloudBox.Services.Services
             }
 
             var isAvailableToChange = await IsAvailableToChange(fileStorage, userId, clientId);
+            
             if (!isAvailableToChange)
             {
                 throw new UpdateException();
@@ -335,7 +340,7 @@ namespace SaphirCloudBox.Services.Services
 
                 fileStorage.Files.Add(newFile);
 
-                await _azureBlobClient.UploadFile(_blobSettings.ContainerName, blobName.ToString(), Base64ToByteArray(fileDto.Content));
+                await _azureBlobClient.UploadFile(_blobSettings.ContainerName, blobName.ToString(), fileDto.Content.ToByteArray());
             }
             else
             {
@@ -354,87 +359,89 @@ namespace SaphirCloudBox.Services.Services
             await fileStorageRepository.Update(fileStorage);
         }
 
-        private async Task<bool> IsAvailableToChange(FileStorage fileStorage, int userId, int clientId)
+        public async Task AddPermission(AddPermissionDto permissionDto, int userId, int clientId)
         {
-            var user = await _userManager.FindByIdAsync(userId.ToString());
-            var roleNames = await _userManager.GetRolesAsync(user);
-            var roles = await _roleManager.Roles.Where(x => roleNames.Contains(x.Name)).ToListAsync();
-
-            if (!((fileStorage.Owner == null && fileStorage.Client == null && roles.Any(x => x.RoleType == RoleType.SuperAdmin))
-                                || (fileStorage.Owner == null && fileStorage.Client != null && roles.Any(x => x.RoleType == RoleType.ClientAdmin)
-                                        && fileStorage.ClientId == clientId)
-                                || (fileStorage.Owner != null && fileStorage.Client == null && (roles.Any(x => x.RoleType == RoleType.DepartmentHead)
-                                        || roles.Any(x => x.RoleType == RoleType.Employee) || fileStorage.OwnerId == userId))))
-            {
-                return false;
-            }
-
             var fileStorageRepository = DataContextManager.CreateRepository<IFileStorageRepository>();
+            var fileStorage = await fileStorageRepository.GetById(permissionDto.FileStorageId, userId, clientId);
 
+            var isAvailableToChange = await IsAvailableToChange(fileStorage, userId, clientId);
+
+            if (!isAvailableToChange)
+            {
+                throw new AddException();
+            }
+
+            var recipient = await _userService.GetByEmail(permissionDto.RecipientEmail);
+
+            fileStorage.Permissions.Add(new FileStoragePermission
+            {
+                SenderId = userId,
+                RecipientId = recipient.Id,
+                Type = permissionDto.Type,
+                StartDate = DateTime.Now
+            });
+
+            await fileStorageRepository.Update(fileStorage);
+        }
+
+        public async Task UpdatePermission(UpdatePermissionDto permissionDto, int userId, int clientId)
+        {
+            var fileStorageRepository = DataContextManager.CreateRepository<IFileStorageRepository>();
+            var fileStorage = await fileStorageRepository.GetById(permissionDto.FileStorageId, userId, clientId);
+
+            var isAvailableToChange = await IsAvailableToChange(fileStorage, userId, clientId);
+
+            if (!isAvailableToChange)
+            {
+                throw new UpdateException();
+            }
+
+            var recipient = await _userService.GetByEmail(permissionDto.RecipientEmail);
+
+            var fileStoragePermission = fileStorage.Permissions.FirstOrDefault(x => x.RecipientId == recipient.Id);
+
+            if (fileStoragePermission == null)
+            {
+                throw new UpdateException();
+            }
+
+            fileStoragePermission.Type = permissionDto.Type;
+            fileStoragePermission.EndDate = null;
+
+            await fileStorageRepository.Update(fileStorage);
+        }
+
+        public async Task RemovePermission(RemovePermissionDto permissionDto, int userId, int clientId)
+        {
+            var fileStorageRepository = DataContextManager.CreateRepository<IFileStorageRepository>();
+            var fileStorage = await fileStorageRepository.GetById(permissionDto.FileStorageId, userId, clientId);
+
+            var isAvailableToChange = await IsAvailableToChange(fileStorage, userId, clientId);
+
+            if (!isAvailableToChange)
+            {
+                throw new RemoveException();
+            }
+
+            var recipient = await _userService.GetByEmail(permissionDto.RecipientEmail);
+
+            var fileStoragePermission = fileStorage.Permissions.FirstOrDefault(x => x.RecipientId == recipient.Id);
+
+            if (fileStoragePermission == null)
+            {
+                throw new RemoveException();
+            }
+
+            fileStoragePermission.EndDate = DateTime.Now;
+
+            await fileStorageRepository.Update(fileStorage);
+        }
+
+        private async Task<Boolean> IsAvailableToChange(FileStorage fileStorage, int userId, int clientId)
+        {
+            var fileStorageRepository = DataContextManager.CreateRepository<IFileStorageRepository>();
             var childFileStorages = await fileStorageRepository.GetAllByParentId(fileStorage.Id);
-
-            foreach (var childFileStorage in childFileStorages)
-            {
-                if (!((fileStorage.Owner == null && fileStorage.Client == null && roles.Any(x => x.RoleType == RoleType.SuperAdmin))
-                                || (fileStorage.Owner == null && fileStorage.Client != null && roles.Any(x => x.RoleType == RoleType.ClientAdmin)
-                                        && fileStorage.ClientId == clientId)
-                                || (fileStorage.Owner != null && fileStorage.Client == null && (roles.Any(x => x.RoleType == RoleType.DepartmentHead)
-                                        || roles.Any(x => x.RoleType == RoleType.Employee) || fileStorage.OwnerId == userId))))
-                {
-                    return false;
-                }
-            }
-
-            return true;
-        }
-
-        private byte[] Base64ToByteArray(string content)
-        {
-            return Convert.FromBase64String(content);
-        }
-
-        private async Task<(int? OwnerId, int? ClientId)> GetOwners(FileStorage parentFileStorage, int userId, int userClientId)
-        {
-            var user = await _userManager.FindByIdAsync(userId.ToString());
-            var roleNames = await _userManager.GetRolesAsync(user);
-            var roles = await _roleManager.Roles.Where(x => roleNames.Contains(x.Name)).ToListAsync();
-
-            int? ownerId = null;
-            int? clientId = null;
-
-            if (parentFileStorage.Id == 1)
-            {
-                foreach (var role in roles)
-                {
-                    if (role.RoleType == RoleType.SuperAdmin)
-                    {
-                        ownerId = null;
-                        clientId = null;
-                    }
-                    else if (role.RoleType == RoleType.ClientAdmin)
-                    {
-                        ownerId = null;
-                        clientId = userClientId;
-                    }
-                    else if (role.RoleType == RoleType.DepartmentHead || role.RoleType == RoleType.Employee)
-                    {
-                        ownerId = userId;
-                        clientId = null;
-                    }
-                    else
-                    {
-                        ownerId = userId;
-                        clientId = null;
-                    }
-                }
-            }
-            else
-            {
-                ownerId = parentFileStorage.OwnerId;
-                clientId = parentFileStorage.ClientId;
-            }
-
-            return (ownerId, clientId);
+            return await _permissionHelper.IsAvailableToChange(fileStorage, childFileStorages, userId, clientId);
         }
     }
 }

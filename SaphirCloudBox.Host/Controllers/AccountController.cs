@@ -60,7 +60,7 @@ namespace SaphirCloudBox.Host.Controllers
             }
             catch (NotFoundException)
             {
-                return Unauthorized(ResponseMessage.NOT_FOUNT.ToString());
+                return Unauthorized(ResponseMessage.NOT_FOUND.ToString());
             }
             catch(UnauthorizedAccessException)
             {
@@ -97,7 +97,7 @@ namespace SaphirCloudBox.Host.Controllers
             }
             catch (NotFoundException)
             {
-                return Unauthorized(ResponseMessage.NOT_FOUNT.ToString());
+                return Unauthorized(ResponseMessage.NOT_FOUND.ToString());
             }
             catch (UnauthorizedAccessException)
             {
@@ -129,7 +129,7 @@ namespace SaphirCloudBox.Host.Controllers
             }
             catch (NotFoundException)
             {
-                return Unauthorized(ResponseMessage.NOT_FOUNT.ToString());
+                return Unauthorized(ResponseMessage.NOT_FOUND.ToString());
             }
             catch (UpdateException)
             {
@@ -150,7 +150,7 @@ namespace SaphirCloudBox.Host.Controllers
             }
             catch (NotFoundException)
             {
-                return Unauthorized(ResponseMessage.NOT_FOUNT.ToString());
+                return Unauthorized(ResponseMessage.NOT_FOUND.ToString());
             }
             catch (UnauthorizedAccessException)
             {
@@ -177,7 +177,7 @@ namespace SaphirCloudBox.Host.Controllers
             }
             catch (NotFoundException)
             {
-                return Unauthorized(ResponseMessage.NOT_FOUNT.ToString());
+                return Unauthorized(ResponseMessage.NOT_FOUND.ToString());
             }
             
         }

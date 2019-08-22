@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using SaphirCloudBox.Host.Infractructure;
 using SaphirCloudBox.Services.Contracts.Dtos;
+using SaphirCloudBox.Services.Contracts.Dtos.Permission;
 using SaphirCloudBox.Services.Contracts.Exceptions;
 using SaphirCloudBox.Services.Contracts.Services;
 
@@ -45,7 +46,7 @@ namespace SaphirCloudBox.Host.Controllers
             catch (NotFoundException)
             {
                 await AddLog(Enums.LogType.NotFound, LogMessage.CreateNotFoundMessage(LogMessage.FolderEntityName, parentId));
-                return StatusCode((int)HttpStatusCode.Forbidden, ResponseMessage.NOT_FOUNT.ToString());
+                return StatusCode((int)HttpStatusCode.Forbidden, ResponseMessage.NOT_FOUND.ToString());
             }
             catch(Exception ex)
             {
@@ -77,7 +78,7 @@ namespace SaphirCloudBox.Host.Controllers
                 await AddLog(Enums.LogType.NotFound, LogMessage.CreateNotFoundParentMessage(LogMessage.FolderEntityName, folderDto.ParentId, 
                     LogMessage.FolderEntityName, folderDto.Name));
 
-                return StatusCode((int)HttpStatusCode.Forbidden, ResponseMessage.NOT_FOUNT.ToString());
+                return StatusCode((int)HttpStatusCode.Forbidden, ResponseMessage.NOT_FOUND.ToString());
             }
             catch (FoundSameObjectException)
             {
@@ -109,7 +110,7 @@ namespace SaphirCloudBox.Host.Controllers
             catch (NotFoundException)
             {
                 await AddLog(Enums.LogType.NotFound, LogMessage.CreateNotFoundMessage(LogMessage.FolderEntityName, folderDto.Id));
-                return StatusCode((int)HttpStatusCode.Forbidden, ResponseMessage.NOT_FOUNT.ToString());
+                return StatusCode((int)HttpStatusCode.Forbidden, ResponseMessage.NOT_FOUND.ToString());
             }
             catch (FoundSameObjectException)
             {
@@ -146,7 +147,7 @@ namespace SaphirCloudBox.Host.Controllers
             catch (NotFoundException)
             {
                 await AddLog(Enums.LogType.NotFound, LogMessage.CreateNotFoundMessage(LogMessage.FolderEntityName, folderDto.Id));
-                return StatusCode((int)HttpStatusCode.Forbidden, ResponseMessage.NOT_FOUNT.ToString());
+                return StatusCode((int)HttpStatusCode.Forbidden, ResponseMessage.NOT_FOUND.ToString());
             }
             catch(RemoveException)
             {
@@ -178,7 +179,7 @@ namespace SaphirCloudBox.Host.Controllers
             catch (NotFoundException)
             {
                 await AddLog(Enums.LogType.NotFound, LogMessage.CreateNotFoundParentMessage(LogMessage.FolderEntityName, fileDto.ParentId, LogMessage.FileEntityName, fileDto.Name));
-                return StatusCode((int)HttpStatusCode.Forbidden, ResponseMessage.NOT_FOUNT.ToString());
+                return StatusCode((int)HttpStatusCode.Forbidden, ResponseMessage.NOT_FOUND.ToString());
             }
             catch (FoundSameObjectException)
             {
@@ -207,7 +208,7 @@ namespace SaphirCloudBox.Host.Controllers
             catch (NotFoundException)
             {
                 await AddLog(Enums.LogType.NotFound, LogMessage.CreateNotFoundMessage(LogMessage.FileEntityName, id));
-                return StatusCode((int)HttpStatusCode.Forbidden, ResponseMessage.NOT_FOUNT.ToString());
+                return StatusCode((int)HttpStatusCode.Forbidden, ResponseMessage.NOT_FOUND.ToString());
             }
             catch (Exception ex)
             {
@@ -234,7 +235,7 @@ namespace SaphirCloudBox.Host.Controllers
             catch (NotFoundException)
             {
                 await AddLog(Enums.LogType.NotFound, LogMessage.CreateNotFoundMessage(LogMessage.FileEntityName, fileDto.Id));
-                return StatusCode((int)HttpStatusCode.Forbidden, ResponseMessage.NOT_FOUNT.ToString());
+                return StatusCode((int)HttpStatusCode.Forbidden, ResponseMessage.NOT_FOUND.ToString());
             }
             catch (UpdateException)
             {
@@ -271,12 +272,93 @@ namespace SaphirCloudBox.Host.Controllers
             catch (NotFoundException)
             {
                 await AddLog(Enums.LogType.NotFound, LogMessage.CreateNotFoundMessage(LogMessage.FileEntityName, fileDto.Id));
-                return StatusCode((int)HttpStatusCode.Forbidden, ResponseMessage.NOT_FOUNT.ToString());
+                return StatusCode((int)HttpStatusCode.Forbidden, ResponseMessage.NOT_FOUND.ToString());
             }
             catch (RemoveException)
             {
                 await AddLog(Enums.LogType.NoAccess, LogMessage.CreateNoAccessMessage(LogMessage.FileEntityName, fileDto.Id, UserId));
                 return StatusCode((int)HttpStatusCode.Forbidden, ResponseMessage.SERVER_ERROR.ToString());
+            }
+            catch (Exception ex)
+            {
+                await AddLog(Enums.LogType.Error, ex.Message);
+                return StatusCode((int)HttpStatusCode.Forbidden, ResponseMessage.SERVER_ERROR.ToString());
+            }
+        }
+
+        [HttpPost]
+        [Route("add-permission")]
+        public async Task<ActionResult> AddPermission([FromBody]AddPermissionDto permissionDto)
+        {
+            try
+            {
+                await _fileStorageService.AddPermission(permissionDto, UserId, ClientId);
+                await AddLog(Enums.LogType.Create, LogMessage.CreatePermissionMessage(permissionDto.FileStorageId, LogMessage.CreateVerb, UserId));
+                return Ok();
+            }
+            catch (AddException)
+            {
+                await AddLog(Enums.LogType.NoAccess, LogMessage.CreateUnavailablePermissionMessage(UserId, LogMessage.CreateVerb, permissionDto.RecipientEmail));
+                return StatusCode((int)HttpStatusCode.Forbidden, ResponseMessage.ADD_PERMISSION_ERROR.ToString());
+            }
+            catch (NotFoundException)
+            {
+                await AddLog(Enums.LogType.NotFound, LogMessage.CreateNotFoundByEmailMessage(LogMessage.UserEntityName, permissionDto.RecipientEmail));
+                return StatusCode((int)HttpStatusCode.Forbidden, ResponseMessage.NOT_FOUND_USER.ToString());
+            }
+            catch (Exception ex)
+            {
+                await AddLog(Enums.LogType.Error, ex.Message);
+                return StatusCode((int)HttpStatusCode.Forbidden, ResponseMessage.SERVER_ERROR.ToString());
+            }
+        }
+
+        [HttpPost]
+        [Route("update-permission")]
+        public async Task<ActionResult> UpdatePermission([FromBody]UpdatePermissionDto permissionDto)
+        {
+            try
+            {
+                await _fileStorageService.UpdatePermission(permissionDto, UserId, ClientId);
+                await AddLog(Enums.LogType.Update, LogMessage.CreatePermissionMessage(permissionDto.FileStorageId, LogMessage.UpdateVerb, UserId));
+                return Ok();
+            }
+            catch (UpdateException)
+            {
+                await AddLog(Enums.LogType.NoAccess, LogMessage.CreateUnavailablePermissionMessage(UserId, LogMessage.CreateVerb, permissionDto.RecipientEmail));
+                return StatusCode((int)HttpStatusCode.Forbidden, ResponseMessage.ADD_PERMISSION_ERROR.ToString());
+            }
+            catch (NotFoundException)
+            {
+                await AddLog(Enums.LogType.NotFound, LogMessage.CreateNotFoundByEmailMessage(LogMessage.UserEntityName, permissionDto.RecipientEmail));
+                return StatusCode((int)HttpStatusCode.Forbidden, ResponseMessage.NOT_FOUND_USER.ToString());
+            }
+            catch (Exception ex)
+            {
+                await AddLog(Enums.LogType.Error, ex.Message);
+                return StatusCode((int)HttpStatusCode.Forbidden, ResponseMessage.SERVER_ERROR.ToString());
+            }
+        }
+
+        [HttpPost]
+        [Route("remove-permission")]
+        public async Task<ActionResult> RemovePermission([FromBody]RemovePermissionDto permissionDto)
+        {
+            try
+            {
+                await _fileStorageService.RemovePermission(permissionDto, UserId, ClientId);
+                await AddLog(Enums.LogType.Remove, LogMessage.CreatePermissionMessage(permissionDto.FileStorageId, LogMessage.UpdateVerb, UserId));
+                return Ok();
+            }
+            catch (RemoveException)
+            {
+                await AddLog(Enums.LogType.NoAccess, LogMessage.CreateUnavailablePermissionMessage(UserId, LogMessage.CreateVerb, permissionDto.RecipientEmail));
+                return StatusCode((int)HttpStatusCode.Forbidden, ResponseMessage.ADD_PERMISSION_ERROR.ToString());
+            }
+            catch (NotFoundException)
+            {
+                await AddLog(Enums.LogType.NotFound, LogMessage.CreateNotFoundByEmailMessage(LogMessage.UserEntityName, permissionDto.RecipientEmail));
+                return StatusCode((int)HttpStatusCode.Forbidden, ResponseMessage.NOT_FOUND_USER.ToString());
             }
             catch (Exception ex)
             {

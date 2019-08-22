@@ -40,7 +40,7 @@ namespace SaphirCloudBox.Data
             builder.ApplyConfiguration(new LogMap());
 
             builder.ApplyConfiguration(new FileStorageMap());
-            builder.ApplyConfiguration(new FileStorageAccessUserMap());
+            builder.ApplyConfiguration(new FileStoragePermissionMap());
 
             builder.ApplyConfiguration(new FileMap());
             builder.ApplyConfiguration(new AzureBlobStorageMap());

@@ -102,7 +102,7 @@ namespace SaphirCloudBox.Host.Controllers
             catch (NotFoundException)
             {
                 await _logService.Add(Enums.LogType.NotFound, $"User with Id = {userDto.Id} not found");
-                return StatusCode((int)HttpStatusCode.Forbidden, ResponseMessage.NOT_FOUNT.ToString());
+                return StatusCode((int)HttpStatusCode.Forbidden, ResponseMessage.NOT_FOUND.ToString());
             }
             catch (NotFoundDependencyObjectException)
             {
@@ -148,7 +148,7 @@ namespace SaphirCloudBox.Host.Controllers
             catch (NotFoundException)
             {
                 await _logService.Add(Enums.LogType.NotFound, $"User with Id = {userDto.Id} not found");
-                return StatusCode((int)HttpStatusCode.Forbidden, ResponseMessage.NOT_FOUNT.ToString());
+                return StatusCode((int)HttpStatusCode.Forbidden, ResponseMessage.NOT_FOUND.ToString());
             }
             catch (RemoveException)
             {
