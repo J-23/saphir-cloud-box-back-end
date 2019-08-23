@@ -34,7 +34,8 @@ namespace SaphirCloudBox.Data.Repositories
             return await Context.Set<FileStorage>()
                 .FirstOrDefaultAsync(x => x.Id == id && ((!x.ClientId.HasValue && !x.OwnerId.HasValue)
                     || (x.ClientId.HasValue && !x.OwnerId.HasValue && x.ClientId.Value == clientId)
-                    || (!x.ClientId.HasValue && x.OwnerId.HasValue && x.OwnerId.Value == userId)));
+                    || (!x.ClientId.HasValue && x.OwnerId.HasValue && x.OwnerId.Value == userId)
+                    || (!x.OwnerId.HasValue && x.Permissions.Any(y => y.RecipientId == userId && !y.EndDate.HasValue))));
         }
 
         public async Task<IEnumerable<FileStorage>> GetByParentId(int parentId, int userId, int clientId)
@@ -43,7 +44,8 @@ namespace SaphirCloudBox.Data.Repositories
                 .Where(x => x.ParentFileStorageId == parentId 
                 && ((!x.ClientId.HasValue && !x.OwnerId.HasValue)
                     || (x.ClientId.HasValue && !x.OwnerId.HasValue && x.ClientId.Value == clientId)
-                    || (!x.ClientId.HasValue && x.OwnerId.HasValue && x.OwnerId.Value == userId)))
+                    || (!x.ClientId.HasValue && x.OwnerId.HasValue && x.OwnerId.Value == userId)
+                    || (!x.OwnerId.HasValue && x.Permissions.Any(y => y.RecipientId == userId && !y.EndDate.HasValue))))
                 .OrderBy(ord => !ord.IsDirectory)
                 .ThenBy(ord => ord.Name)
                 .ToListAsync();

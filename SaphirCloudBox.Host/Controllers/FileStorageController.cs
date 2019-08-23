@@ -322,6 +322,11 @@ namespace SaphirCloudBox.Host.Controllers
         [Route("update/permission")]
         public async Task<ActionResult> UpdatePermission([FromBody]UpdatePermissionDto permissionDto)
         {
+            if (!IsAvailableOperation())
+            {
+                return BadRequest();
+            }
+
             try
             {
                 await _fileStorageService.UpdatePermission(permissionDto, UserId, ClientId);
@@ -349,6 +354,11 @@ namespace SaphirCloudBox.Host.Controllers
         [Route("remove/permission")]
         public async Task<ActionResult> RemovePermission([FromBody]RemovePermissionDto permissionDto)
         {
+            if (!IsAvailableOperation())
+            {
+                return BadRequest();
+            }
+
             try
             {
                 await _fileStorageService.RemovePermission(permissionDto, UserId, ClientId);
