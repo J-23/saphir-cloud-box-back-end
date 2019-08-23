@@ -27,6 +27,12 @@ namespace SaphirCloudBox.Host.Infractructure
 Sie haben sich auf unserer Webseite {1} registriert. Um Ihre Registrierung abzuschließen, klicken Sie zur Bestätigung auf folgenden Link: {2}";
 
             public const string ResetPasswordUrl = @"/auth/reset-password?code={0}";
+
+            public const string TechnicalSupportMessage = @"Message from user {0} ({1}):
+Theme: {2}
+Message:
+{3}";
+            public const string TechnicalSupportSubject = @"Message from user {0}";
         }
 
         
@@ -53,6 +59,7 @@ Sie haben sich auf unserer Webseite {1} registriert. Um Ihre Registrierung abzus
     public class LogMessage
     {
         public const string NotFoundMessage = @"{0} with Id = {1} not found";
+        public const string NotFoundByEmailMessage = @"{0} with Email = {1} not found";
         public const string NotFoundParentMessage = @"{0} with Id = {1} not found for {2} with Name = {3}";
         public const string SuccessActionMessage = @"{0} with Name = {1} was {2} successfully by user = {3}";
         public const string SuccessActionByIdMessage = @"{0} with Id = {1} was {2} successfully by user = {3}";
@@ -61,6 +68,7 @@ Sie haben sich auf unserer Webseite {1} registriert. Um Ihre Registrierung abzus
 
         public const string FileEntityName = "File";
         public const string FolderEntityName = "Folder";
+        public const string UserEntityName = "User";
 
         public const string CreateAction = "created";
         public const string UpdateAction = "updated";
@@ -78,6 +86,10 @@ Sie haben sich auf unserer Webseite {1} registriert. Um Ihre Registrierung abzus
             return result;
         }
 
+        public static string CreateNotFoundByEmailMessage(string entityName, string email)
+        {
+            return String.Format(NotFoundByEmailMessage, entityName, email);
+        }
         public static string CreateNotFoundParentMessage(string parentEntityName, int parentId, string entityName, string name)
         {
             var result = String.Format(NotFoundParentMessage, parentEntityName, parentId, entityName, name);

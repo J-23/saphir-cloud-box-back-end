@@ -118,7 +118,8 @@ namespace SaphirCloudBox.Host.Controllers
                 var resetPasswordLink = _appSettings.FrontEndUrl + String.Format(Constants.NotificationMessages.ResetPasswordUrl, code);
                 var message = String.Format(Constants.NotificationMessages.ForgotPasswordMessage, user.UserName, _appSettings.FrontEndUrl, resetPasswordLink);
 
-                await _emailSender.Send(new MailAddress(user.Email, user.UserName), Constants.NotificationMessages.ForgotPasswordSubject, message);
+                await _emailSender.Send(_appSettings.SmtpHost, _appSettings.SmtpPort, _appSettings.SenderEmail, _appSettings.SenderPassword, 
+                    new MailAddress(user.Email, user.UserName), Constants.NotificationMessages.ForgotPasswordSubject, message);
 
                 var response = new
                 {

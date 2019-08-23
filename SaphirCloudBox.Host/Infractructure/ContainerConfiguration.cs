@@ -23,6 +23,7 @@ namespace SaphirCloudBox.Host.Infractructure
             container.RegisterType<DepartmentController>();
             container.RegisterType<RoleController>();
             container.RegisterType<UserController>();
+            container.RegisterType<FeedbackController>();
         }
     }
 }

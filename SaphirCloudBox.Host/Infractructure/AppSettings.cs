@@ -20,5 +20,13 @@ namespace SaphirCloudBox.Host.Infractructure
         public string CommonPassword { get; set; }
 
         public string CommonRole { get; set; }
+
+        public string TechSupportEmail { get; set; }
+
+        public string TechSupportPassword { get; set; }
+
+        public int TechSupportPort { get; set; }
+
+        public string TechSupportHost { get; set; }
     }
 }
