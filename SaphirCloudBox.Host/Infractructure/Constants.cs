@@ -27,6 +27,12 @@ namespace SaphirCloudBox.Host.Infractructure
 Sie haben sich auf unserer Webseite {1} registriert. Um Ihre Registrierung abzuschließen, klicken Sie zur Bestätigung auf folgenden Link: {2}";
 
             public const string ResetPasswordUrl = @"/auth/reset-password?code={0}";
+
+            public const string TechnicalSupportMessage = @"Message from user {0} ({1}):
+Theme: {2}
+Message:
+{3}";
+            public const string TechnicalSupportSubject = @"Message from user {0}";
         }
 
         

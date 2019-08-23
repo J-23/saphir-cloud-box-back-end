@@ -1,6 +1,7 @@
 ﻿using SaphirCloudBox.Host.Infractructure;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Mail;
@@ -10,31 +11,42 @@ namespace SaphirCloudBox.Host.Helpers
 {
     public class EmailSender : IEmailSender
     {
-        private readonly AppSettings _appSettings;
-
-        public EmailSender(AppSettings appSettings)
+        public EmailSender()
         {
-            _appSettings = appSettings ?? throw new ArgumentNullException(nameof(appSettings));
         }
 
-        public async Task Send(MailAddress recipient, string subject, string message)
+        public async Task Send(string senderHost, int senderPort, string senderEmail, string senderPassword, 
+            MailAddress recipient, string subject, string message, string fileName = "", string fileContent = "")
         {
             using (var smtpClient = new SmtpClient())
             {
-                smtpClient.Host = _appSettings.SmtpHost;
-                smtpClient.Port = _appSettings.SmtpPort;
+                smtpClient.Host = senderHost;
+                smtpClient.Port = senderPort;
                 smtpClient.EnableSsl = true;
                 smtpClient.UseDefaultCredentials = false;
-                smtpClient.Credentials = new NetworkCredential(_appSettings.SenderEmail, _appSettings.SenderPassword);
+                smtpClient.Credentials = new NetworkCredential(senderEmail, senderPassword);
 
                 using (var msg = new MailMessage())
                 {
-                    msg.From = new MailAddress(_appSettings.SenderEmail);
+                    msg.From = new MailAddress(senderEmail);
                     msg.To.Add(recipient);
                     msg.Subject = subject;
                     msg.Body = message;
 
-                    await smtpClient.SendMailAsync(msg);
+                    if (!String.IsNullOrEmpty(fileName) && !String.IsNullOrEmpty(fileContent))
+                    {
+                        var bytes = Convert.FromBase64String(fileContent);
+
+                        using (var stream = new MemoryStream(bytes))
+                        {
+                            msg.Attachments.Add(new Attachment(stream, fileName));
+                            await smtpClient.SendMailAsync(msg);
+                        }
+                    }
+                    else
+                    {
+                        await smtpClient.SendMailAsync(msg);
+                    }
                 }
             }
         }

@@ -8,6 +8,7 @@ namespace SaphirCloudBox.Host.Helpers
 {
     public interface IEmailSender
     {
-        Task Send(MailAddress recipient, string subject, string message);
+        Task Send(string senderHost, int senderPort, string senderEmail, string senderPassword, 
+            MailAddress recipient, string subject, string message, string fileName = "", string fileContent = "");
     }
 }
