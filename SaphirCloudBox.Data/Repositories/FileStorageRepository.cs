@@ -31,19 +31,48 @@ namespace SaphirCloudBox.Data.Repositories
 
         public async Task<FileStorage> GetById(int id, int userId, int clientId)
         {
+            if (id == 1)
+            {
+                return await Context.Set<FileStorage>()
+                    .FirstOrDefaultAsync(x => x.Id == 1 && ((!x.ClientId.HasValue && !x.OwnerId.HasValue)
+                        || (x.ClientId.HasValue && !x.OwnerId.HasValue && x.ClientId.Value == clientId)
+                        || (!x.ClientId.HasValue && x.OwnerId.HasValue && x.OwnerId.Value == userId)));
+            }
+
+            var user = await _userManager.FindByIdAsync(userId.ToString());
+            var roleNames = await _userManager.GetRolesAsync(user);
+            var roles = await _roleManager.Roles.Where(x => roleNames.Contains(x.Name)).ToListAsync();
+
             return await Context.Set<FileStorage>()
-                .FirstOrDefaultAsync(x => x.Id == id && ((!x.ClientId.HasValue && !x.OwnerId.HasValue)
-                    || (x.ClientId.HasValue && !x.OwnerId.HasValue && x.ClientId.Value == clientId)
-                    || (!x.ClientId.HasValue && x.OwnerId.HasValue && x.OwnerId.Value == userId)
+                .FirstOrDefaultAsync(x => x.Id == id && ((!x.ClientId.HasValue && !x.OwnerId.HasValue && (roles.Any(y => y.RoleType == RoleType.SuperAdmin) || x.ParentFileStorageId.HasValue && x.ParentFileStorageId.Value == 1))
+                    || (x.ClientId.HasValue && !x.OwnerId.HasValue && x.ClientId.Value == clientId && (roles.Any(y => y.RoleType == RoleType.ClientAdmin) || x.ParentFileStorageId.HasValue && x.ParentFileStorageId.Value == 1))
+                    || (!x.ClientId.HasValue && x.OwnerId.HasValue && (x.OwnerId.Value == userId || x.ParentFileStorageId.HasValue && x.ParentFileStorageId.Value == 1))
                     || (!x.OwnerId.HasValue && x.Permissions.Any(y => y.RecipientId == userId && !y.EndDate.HasValue))));
         }
 
         public async Task<IEnumerable<FileStorage>> GetByParentId(int parentId, int userId, int clientId)
         {
+            if (parentId == 1)
+            {
+                return await Context.Set<FileStorage>()
+                    .Where(x => x.ParentFileStorageId == 1
+                            && ((!x.ClientId.HasValue && !x.OwnerId.HasValue)
+                                || (x.ClientId.HasValue && !x.OwnerId.HasValue && x.ClientId.Value == clientId)
+                                || (!x.ClientId.HasValue && x.OwnerId.HasValue && x.OwnerId.Value == userId)
+                                || (!x.OwnerId.HasValue && x.Permissions.Any(y => y.RecipientId == userId && !y.EndDate.HasValue))))
+                    .OrderBy(ord => !ord.IsDirectory)
+                    .ThenBy(ord => ord.Name)
+                    .ToListAsync();
+            }
+
+            var user = await _userManager.FindByIdAsync(userId.ToString());
+            var roleNames = await _userManager.GetRolesAsync(user);
+            var roles = await _roleManager.Roles.Where(x => roleNames.Contains(x.Name)).ToListAsync();
+
             return await Context.Set<FileStorage>()
                 .Where(x => x.ParentFileStorageId == parentId 
-                && ((!x.ClientId.HasValue && !x.OwnerId.HasValue)
-                    || (x.ClientId.HasValue && !x.OwnerId.HasValue && x.ClientId.Value == clientId)
+                && ((!x.ClientId.HasValue && !x.OwnerId.HasValue && roles.Any(y => y.RoleType == RoleType.SuperAdmin))
+                    || (x.ClientId.HasValue && !x.OwnerId.HasValue && x.ClientId.Value == clientId && roles.Any(y => y.RoleType == RoleType.ClientAdmin))
                     || (!x.ClientId.HasValue && x.OwnerId.HasValue && x.OwnerId.Value == userId)
                     || (!x.OwnerId.HasValue && x.Permissions.Any(y => y.RecipientId == userId && !y.EndDate.HasValue))))
                 .OrderBy(ord => !ord.IsDirectory)

@@ -62,7 +62,7 @@ namespace SaphirCloudBox.Host.Controllers
             catch (NotFoundException)
             {
                 await AddLog(Enums.LogType.NotFound, LogMessage.CreateNotFoundByEmailMessage(LogMessage.UserEntityName, model.UserEmail));
-                return StatusCode((int)HttpStatusCode.Forbidden, ResponseMessage.NOT_FOUNT.ToString());
+                return StatusCode((int)HttpStatusCode.Forbidden, ResponseMessage.NOT_FOUND.ToString());
             }
             catch(Exception ex)
             {
