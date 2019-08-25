@@ -87,7 +87,7 @@ namespace SaphirCloudBox.Data.Migrations
             migrationBuilder.InsertData(
                 table: "FileStorage",
                 columns: new[] { "Id", "BlobName", "ClientId", "CreateById", "CreateDate", "IsDirectory", "Name", "OwnerId", "ParentFileStorageId", "UpdateById", "UpdateDate" },
-                values: new object[] { 1, null, null, 3, new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), true, "root", null, null, null, null });
+                values: new object[] { 1, null, null, 1, new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), true, "root", null, null, null, null });
 
             migrationBuilder.CreateIndex(
                 name: "IX_FileStorage_ClientId",

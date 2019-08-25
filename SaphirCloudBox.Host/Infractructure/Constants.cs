@@ -67,6 +67,7 @@ Message:
         public const string NoAccessMessage = @"{0} with Id = {1} is unavailable for user with id = {2}";
         public const string PermissionMessage = @"Permission for file storage with id = {0} was {1} successfully by user with id = {2}";
         public const string UnavailablePermissionMessage = @"User with id = {0} can't {1} permission for user with email = {2}";
+        public const string PermissionExistMessage = @"User with email = {0} has permission on file storage with id = {1}";
 
         public const string FileEntityName = "File";
         public const string FolderEntityName = "Folder";
@@ -129,6 +130,11 @@ Message:
         public static string CreateUnavailablePermissionMessage(int senderId, string actionVerb, string recipientEmail)
         {
             return string.Format(UnavailablePermissionMessage, senderId, actionVerb, recipientEmail);
+        }
+
+        public static string CreatePermissionExistMessage(string email, int fileStorageId)
+        {
+            return string.Format(PermissionExistMessage, email, fileStorageId);
         }
     }
 }

@@ -311,6 +311,11 @@ namespace SaphirCloudBox.Host.Controllers
                 await AddLog(Enums.LogType.NotFound, LogMessage.CreateNotFoundByEmailMessage(LogMessage.UserEntityName, permissionDto.RecipientEmail));
                 return StatusCode((int)HttpStatusCode.Forbidden, ResponseMessage.NOT_FOUND_USER.ToString());
             }
+            catch(FoundSameObjectException)
+            {
+                await AddLog(Enums.LogType.SameObject, LogMessage.CreatePermissionExistMessage(permissionDto.RecipientEmail, permissionDto.FileStorageId));
+                return StatusCode((int)HttpStatusCode.Forbidden, ResponseMessage.SAME_NAME.ToString());
+            }
             catch (Exception ex)
             {
                 await AddLog(Enums.LogType.Error, ex.Message);
@@ -380,6 +385,19 @@ namespace SaphirCloudBox.Host.Controllers
                 await AddLog(Enums.LogType.Error, ex.Message);
                 return StatusCode((int)HttpStatusCode.Forbidden, ResponseMessage.SERVER_ERROR.ToString());
             }
+        }
+
+        [HttpGet]
+        [Route("shared-with-me")]
+        public async Task<ActionResult> GetSharedFiles()
+        {
+            if (!IsAvailableOperation())
+            {
+                return BadRequest();
+            }
+
+            var storages = await _fileStorageService.GetSharedFiles(UserId);
+            return Ok(storages);
         }
     }
 }

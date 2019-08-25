@@ -1,5 +1,6 @@
 ﻿using SaphirCloudBox.Services.Contracts.Dtos;
 using SaphirCloudBox.Services.Contracts.Dtos.Permission;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace SaphirCloudBox.Services.Contracts.Services
@@ -27,5 +28,7 @@ namespace SaphirCloudBox.Services.Contracts.Services
         Task UpdatePermission(UpdatePermissionDto permissionDto, int userId, int clientId);
 
         Task RemovePermission(RemovePermissionDto permissionDto, int userId, int clientId);
+
+        Task<IEnumerable<FileStorageDto.StorageDto>> GetSharedFiles(int userId);
     }
 }

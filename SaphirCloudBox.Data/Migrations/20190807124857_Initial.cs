@@ -219,6 +219,33 @@ namespace SaphirCloudBox.Data.Migrations
                     { 4, "9968fb06-bba6-45f0-b0f9-d45eb3cdc767", "EMPLOYEE", "employee" }
                 });
 
+            migrationBuilder.InsertData(
+                table: "Client",
+                columns: new[] { "Id", "Name", "CreateDate", "UpdateDate" },
+                values: new object[,]
+                {
+                    { 1, "Admin client", DateTime.Now, null }
+                });
+
+            migrationBuilder.InsertData(
+                table: "AspNetUsers",
+                columns: new[] { "Id", "UserName", "NormalizedUserName", "Email", "NormalizedEmail", "EmailConfirmed",
+                                "PasswordHash", "SecurityStamp", "ConcurrencyStamp", "PhoneNumber", "PhoneNumberConfirmed",
+                                "TwoFactorEnabled", "LockoutEnd", "LockoutEnabled", "AccessFailedCount", "ClientId",
+                                "DepartmentId", "CreateDate", "UpdateDate" },
+                values: new object[,]
+                {
+                    { 1, "Admin", "admin", "", "", false, null, null, null, null, false, false, null, false, 0, 1, null, DateTime.Now, null }
+                });
+
+            migrationBuilder.InsertData(
+                table: "AspNetUserRoles",
+                columns: new[] { "UserId", "RoleId" },
+                values: new object[,]
+                {
+                    { 1, 1 }
+                });
+
             migrationBuilder.CreateIndex(
                 name: "IX_AspNetRoleClaims_RoleId",
                 table: "AspNetRoleClaims",

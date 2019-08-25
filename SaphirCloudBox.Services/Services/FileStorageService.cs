@@ -162,6 +162,8 @@ namespace SaphirCloudBox.Services.Services
                 ParentStorageId = parentFileStorage.ParentFileStorageId,
                 Client = MapperFactory.CreateMapper<IClientMapper>().MapToModel(parentFileStorage.Client),
                 Owner = MapperFactory.CreateMapper<IUserMapper>().MapToModel(parentFileStorage.Owner),
+                Permissions = MapperFactory.CreateMapper<IPermissionMapper>()
+                    .MapCollectionToModel(parentFileStorage.Permissions),
                 Storages = storages
             };
         }
@@ -374,6 +376,11 @@ namespace SaphirCloudBox.Services.Services
 
             var recipient = await _userService.GetByEmail(permissionDto.RecipientEmail);
 
+            if (recipient.Id == userId && fileStorage.Permissions.Any(x => x.RecipientId == userId))
+            {
+                throw new FoundSameObjectException();
+            }
+
             fileStorage.Permissions.Add(new FileStoragePermission
             {
                 SenderId = userId,
@@ -436,6 +443,15 @@ namespace SaphirCloudBox.Services.Services
             fileStoragePermission.EndDate = DateTime.Now;
 
             await fileStorageRepository.Update(fileStorage);
+        }
+
+        public async Task<IEnumerable<FileStorageDto.StorageDto>> GetSharedFiles(int userId)
+        {
+            var fileStorageRepository = DataContextManager.CreateRepository<IFileStorageRepository>();
+
+            var fileStorages = await fileStorageRepository.GetSharedFiles(userId);
+
+            return MapperFactory.CreateMapper<IFileStorageMapper>().MapCollectionToModel(fileStorages);
         }
     }
 }

@@ -47,7 +47,7 @@ namespace SaphirCloudBox.Data.Repositories
                 .FirstOrDefaultAsync(x => x.Id == id && ((!x.ClientId.HasValue && !x.OwnerId.HasValue && (roles.Any(y => y.RoleType == RoleType.SuperAdmin) || x.ParentFileStorageId.HasValue && x.ParentFileStorageId.Value == 1))
                     || (x.ClientId.HasValue && !x.OwnerId.HasValue && x.ClientId.Value == clientId && (roles.Any(y => y.RoleType == RoleType.ClientAdmin) || x.ParentFileStorageId.HasValue && x.ParentFileStorageId.Value == 1))
                     || (!x.ClientId.HasValue && x.OwnerId.HasValue && (x.OwnerId.Value == userId || x.ParentFileStorageId.HasValue && x.ParentFileStorageId.Value == 1))
-                    || (!x.OwnerId.HasValue && x.Permissions.Any(y => y.RecipientId == userId && !y.EndDate.HasValue))));
+                    || (x.Permissions.Any(y => y.RecipientId == userId && !y.EndDate.HasValue))));
         }
 
         public async Task<IEnumerable<FileStorage>> GetByParentId(int parentId, int userId, int clientId)
@@ -74,7 +74,7 @@ namespace SaphirCloudBox.Data.Repositories
                 && ((!x.ClientId.HasValue && !x.OwnerId.HasValue && roles.Any(y => y.RoleType == RoleType.SuperAdmin))
                     || (x.ClientId.HasValue && !x.OwnerId.HasValue && x.ClientId.Value == clientId && roles.Any(y => y.RoleType == RoleType.ClientAdmin))
                     || (!x.ClientId.HasValue && x.OwnerId.HasValue && x.OwnerId.Value == userId)
-                    || (!x.OwnerId.HasValue && x.Permissions.Any(y => y.RecipientId == userId && !y.EndDate.HasValue))))
+                    || (x.Permissions.Any(y => y.RecipientId == userId && !y.EndDate.HasValue))))
                 .OrderBy(ord => !ord.IsDirectory)
                 .ThenBy(ord => ord.Name)
                 .ToListAsync();
@@ -137,7 +137,8 @@ namespace SaphirCloudBox.Data.Repositories
                 .FirstOrDefaultAsync(x => x.Id == id && ((x.Owner == null && x.Client == null && roles.Any(y => y.RoleType == RoleType.SuperAdmin))
                             || (x.Owner == null && x.Client != null && roles.Any(y => y.RoleType == RoleType.ClientAdmin) && x.ClientId == clientId)
                             || (x.Owner != null && x.Client == null && (roles.Any(y => y.RoleType == RoleType.DepartmentHead)
-                            || roles.Any(y => y.RoleType == RoleType.Employee) || x.OwnerId == userId))));
+                            || roles.Any(y => y.RoleType == RoleType.Employee) || x.OwnerId == userId))
+                            || (x.Permissions.Any(y => y.RecipientId == userId && y.Type == PermissionType.ReadAndWrite))));
 
             if (fileStorage == null)
             {
@@ -189,6 +190,14 @@ namespace SaphirCloudBox.Data.Repositories
             }
 
             return files;
+        }
+
+        public async Task<IEnumerable<FileStorage>> GetSharedFiles(int userId)
+        {
+            return await Context.Set<FileStorage>()
+                .Where(x => !x.ClientId.HasValue && x.OwnerId.HasValue
+                            && x.Permissions.Any(y => y.RecipientId == userId))
+                .ToListAsync();
         }
     }
 }

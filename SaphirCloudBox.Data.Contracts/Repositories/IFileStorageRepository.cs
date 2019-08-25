@@ -1,4 +1,5 @@
 ﻿using Anthill.Common.Data.Contracts;
+using SaphirCloudBox.Enums;
 using SaphirCloudBox.Models;
 using System;
 using System.Collections.Generic;
@@ -26,5 +27,7 @@ namespace SaphirCloudBox.Data.Contracts.Repositories
         Task<Boolean> IsAvailableToChange(int id, int userId, int clientId);
 
         Task<IEnumerable<FileStorage>> GetFilesByParentId(int id, int userId, int clientId);
+
+        Task<IEnumerable<FileStorage>> GetSharedFiles(int userId);
     }
 }

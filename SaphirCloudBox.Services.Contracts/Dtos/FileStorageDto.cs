@@ -19,6 +19,8 @@ namespace SaphirCloudBox.Services.Contracts.Dtos
 
         public IEnumerable<StorageDto> Storages { get; set; }
 
+        public IEnumerable<StorageDto.PermissionDto> Permissions { get; set; }
+
         public class StorageDto
         {
             public int Id { get; set; }
