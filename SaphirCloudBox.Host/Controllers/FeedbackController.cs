@@ -47,28 +47,15 @@ namespace SaphirCloudBox.Host.Controllers
                 return BadRequest();
             }
 
-            try
-            {
-                var user = await _userService.GetByEmail(model.UserEmail);
+            var user = await _userService.GetByEmail(model.UserEmail);
 
-                var subject = String.Format(Constants.NotificationMessages.TechnicalSupportSubject, model.UserName);
-                var message = String.Format(Constants.NotificationMessages.TechnicalSupportMessage, model.UserName, user.Email, model.Theme, model.Message);
+            var subject = String.Format(Constants.NotificationMessages.TechnicalSupportSubject, model.UserName);
+            var message = String.Format(Constants.NotificationMessages.TechnicalSupportMessage, model.UserName, user.Email, model.Theme, model.Message);
 
-                await _emailSender.Send(_appSettings.TechSupportHost, _appSettings.TechSupportPort, _appSettings.TechSupportEmail, _appSettings.TechSupportPassword, 
-                    new MailAddress(_appSettings.TechSupportEmail), subject, message, model.FileName, model.FileContent);
+            await _emailSender.Send(_appSettings.TechSupportHost, _appSettings.TechSupportPort, _appSettings.TechSupportEmail, _appSettings.TechSupportPassword,
+                new MailAddress(_appSettings.TechSupportEmail), subject, message, model.FileName, model.FileContent);
 
-                return Ok();
-            }
-            catch (NotFoundException)
-            {
-                await AddLog(Enums.LogType.NotFound, LogMessage.CreateNotFoundByEmailMessage(LogMessage.UserEntityName, model.UserEmail));
-                return StatusCode((int)HttpStatusCode.Forbidden, ResponseMessage.NOT_FOUND.ToString());
-            }
-            catch(Exception ex)
-            {
-                await AddLog(Enums.LogType.Error, ex.Message);
-                return StatusCode((int)HttpStatusCode.Forbidden, ResponseMessage.SERVER_ERROR.ToString());
-            }
+            return Ok();
         }
     }
 }
