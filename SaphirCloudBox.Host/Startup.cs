@@ -77,6 +77,12 @@ namespace SaphirCloudBox.Host
                         ValidateIssuerSigningKey = true,
                     };
                 });
+
+
+            services.AddSwaggerGen(c =>
+            {
+                c.SwaggerDoc("v1", new Swashbuckle.AspNetCore.Swagger.Info { Title = "Saphir Cloud Box", Version = "v1" });
+            });
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -97,6 +103,12 @@ namespace SaphirCloudBox.Host
 
             app.UseCors("CorsPolicy");
             app.UseAuthentication();
+
+            app.UseSwagger();
+            app.UseSwaggerUI(c =>
+            {
+                c.SwaggerEndpoint("https://saphir-cloud-box-api.azurewebsites.net/swagger/v1/swagger.json", "v1");
+            });
         }
 
         public void ConfigureContainer(IUnityContainer container)
