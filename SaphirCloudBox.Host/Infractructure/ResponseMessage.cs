@@ -8,14 +8,15 @@ namespace SaphirCloudBox.Host.Infractructure
     public enum ResponseMessage
     {
         NOT_FOUND,
-        UNATHORIZED,
         SERVER_ERROR,
-        SAME_NAME,
-        REMOVE_ERROR,
-        UPDATE_ERROR,
-        ADD_ERROR,
-        NOT_FOUNT_DEPENDENCY_OBJECT,
-        EXIST_DEPENDENCY_ERROR,
-        NOT_FOUND_USER
+        SAME_OBJECT,
+        NOT_FOUND_DEPENDENCY_OBJECT,
+        EXIST_DEPENDENCY_OBJECTS,
+        NOT_FOUND_USER,
+        NO_ACCESS,
+        NOT_FOUND_ROLE,
+        SAME_USER,
+        SAME_ROLE,
+        ERROR
     }
 }

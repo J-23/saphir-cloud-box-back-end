@@ -43,7 +43,7 @@ namespace SaphirCloudBox.Services.Services
 
             if (user != null)
             {
-                throw new FoundSameObjectException();
+                throw new FoundSameObjectException("User", userDto.Email);
             }
 
             var newUser = new User
@@ -59,7 +59,7 @@ namespace SaphirCloudBox.Services.Services
 
             if (role == null)
             {
-                throw new NotFoundDependencyObjectException();
+                throw new NotFoundDependencyObjectException("Role", userDto.RoleId);
             }
 
             using (var scope = new TransactionScope(TransactionScopeAsyncFlowOption.Enabled))
@@ -69,17 +69,17 @@ namespace SaphirCloudBox.Services.Services
                 if (!result.Succeeded)
                 {
                     scope.Dispose();
-                    throw new AddException();
+                    throw new UserManagerException("add", newUser.Email);
                 }
 
                 try
                 {
                     await AddUserToRole(newUser, role);
                 }
-                catch (RoleAddException)
+                catch (UserManagerException umex)
                 {
                     scope.Dispose();
-                    throw new AddException();
+                    throw new UserManagerException(umex.Message);
                 }
 
                 scope.Complete();
@@ -93,7 +93,7 @@ namespace SaphirCloudBox.Services.Services
 
             if (user == null)
             {
-                throw new NotFoundException();
+                throw new AppUnauthorizedAccessException(UnautorizedType.NOT_FOUND, ObjectType.USER);
             }
 
             user.ResetPasswordCode = GenerateForgotPassowrdCodeToken();
@@ -102,7 +102,7 @@ namespace SaphirCloudBox.Services.Services
 
             if (!result.Succeeded)
             {
-                throw new UpdateException();
+                throw new UserManagerException("forgot password", email);
             }
 
             return user.ResetPasswordCode;
@@ -140,7 +140,7 @@ namespace SaphirCloudBox.Services.Services
 
             if (user == null)
             {
-                throw new NotFoundException();
+                throw new AppUnauthorizedAccessException(UnautorizedType.NOT_FOUND, ObjectType.USER);
             }
 
             return MapperFactory.CreateMapper<IUserMapper>().MapToModel(user);
@@ -152,7 +152,7 @@ namespace SaphirCloudBox.Services.Services
 
             if (user == null)
             {
-                throw new NotFoundException();
+                throw new AppUnauthorizedAccessException(UnautorizedType.NOT_FOUND, ObjectType.USER);
             }
 
             var userDto = MapperFactory.CreateMapper<IUserMapper>().MapToModel(user);
@@ -180,14 +180,14 @@ namespace SaphirCloudBox.Services.Services
 
             if (user == null)
             {
-                throw new NotFoundException();
+                throw new AppUnauthorizedAccessException(UnautorizedType.NOT_FOUND, ObjectType.USER);
             }
 
             var result = await _signInManager.PasswordSignInAsync(user, password, false, false);
 
             if (!result.Succeeded)
             {
-                throw new UnauthorizedAccessException();
+                throw new UserManagerException("login", user.Email);
             }
 
             await AddUserFolder(user);
@@ -205,7 +205,7 @@ namespace SaphirCloudBox.Services.Services
 
             if (user != null)
             {
-                throw new FoundSameObjectException();
+                throw new AppUnauthorizedAccessException(UnautorizedType.SAME_OBJECT, ObjectType.USER);
             }
 
             var newUser = new User
@@ -221,7 +221,7 @@ namespace SaphirCloudBox.Services.Services
 
             if (role == null)
             {
-                throw new NotFoundException();
+                throw new AppUnauthorizedAccessException(UnautorizedType.NOT_FOUND, ObjectType.ROLE);
             }
 
             using (var scope = new TransactionScope(TransactionScopeAsyncFlowOption.Enabled))
@@ -231,7 +231,7 @@ namespace SaphirCloudBox.Services.Services
                 if (!result.Succeeded)
                 {
                     scope.Dispose();
-                    throw new UnauthorizedAccessException();
+                    throw new UserManagerException("create user", newUser.Email);
                 }
 
                 result = await _userManager.AddToRoleAsync(newUser, role.Name);
@@ -239,7 +239,7 @@ namespace SaphirCloudBox.Services.Services
                 if (!result.Succeeded)
                 {
                     scope.Dispose();
-                    throw new UnauthorizedAccessException();
+                    throw new UserManagerException("add to role", newUser.Email));
                 }
 
                 scope.Complete();
@@ -255,7 +255,7 @@ namespace SaphirCloudBox.Services.Services
 
             if (user == null)
             {
-                throw new NotFoundException();
+                throw new AppUnauthorizedAccessException(UnautorizedType.NOT_FOUND, ObjectType.USER);
             }
 
             user.PasswordHash = _userManager.PasswordHasher.HashPassword(user, resetPasswordUserDto.Password);
@@ -263,7 +263,7 @@ namespace SaphirCloudBox.Services.Services
             var result = await _userManager.UpdateAsync(user);
             if (!result.Succeeded)
             {
-                throw new UnauthorizedAccessException();
+                throw new UserManagerException("reset password", user.Email);
             }
         }
 
@@ -273,14 +273,14 @@ namespace SaphirCloudBox.Services.Services
 
             if (user == null)
             {
-                throw new NotFoundException();
+                throw new NotFoundException("User", userDto.Id);
             }
 
             var otherUser = await _userManager.FindByEmailAsync(userDto.Email);
 
             if (otherUser != null && otherUser.Id != user.Id)
             {
-                throw new FoundSameObjectException();
+                throw new FoundSameObjectException("User", userDto.UserName);
             }
 
             user.UserName = userDto.UserName;
@@ -293,7 +293,7 @@ namespace SaphirCloudBox.Services.Services
 
             if (role == null)
             {
-                throw new NotFoundException();
+                throw new NotFoundDependencyObjectException("Role", userDto.RoleId);
             }
 
             using (var scope = new TransactionScope(TransactionScopeAsyncFlowOption.Enabled))
@@ -303,27 +303,17 @@ namespace SaphirCloudBox.Services.Services
                 if (!result.Succeeded)
                 {
                     scope.Dispose();
-                    throw new UpdateException();
+                    throw new UserManagerException("update", user.Email);
                 }
 
                 try
                 {
                     await UpdateUserRole(user, role);
                 }
-                catch (NotFoundException)
+                catch (UserManagerException umex)
                 {
                     scope.Dispose();
-                    throw new UpdateException();
-                }
-                catch (RemoveException)
-                {
-                    scope.Dispose();
-                    throw new UpdateException();
-                }
-                catch (RoleAddException)
-                {
-                    scope.Dispose();
-                    throw new UpdateException();
+                    throw new UserManagerException(umex.Message);
                 }
 
                 scope.Complete();
@@ -336,7 +326,7 @@ namespace SaphirCloudBox.Services.Services
 
             if (user == null)
             {
-                throw new NotFoundException();
+                throw new NotFoundException("User", userDto.Id);
             }
 
             var roles = await _userManager.GetRolesAsync(user);
@@ -348,7 +338,7 @@ namespace SaphirCloudBox.Services.Services
                 if (!result.Succeeded)
                 {
                     scope.Dispose();
-                    throw new RemoveException();
+                    throw new UserManagerException("remove from role", user.Email);
                 }
 
                 result = await _userManager.DeleteAsync(user);
@@ -356,7 +346,7 @@ namespace SaphirCloudBox.Services.Services
                 if (!result.Succeeded)
                 {
                     scope.Dispose();
-                    throw new RemoveException();
+                    throw new UserManagerException("remove", user.Email);
                 }
 
                 scope.Complete();
@@ -370,7 +360,7 @@ namespace SaphirCloudBox.Services.Services
 
             if (client == null)
             {
-                throw new NotFoundDependencyObjectException();
+                throw new NotFoundDependencyObjectException("Client", id);
             }
 
             return client;
@@ -387,7 +377,7 @@ namespace SaphirCloudBox.Services.Services
 
                 if (department == null)
                 {
-                    throw new NotFoundDependencyObjectException();
+                    throw new NotFoundDependencyObjectException("Department", id.Value);
                 }
             }
 
@@ -400,7 +390,7 @@ namespace SaphirCloudBox.Services.Services
 
             if (!result.Succeeded)
             {
-                throw new RoleAddException();
+                throw new UserManagerException("add to role", user.Email);
             }
         }
 
@@ -414,7 +404,7 @@ namespace SaphirCloudBox.Services.Services
 
                 if (!result.Succeeded)
                 {
-                    throw new RemoveException();
+                    throw new UserManagerException("Remove from role", user.Email);
                 }
 
                 await AddUserToRole(user, role);

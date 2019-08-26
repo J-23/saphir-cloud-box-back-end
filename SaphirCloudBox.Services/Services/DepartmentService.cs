@@ -30,12 +30,12 @@ namespace SaphirCloudBox.Services.Services
 
             if (client == null)
             {
-                throw new NotFoundException();
+                throw new NotFoundDependencyObjectException("Client", departmentDto.ClientId);
             }
 
             if (client.Departments.Select(s => s.Name).Contains(departmentDto.Name))
             {
-                throw new FoundSameObjectException();
+                throw new FoundSameObjectException("Department", departmentDto.Name);
             }
 
             var department = new Department
@@ -74,12 +74,12 @@ namespace SaphirCloudBox.Services.Services
 
             if (department == null)
             {
-                throw new NotFoundException();
+                throw new NotFoundException("Department", departmentDto.Id);
             }
 
             if (department.Users.Count() > 0)
             {
-                throw new RemoveException();
+                throw new ExistDependencyException("Department", departmentDto.Id, new List<string> { "Users" });
             }
 
             await departmentRepository.Remove(department);
@@ -93,7 +93,7 @@ namespace SaphirCloudBox.Services.Services
 
             if (department == null)
             {
-                throw new NotFoundException();
+                throw new NotFoundException("Department", departmentDto.Id);
             }
 
             var clientRepository = DataContextManager.CreateRepository<IClientRepository>();
@@ -102,13 +102,13 @@ namespace SaphirCloudBox.Services.Services
 
             if (client == null)
             {
-                throw new UpdateException();
+                throw new NotFoundDependencyObjectException("Client", departmentDto.ClientId);
             }
 
             var otherDepartment = client.Departments.FirstOrDefault(x => x.Name.Equals(departmentDto.Name));
             if (otherDepartment != null && otherDepartment.Id != departmentDto.Id)
             {
-                throw new FoundSameObjectException();
+                throw new FoundSameObjectException("Department", departmentDto.Name);
             }
 
             department.Name = departmentDto.Name;

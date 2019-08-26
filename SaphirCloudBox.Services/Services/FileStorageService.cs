@@ -56,7 +56,7 @@ namespace SaphirCloudBox.Services.Services
 
             if (parentFileStorage == null || !parentFileStorage.IsDirectory)
             {
-                throw new NotFoundException();
+                throw new NotFoundException("File storage", fileDto.ParentId);
             }
 
             var fileName = Path.GetFileNameWithoutExtension(fileDto.Name);
@@ -67,7 +67,7 @@ namespace SaphirCloudBox.Services.Services
             if (childFileStorages.Any(x => !x.IsDirectory && x.Name.Equals(fileName) 
                 && x.Files.Any(y => y.IsActive && y.Extension.Equals(fileExtension))))
             {
-                throw new FoundSameObjectException();
+                throw new FoundSameObjectException("File storage", fileName);
             }
 
             var owners = await _permissionHelper.GetOwners(parentFileStorage, userId, clientId);
@@ -114,14 +114,14 @@ namespace SaphirCloudBox.Services.Services
 
             if (parentFileStorage == null || parentFileStorage != null && !parentFileStorage.IsDirectory)
             {
-                throw new NotFoundException();
+                throw new NotFoundException("File storage", folderDto.ParentId);
             }
 
             var childFileStorages = await fileStorageRepository.GetByParentId(parentFileStorage.Id, userId, clientId);
 
             if (childFileStorages.Any(x => x.IsDirectory && x.Name.Equals(folderDto.Name)))
             {
-                throw new FoundSameObjectException();
+                throw new FoundSameObjectException("File storage", folderDto.Name);
             }
 
             var owners = await _permissionHelper.GetOwners(parentFileStorage, userId, clientId);
@@ -148,7 +148,7 @@ namespace SaphirCloudBox.Services.Services
 
             if (parentFileStorage == null || parentFileStorage != null && !parentFileStorage.IsDirectory)
             {
-                throw new NotFoundException();
+                throw new NotFoundException("File storage", parentId);
             }
 
             var childFileStorages = await fileStorageRepository.GetByParentId(parentFileStorage.Id, userId, clientId);
@@ -175,14 +175,14 @@ namespace SaphirCloudBox.Services.Services
 
             if (fileStorage == null || fileStorage != null && fileStorage.IsDirectory)
             {
-                throw new NotFoundException();
+                throw new NotFoundException("File storage", id);
             }
 
             var file = fileStorage.Files.FirstOrDefault(x => x.IsActive);
 
             if (file == null)
             {
-                throw new NotFoundException();
+                throw new NotFoundDependencyObjectException("File");
             }
 
             var buffer = await _azureBlobClient.DownloadFile(_blobSettings.ContainerName, file.AzureBlobStorage.BlobName.ToString());
@@ -202,14 +202,14 @@ namespace SaphirCloudBox.Services.Services
 
             if (fileStorage == null || fileStorage != null && fileStorage.IsDirectory)
             {
-                throw new NotFoundException();
+                throw new NotFoundException("File storage", fileDto.Id);
             }
 
             var isAvailableToChange = await fileStorageRepository.IsAvailableToChange(fileStorage.Id, userId, clientId);
 
             if (!isAvailableToChange)
             {
-                throw new RemoveException();
+                throw new UnavailableOperationException("remove file", fileStorage.Id, userId);
             }
 
             foreach (var file in fileStorage.Files)
@@ -227,14 +227,14 @@ namespace SaphirCloudBox.Services.Services
 
             if (fileStorage == null || fileStorage != null && !fileStorage.IsDirectory)
             {
-                throw new NotFoundException();
+                throw new NotFoundException("File storage", folderDto.Id);
             }
 
             var isAvailableToChange = await fileStorageRepository.IsAvailableToChange(fileStorage.Id, userId, clientId);
 
             if (!isAvailableToChange)
             {
-                throw new RemoveException();
+                throw new UnavailableOperationException("remove folder", fileStorage.Id, userId);
             }
 
             var files = await fileStorageRepository.GetFilesByParentId(fileStorage.Id, userId, clientId);
@@ -256,23 +256,23 @@ namespace SaphirCloudBox.Services.Services
 
             if (fileStorage == null || fileStorage != null && !fileStorage.IsDirectory)
             {
-                throw new NotFoundException();
+                throw new NotFoundException("File storage", folderDto.Id);
             }
 
             var isAvailableToChange = await fileStorageRepository.IsAvailableToChange(fileStorage.Id, userId, clientId);
 
             if (!isAvailableToChange)
             {
-                throw new UpdateException();
+                throw new UnavailableOperationException("update folder", fileStorage.Id, userId);
             }
 
             if (fileStorage.ParentFileStorageId.HasValue)
             {
                 var childFileStorages = await fileStorageRepository.GetByParentId(fileStorage.ParentFileStorageId.Value, userId, clientId);
 
-                if (childFileStorages.Any(x => x.Name.Equals(childFileStorages) && x.Id != folderDto.Id))
+                if (childFileStorages.Any(x => x.Name.Equals(folderDto.Name) && x.Id != folderDto.Id))
                 {
-                    throw new FoundSameObjectException();
+                    throw new FoundSameObjectException("File storage", folderDto.Name);
                 }
             }
             
@@ -290,14 +290,14 @@ namespace SaphirCloudBox.Services.Services
 
             if (fileStorage == null || fileStorage != null && fileStorage.IsDirectory)
             {
-                throw new NotFoundException();
+                throw new NotFoundException("File storage", fileDto.Id);
             }
 
             var isAvailableToChange = await fileStorageRepository.IsAvailableToChange(fileStorage.Id, userId, clientId);
 
             if (!isAvailableToChange)
             {
-                throw new UpdateException();
+                throw new UnavailableOperationException("update file", fileStorage.Id, userId);
             }
 
             var fileName = Path.GetFileNameWithoutExtension(fileDto.Name);
@@ -309,7 +309,7 @@ namespace SaphirCloudBox.Services.Services
 
                 if (fileStorages.Any(x => !x.IsDirectory && x.Name.Equals(fileName) && x.Files.Any(y => y.IsActive && y.Extension.Equals(fileExtension))))
                 {
-                    throw new FoundSameObjectException();
+                    throw new FoundSameObjectException("File storage", fileName);
                 }
             }
 
@@ -351,7 +351,7 @@ namespace SaphirCloudBox.Services.Services
 
                 if (activeFile == null)
                 {
-                    throw new UpdateException();
+                    throw new NotFoundDependencyObjectException("File");
                 }
 
                 activeFile.Extension = fileExtension;
@@ -371,14 +371,14 @@ namespace SaphirCloudBox.Services.Services
 
             if (!isAvailableToChange)
             {
-                throw new AddException();
+                throw new UnavailableOperationException("add permission", fileStorage.Id, permissionDto.RecipientEmail, userId);
             }
 
             var recipient = await _userService.GetByEmail(permissionDto.RecipientEmail);
 
             if (recipient.Id == userId && fileStorage.Permissions.Any(x => x.RecipientId == userId))
             {
-                throw new FoundSameObjectException();
+                throw new FoundSameObjectException("File storage permission", fileStorage.Id, permissionDto.RecipientEmail);
             }
 
             fileStorage.Permissions.Add(new FileStoragePermission
@@ -401,7 +401,7 @@ namespace SaphirCloudBox.Services.Services
 
             if (!isAvailableToChange)
             {
-                throw new UpdateException();
+                throw new UnavailableOperationException("update permission", fileStorage.Id, permissionDto.RecipientEmail, userId);
             }
 
             var recipient = await _userService.GetByEmail(permissionDto.RecipientEmail);
@@ -410,7 +410,7 @@ namespace SaphirCloudBox.Services.Services
 
             if (fileStoragePermission == null)
             {
-                throw new UpdateException();
+                throw new NotFoundException("File storage permission", fileStorage.Id, permissionDto.RecipientEmail);
             }
 
             fileStoragePermission.Type = permissionDto.Type;
@@ -428,7 +428,7 @@ namespace SaphirCloudBox.Services.Services
 
             if (!isAvailableToChange)
             {
-                throw new RemoveException();
+                throw new UnavailableOperationException("remove permission", fileStorage.Id, permissionDto.RecipientEmail, userId);
             }
 
             var recipient = await _userService.GetByEmail(permissionDto.RecipientEmail);
@@ -437,7 +437,7 @@ namespace SaphirCloudBox.Services.Services
 
             if (fileStoragePermission == null)
             {
-                throw new RemoveException();
+                throw new NotFoundException("File storage permission", fileStorage.Id, permissionDto.RecipientEmail);
             }
 
             fileStoragePermission.EndDate = DateTime.Now;

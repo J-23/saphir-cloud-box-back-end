@@ -30,7 +30,7 @@ namespace SaphirCloudBox.Services.Services
 
             if (client != null)
             {
-                throw new FoundSameObjectException();
+                throw new FoundSameObjectException("Client", clientDto.Name);
             }
 
             var newClient = new Client
@@ -59,12 +59,12 @@ namespace SaphirCloudBox.Services.Services
 
             if (client == null)
             {
-                throw new NotFoundException();
+                throw new NotFoundException("Client", clientDto.Id);
             }
 
             if (client.Departments.Count() > 0 || client.Users.Count() > 0)
             {
-                throw new RemoveException();
+                throw new ExistDependencyException("Client", clientDto.Id, new List<string> { "Departments", "Users" });
             }
 
             await clientRepository.Remove(client);
@@ -78,14 +78,14 @@ namespace SaphirCloudBox.Services.Services
 
             if (client == null)
             {
-                throw new NotFoundException();
+                throw new NotFoundException("Client", clientDto.Id);
             }
 
             var otherClient = await clientRepository.GetByName(clientDto.Name);
 
             if (otherClient != null && otherClient.Id != clientDto.Id)
             {
-                throw new FoundSameObjectException();
+                throw new FoundSameObjectException("Client", clientDto.Name);
             }
 
             client.Name = clientDto.Name;

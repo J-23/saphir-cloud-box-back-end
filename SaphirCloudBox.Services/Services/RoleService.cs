@@ -36,7 +36,7 @@ namespace SaphirCloudBox.Services.Services
 
             if (role != null)
             {
-                throw new FoundSameObjectException();
+                throw new FoundSameObjectException("Role", roleDto.Name);
             }
 
             role = new Role {
@@ -48,7 +48,7 @@ namespace SaphirCloudBox.Services.Services
 
             if (!result.Succeeded)
             {
-                throw new AddException();
+                throw new RoleManagerException("add", role.Name);
             }
         }
 
@@ -64,21 +64,21 @@ namespace SaphirCloudBox.Services.Services
 
             if (role == null)
             {
-                throw new NotFoundException();
+                throw new NotFoundException("Role", roleDto.Id);
             }
 
             var users = await _userManager.GetUsersInRoleAsync(role.Name);
 
             if (users.Count > 0)
             {
-                throw new ExistDependencyException();
+                throw new ExistDependencyException("Role", role.Id, new List<string> { "Users" });
             }
 
             var result = await _roleManager.DeleteAsync(role);
 
             if (!result.Succeeded)
             {
-                throw new RemoveException();
+                throw new RoleManagerException("remove", role.Name);
             }
         }
 
@@ -88,14 +88,14 @@ namespace SaphirCloudBox.Services.Services
 
             if (role == null)
             {
-                throw new NotFoundException();
+                throw new NotFoundException("Role", roleDto.Id);
             }
 
             var otherRole = await _roleManager.FindByNameAsync(roleDto.Name);
 
             if (otherRole != null && otherRole.Id != role.Id)
             {
-                throw new FoundSameObjectException();
+                throw new FoundSameObjectException("Role", roleDto.Name);
             }
 
             role.Name = roleDto.Name;
@@ -104,7 +104,7 @@ namespace SaphirCloudBox.Services.Services
 
             if (!result.Succeeded)
             {
-                throw new UpdateException();
+                throw new RoleManagerException("update", role.Name);
             }
         }
     }

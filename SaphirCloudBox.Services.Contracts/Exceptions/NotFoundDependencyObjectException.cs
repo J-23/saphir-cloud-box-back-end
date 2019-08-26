@@ -6,6 +6,8 @@ namespace SaphirCloudBox.Services.Contracts.Exceptions
 {
     public class NotFoundDependencyObjectException: Exception
     {
-        public NotFoundDependencyObjectException() : base() { }
+        public NotFoundDependencyObjectException(string objectName, int id) : base($"{objectName} with Id = {id} not found") { }
+
+        public NotFoundDependencyObjectException(string objectName) : base($"Active {objectName} not found") { }
     }
 }

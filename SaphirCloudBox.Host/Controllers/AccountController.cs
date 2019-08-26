@@ -42,30 +42,19 @@ namespace SaphirCloudBox.Host.Controllers
         [Route("login")]
         public async Task<ActionResult> Login([FromBody]LoginModel model)
         {
-            try
+            var identity = await GetIdentity(model.Email, model.Password);
+
+            var now = DateTime.UtcNow;
+
+            var newToken = GenerateToken(identity.Claims, now);
+
+            var response = new
             {
-                var identity = await GetIdentity(model.Email, model.Password);
+                access_token = newToken,
+                expires_date = now.Add(TimeSpan.FromMinutes(Constants.LIFETIME))
+            };
 
-                var now = DateTime.UtcNow;
-
-                var newToken = GenerateToken(identity.Claims, now);
-
-                var response = new
-                {
-                    access_token = newToken,
-                    expires_date = now.Add(TimeSpan.FromMinutes(Constants.LIFETIME))
-                };
-
-                return Ok(response);
-            }
-            catch (NotFoundException)
-            {
-                return Unauthorized(ResponseMessage.NOT_FOUND.ToString());
-            }
-            catch(UnauthorizedAccessException)
-            {
-                return Unauthorized(ResponseMessage.UNATHORIZED.ToString());
-            }
+            return Ok(response);
         }
 
 
@@ -74,35 +63,20 @@ namespace SaphirCloudBox.Host.Controllers
         [AllowAnonymous]
         public async Task<ActionResult> Register([FromBody]RegisterUserDto userDto)
         {
-            try
-            {
-                await _userService.Register(userDto, _appSettings.CommonRole);
+            await _userService.Register(userDto, _appSettings.CommonRole);
 
-                var identity = await GetIdentity(userDto.Email, userDto.Password);
+            var identity = await GetIdentity(userDto.Email, userDto.Password);
 
-                var now = DateTime.UtcNow;
-                var newToken = GenerateToken(identity.Claims,now);
+            var now = DateTime.UtcNow;
+            var newToken = GenerateToken(identity.Claims, now);
 
-                var response = new
-                {
-                    access_token = newToken,
-                    expires_date = now.Add(TimeSpan.FromMinutes(Constants.LIFETIME))
-                };
+            var response = new
+            {
+                access_token = newToken,
+                expires_date = now.Add(TimeSpan.FromMinutes(Constants.LIFETIME))
+            };
 
-                return Ok(response);
-            }
-            catch (FoundSameObjectException)
-            {
-                return Unauthorized(ResponseMessage.SAME_NAME.ToString());
-            }
-            catch (NotFoundException)
-            {
-                return Unauthorized(ResponseMessage.NOT_FOUND.ToString());
-            }
-            catch (UnauthorizedAccessException)
-            {
-                return Unauthorized(ResponseMessage.UNATHORIZED.ToString());
-            }
+            return Ok(response);
         }
 
         [HttpPost]
@@ -110,32 +84,21 @@ namespace SaphirCloudBox.Host.Controllers
         [AllowAnonymous]
         public async Task<ActionResult> ForgotPassword([FromBody]ForgotPasswordModel model)
         {
-            try
+            var user = await _userService.GetByEmail(model.Email);
+            var code = await _userService.ForgotPassword(model.Email);
+
+            var resetPasswordLink = _appSettings.FrontEndUrl + String.Format(Constants.NotificationMessages.ResetPasswordUrl, code);
+            var message = String.Format(Constants.NotificationMessages.ForgotPasswordMessage, user.UserName, _appSettings.FrontEndUrl, resetPasswordLink);
+
+            await _emailSender.Send(_appSettings.SmtpHost, _appSettings.SmtpPort, _appSettings.SenderEmail, _appSettings.SenderPassword,
+                new MailAddress(user.Email, user.UserName), Constants.NotificationMessages.ForgotPasswordSubject, message);
+
+            var response = new
             {
-                var user = await _userService.GetByEmail(model.Email);
-                var code = await _userService.ForgotPassword(model.Email);
+                forgot_password_token = code
+            };
 
-                var resetPasswordLink = _appSettings.FrontEndUrl + String.Format(Constants.NotificationMessages.ResetPasswordUrl, code);
-                var message = String.Format(Constants.NotificationMessages.ForgotPasswordMessage, user.UserName, _appSettings.FrontEndUrl, resetPasswordLink);
-
-                await _emailSender.Send(_appSettings.SmtpHost, _appSettings.SmtpPort, _appSettings.SenderEmail, _appSettings.SenderPassword, 
-                    new MailAddress(user.Email, user.UserName), Constants.NotificationMessages.ForgotPasswordSubject, message);
-
-                var response = new
-                {
-                    forgot_password_token = code
-                };
-
-                return Ok(response);
-            }
-            catch (NotFoundException)
-            {
-                return Unauthorized(ResponseMessage.NOT_FOUND.ToString());
-            }
-            catch (UpdateException)
-            {
-                return Unauthorized(ResponseMessage.UNATHORIZED.ToString());
-            }
+            return Ok(response);
         }
 
         [HttpPost]
@@ -143,20 +106,8 @@ namespace SaphirCloudBox.Host.Controllers
         [AllowAnonymous]
         public async Task<ActionResult> ResetPassword([FromBody]ResetPasswordUserDto resetPassword)
         {
-            try
-            {
-                await _userService.ResetPassword(resetPassword);
-                return Ok();
-
-            }
-            catch (NotFoundException)
-            {
-                return Unauthorized(ResponseMessage.NOT_FOUND.ToString());
-            }
-            catch (UnauthorizedAccessException)
-            {
-                return Unauthorized(ResponseMessage.UNATHORIZED.ToString());
-            }
+            await _userService.ResetPassword(resetPassword);
+            return Ok();
         }
 
         [HttpGet]
@@ -171,16 +122,8 @@ namespace SaphirCloudBox.Host.Controllers
                 return BadRequest();
             }
 
-            try
-            {
-                var user = await _userService.GetById(Int32.Parse(userId.Value));
-                return Ok(user);
-            }
-            catch (NotFoundException)
-            {
-                return Unauthorized(ResponseMessage.NOT_FOUND.ToString());
-            }
-            
+            var user = await _userService.GetById(Int32.Parse(userId.Value));
+            return Ok(user);
         }
 
         private async Task<ClaimsIdentity> GetIdentity(string email, string password)

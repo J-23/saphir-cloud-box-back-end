@@ -6,6 +6,7 @@ namespace SaphirCloudBox.Services.Contracts.Exceptions
 {
     public class ExistDependencyException: Exception
     {
-        public ExistDependencyException() : base() { }
+        public ExistDependencyException(string objectName, int objectId, IEnumerable<string> dependencyObjectNames) 
+            : base($"{objectName} has {String.Join(",", dependencyObjectNames)}") { }
     }
 }

@@ -51,22 +51,9 @@ namespace SaphirCloudBox.Host.Controllers
 
             var userId = Convert.ToInt32(userIdClaim.Value);
 
-            try
-            {
-                await _clientService.Add(clientDto);
-                await _logService.Add(Enums.LogType.Create, $"Client with name = {clientDto.Name} was created successfully by user = {userId}");
-                return Ok();
-            }
-            catch (FoundSameObjectException)
-            {
-                await _logService.Add(Enums.LogType.SameObject, $"Failed to create client with name = {clientDto.Name}. Client already exists with that name");
-                return StatusCode((int)HttpStatusCode.Forbidden, ResponseMessage.SAME_NAME.ToString());
-            }
-            catch(Exception ex)
-            {
-                await _logService.Add(Enums.LogType.Error, ex.Message);
-                return StatusCode((int)HttpStatusCode.Forbidden, ResponseMessage.SERVER_ERROR.ToString());
-            }
+            await _clientService.Add(clientDto);
+            await _logService.Add(Enums.LogType.Create, $"Client with name = {clientDto.Name} was created successfully by user = {userId}");
+            return Ok();
         }
 
         [HttpPost]
@@ -82,27 +69,9 @@ namespace SaphirCloudBox.Host.Controllers
 
             var userId = Convert.ToInt32(userIdClaim.Value);
 
-            try
-            {
-                await _clientService.Update(clientDto);
-                await _logService.Add(Enums.LogType.Update, $"Client with id = {clientDto.Id} was updated successfully by user = {userId}");
-                return Ok();
-            }
-            catch (NotFoundException)
-            {
-                await _logService.Add(Enums.LogType.NotFound, $"Client with Id = {clientDto.Id} not found");
-                return StatusCode((int)HttpStatusCode.Forbidden, ResponseMessage.NOT_FOUND.ToString());
-            }
-            catch (FoundSameObjectException)
-            {
-                await _logService.Add(Enums.LogType.SameObject, $"Failed to update client with id = {clientDto.Id} and name = {clientDto.Name}. Client already exists with that name");
-                return StatusCode((int)HttpStatusCode.Forbidden, ResponseMessage.SAME_NAME.ToString());
-            }
-            catch (Exception ex)
-            {
-                await _logService.Add(Enums.LogType.Error, ex.Message);
-                return StatusCode((int)HttpStatusCode.Forbidden, ResponseMessage.SERVER_ERROR.ToString());
-            }
+            await _clientService.Update(clientDto);
+            await _logService.Add(Enums.LogType.Update, $"Client with id = {clientDto.Id} was updated successfully by user = {userId}");
+            return Ok();
         }
 
         [HttpPost]
@@ -118,27 +87,9 @@ namespace SaphirCloudBox.Host.Controllers
 
             var userId = Convert.ToInt32(userIdClaim.Value);
 
-            try
-            {
-                await _clientService.Remove(clientDto);
-                await _logService.Add(Enums.LogType.Remove, $"Client with id = {clientDto.Id} was removed successfully by user = {userId}");
-                return Ok();
-            }
-            catch (NotFoundException)
-            {
-                await _logService.Add(Enums.LogType.NotFound, $"Client with Id = {clientDto.Id} not found");
-                return StatusCode((int)HttpStatusCode.Forbidden, ResponseMessage.NOT_FOUND.ToString());
-            }
-            catch (RemoveException)
-            {
-                await _logService.Add(Enums.LogType.Error, $"Client with Id = {clientDto.Id} has departments and / or users");
-                return StatusCode((int)HttpStatusCode.Forbidden, ResponseMessage.REMOVE_ERROR.ToString());
-            }
-            catch (Exception ex)
-            {
-                await _logService.Add(Enums.LogType.Error, ex.Message);
-                return StatusCode((int)HttpStatusCode.Forbidden, ResponseMessage.SERVER_ERROR.ToString());
-            }
+            await _clientService.Remove(clientDto);
+            await _logService.Add(Enums.LogType.Remove, $"Client with id = {clientDto.Id} was removed successfully by user = {userId}");
+            return Ok();
         }
     }
 }

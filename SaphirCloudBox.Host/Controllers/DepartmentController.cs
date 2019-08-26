@@ -59,27 +59,9 @@ namespace SaphirCloudBox.Host.Controllers
 
             var userId = Convert.ToInt32(userIdClaim.Value);
 
-            try
-            {
-                await _departmentService.Add(departmentDto);
-                await _logService.Add(Enums.LogType.Create, $"Department with name = {departmentDto.Name} was created successfully by user = {userId}");
-                return Ok();
-            }
-            catch (NotFoundException)
-            {
-                await _logService.Add(Enums.LogType.NotFound, $"Client with Id = {departmentDto.ClientId} for department with name = {departmentDto.Name} not found");
-                return StatusCode((int)HttpStatusCode.Forbidden, ResponseMessage.NOT_FOUNT_DEPENDENCY_OBJECT.ToString());
-            }
-            catch (FoundSameObjectException)
-            {
-                await _logService.Add(Enums.LogType.SameObject, $"Failed to create department with name = {departmentDto.Name}. Department already exists with that name");
-                return StatusCode((int)HttpStatusCode.Forbidden, ResponseMessage.SAME_NAME.ToString());
-            }
-            catch (Exception ex)
-            {
-                await _logService.Add(Enums.LogType.Error, ex.Message);
-                return StatusCode((int)HttpStatusCode.Forbidden, ResponseMessage.SERVER_ERROR.ToString());
-            }
+            await _departmentService.Add(departmentDto);
+            await _logService.Add(Enums.LogType.Create, $"Department with name = {departmentDto.Name} was created successfully by user = {userId}");
+            return Ok();
         }
 
         [HttpPost]
@@ -95,32 +77,9 @@ namespace SaphirCloudBox.Host.Controllers
 
             var userId = Convert.ToInt32(userIdClaim.Value);
 
-            try
-            {
-                await _departmentService.Update(departmentDto);
-                await _logService.Add(Enums.LogType.Update, $"Department with id = {departmentDto.Id} was updated successfully by user = {userId}");
-                return Ok();
-            }
-            catch (NotFoundException)
-            {
-                await _logService.Add(Enums.LogType.NotFound, $"Department with Id = {departmentDto.Id} not found");
-                return StatusCode((int)HttpStatusCode.Forbidden, ResponseMessage.NOT_FOUND.ToString());
-            }
-            catch (UpdateException)
-            {
-                await _logService.Add(Enums.LogType.NotFound, $"Client with Id = {departmentDto.ClientId} for department with id = {departmentDto.Id} not found");
-                return StatusCode((int)HttpStatusCode.Forbidden, ResponseMessage.NOT_FOUNT_DEPENDENCY_OBJECT.ToString());
-            }
-            catch (FoundSameObjectException)
-            {
-                await _logService.Add(Enums.LogType.SameObject, $"Failed to update department with id = {departmentDto.Id} and name = {departmentDto.Name}. Department already exists with that name");
-                return StatusCode((int)HttpStatusCode.Forbidden, ResponseMessage.SAME_NAME.ToString());
-            }
-            catch (Exception ex)
-            {
-                await _logService.Add(Enums.LogType.Error, ex.Message);
-                return StatusCode((int)HttpStatusCode.Forbidden, ResponseMessage.SERVER_ERROR.ToString());
-            }
+            await _departmentService.Update(departmentDto);
+            await _logService.Add(Enums.LogType.Update, $"Department with id = {departmentDto.Id} was updated successfully by user = {userId}");
+            return Ok();
         }
 
         [HttpPost]
@@ -136,27 +95,9 @@ namespace SaphirCloudBox.Host.Controllers
 
             var userId = Convert.ToInt32(userIdClaim.Value);
 
-            try
-            {
-                await _departmentService.Remove(departmentDto);
-                await _logService.Add(Enums.LogType.Remove, $"Department with id = {departmentDto.Id} was removed successfully by user = {userId}");
-                return Ok();
-            }
-            catch (NotFoundException)
-            {
-                await _logService.Add(Enums.LogType.NotFound, $"Department with Id = {departmentDto.Id} not found");
-                return StatusCode((int)HttpStatusCode.Forbidden, ResponseMessage.NOT_FOUND.ToString());
-            }
-            catch (RemoveException)
-            {
-                await _logService.Add(Enums.LogType.Error, $"Department with Id = {departmentDto.Id} has users");
-                return StatusCode((int)HttpStatusCode.Forbidden, ResponseMessage.REMOVE_ERROR.ToString());
-            }
-            catch (Exception ex)
-            {
-                await _logService.Add(Enums.LogType.Error, ex.Message);
-                return StatusCode((int)HttpStatusCode.Forbidden, ResponseMessage.SERVER_ERROR.ToString());
-            }
+            await _departmentService.Remove(departmentDto);
+            await _logService.Add(Enums.LogType.Remove, $"Department with id = {departmentDto.Id} was removed successfully by user = {userId}");
+            return Ok();
         }
     }
 }
