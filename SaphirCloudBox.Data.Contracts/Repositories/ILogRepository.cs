@@ -9,6 +9,6 @@ namespace SaphirCloudBox.Data.Contracts.Repositories
 {
     public interface ILogRepository : IRepository
     {
-        Task Add(Log log);
+        void Add(Log log);
     }
 }

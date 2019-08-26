@@ -17,6 +17,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using SaphirCloudBox.Host.Infractructure;
+using SaphirCloudBox.Host.Middlewares;
 using SaphirCloudBox.Models;
 using Unity;
 using Unity.Lifetime;
@@ -97,6 +98,8 @@ namespace SaphirCloudBox.Host
                 // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
                 app.UseHsts();
             }
+            
+            app.UseExceptionMiddleware();
 
             app.UseHttpsRedirection();
             app.UseMvc();

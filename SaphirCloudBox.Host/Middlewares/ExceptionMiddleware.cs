@@ -31,7 +31,6 @@ namespace SaphirCloudBox.Host.Middlewares
             }
             catch (Exception ex)
             {
-                await _logService.Add(Enums.LogType.Error, ex.Message);
                 await HandleExceptionAsync(httpContext, ex);
             }
         }
@@ -42,37 +41,45 @@ namespace SaphirCloudBox.Host.Middlewares
             context.Response.StatusCode = (int)HttpStatusCode.Forbidden;
 
             var message = string.Empty;
-
+            Enums.LogType logType = Enums.LogType.Error;
             if (exception is FoundSameObjectException)
             {
+                logType = Enums.LogType.SameObject;
                 message = ResponseMessage.SAME_OBJECT.ToString();
             }
             else if (exception is NotFoundException)
             {
+                logType = Enums.LogType.NotFound;
                 message = ResponseMessage.NOT_FOUND.ToString();
             }
             else if (exception is ExistDependencyException)
             {
+                logType = Enums.LogType.Error;
                 message = ResponseMessage.EXIST_DEPENDENCY_OBJECTS.ToString();
             }
             else if (exception is NotFoundDependencyObjectException)
             {
+                logType = Enums.LogType.NotFound;
                 message = ResponseMessage.NOT_FOUND_DEPENDENCY_OBJECT.ToString();
             }
             else if (exception is RoleManagerException)
             {
+                logType = Enums.LogType.Error;
                 message = ResponseMessage.ERROR.ToString();
             }
             else if (exception is UserManagerException)
             {
+                logType = Enums.LogType.Error;
                 message = ResponseMessage.ERROR.ToString();
             }
             else if (exception is UnavailableOperationException)
             {
+                logType = Enums.LogType.NoAccess;
                 message = ResponseMessage.NO_ACCESS.ToString();
             }
             else if (exception is AppUnauthorizedAccessException)
             {
+                logType = Enums.LogType.Error;
                 context.Response.StatusCode = (int)HttpStatusCode.Unauthorized;
 
                 var ex = exception as AppUnauthorizedAccessException;
@@ -102,9 +109,11 @@ namespace SaphirCloudBox.Host.Middlewares
             }
             else
             {
+                logType = Enums.LogType.Error;
                 context.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
             }
 
+            _logService.Add(logType, exception.Message);
             return context.Response.WriteAsync(message);
         }
     }

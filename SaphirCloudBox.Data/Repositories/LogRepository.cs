@@ -15,10 +15,10 @@ namespace SaphirCloudBox.Data.Repositories
         {
         }
 
-        public async Task Add(Log log)
+        public void Add(Log log)
         {
-            await Context.Set<Log>().AddAsync(log);
-            await Context.SaveChangesAsync();
+            Context.Set<Log>().Add(log);
+            Context.SaveChanges();
         }
     }
 }

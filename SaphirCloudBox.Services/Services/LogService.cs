@@ -19,7 +19,7 @@ namespace SaphirCloudBox.Services.Services
         {
         }
 
-        public async Task Add(LogType logType, string text)
+        public void Add(LogType logType, string text)
         {
             var logRepository = DataContextManager.CreateRepository<ILogRepository>();
 
@@ -29,7 +29,7 @@ namespace SaphirCloudBox.Services.Services
                 Text = text
             };
 
-            await logRepository.Add(log);
+            logRepository.Add(log);
         }
     }
 }

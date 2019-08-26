@@ -18,12 +18,12 @@ namespace SaphirCloudBox.Host.Controllers
     [ApiController]
     [EnableCors("CorsPolicy")]
     [Authorize(Policy = "Bearer")]
-    public class ClientController : ControllerBase
+    public class ClientController : BaseController
     {
         private readonly IClientService _clientService;
         private readonly ILogService _logService;
 
-        public ClientController(IClientService clientService, ILogService logService)
+        public ClientController(IClientService clientService, ILogService logService): base(logService)
         {
             _clientService = clientService ?? throw new ArgumentNullException(nameof(clientService));
             _logService = logService ?? throw new ArgumentNullException(nameof(logService));
@@ -42,17 +42,13 @@ namespace SaphirCloudBox.Host.Controllers
         [Route("add")]
         public async Task<ActionResult> AddClient([FromBody]AddClientDto clientDto)
         {
-            var userIdClaim = User.Claims.FirstOrDefault(x => x.Type.Contains("UserId"));
-
-            if (userIdClaim == null)
+            if (!IsAvailableOperation())
             {
                 return BadRequest();
             }
 
-            var userId = Convert.ToInt32(userIdClaim.Value);
-
             await _clientService.Add(clientDto);
-            await _logService.Add(Enums.LogType.Create, $"Client with name = {clientDto.Name} was created successfully by user = {userId}");
+            AddLog(Enums.LogType.Create, LogMessage.CreateSuccessByNameMessage(LogMessage.ClientEntityName, clientDto.Name, LogMessage.CreateAction, UserId));
             return Ok();
         }
 
@@ -60,17 +56,13 @@ namespace SaphirCloudBox.Host.Controllers
         [Route("update")]
         public async Task<ActionResult> UdpateClient([FromBody]UpdateClientDto clientDto)
         {
-            var userIdClaim = User.Claims.FirstOrDefault(x => x.Type.Contains("UserId"));
-
-            if (userIdClaim == null)
+            if (!IsAvailableOperation())
             {
                 return BadRequest();
             }
 
-            var userId = Convert.ToInt32(userIdClaim.Value);
-
             await _clientService.Update(clientDto);
-            await _logService.Add(Enums.LogType.Update, $"Client with id = {clientDto.Id} was updated successfully by user = {userId}");
+            AddLog(Enums.LogType.Create, LogMessage.CreateSuccessByIdMessage(LogMessage.ClientEntityName, clientDto.Id, LogMessage.UpdateAction, UserId));
             return Ok();
         }
 
@@ -78,17 +70,13 @@ namespace SaphirCloudBox.Host.Controllers
         [Route("remove")]
         public async Task<ActionResult> RemoveClient([FromBody]RemoveClientDto clientDto)
         {
-            var userIdClaim = User.Claims.FirstOrDefault(x => x.Type.Contains("UserId"));
-
-            if (userIdClaim == null)
+            if (!IsAvailableOperation())
             {
                 return BadRequest();
             }
 
-            var userId = Convert.ToInt32(userIdClaim.Value);
-
             await _clientService.Remove(clientDto);
-            await _logService.Add(Enums.LogType.Remove, $"Client with id = {clientDto.Id} was removed successfully by user = {userId}");
+            AddLog(Enums.LogType.Create, LogMessage.CreateSuccessByIdMessage(LogMessage.ClientEntityName, clientDto.Id, LogMessage.RemoveAction, UserId));
             return Ok();
         }
     }

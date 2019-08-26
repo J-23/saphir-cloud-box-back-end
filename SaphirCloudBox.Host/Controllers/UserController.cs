@@ -18,17 +18,15 @@ namespace SaphirCloudBox.Host.Controllers
     [ApiController]
     [EnableCors("CorsPolicy")]
     [Authorize(Policy = "Bearer")]
-    public class UserController : ControllerBase
+    public class UserController : BaseController
     {
         private readonly IUserService _userService;
         private readonly AppSettings _appSettings;
-        private readonly ILogService _logService;
 
-        public UserController(IUserService userService, AppSettings appSettings, ILogService logService)
+        public UserController(IUserService userService, AppSettings appSettings, ILogService logService): base(logService)
         {
             _userService = userService ?? throw new ArgumentNullException(nameof(userService));
             _appSettings = appSettings ?? throw new ArgumentNullException(nameof(appSettings));
-            _logService = logService ?? throw new ArgumentNullException(nameof(logService));
         }
 
         [HttpGet]
@@ -43,17 +41,13 @@ namespace SaphirCloudBox.Host.Controllers
         [Route("add")]
         public async Task<ActionResult> AddUser([FromBody]AddUserDto userDto)
         {
-            var userIdClaim = User.Claims.FirstOrDefault(x => x.Type.Contains("UserId"));
-
-            if (userIdClaim == null)
+            if (!IsAvailableOperation())
             {
                 return BadRequest();
             }
 
-            var userId = Convert.ToInt32(userIdClaim.Value);
-
             await _userService.Add(userDto, _appSettings.CommonPassword);
-            await _logService.Add(Enums.LogType.Create, $"User with email = {userDto.Email} was created successfully by user = {userId}");
+            AddLog(Enums.LogType.Create, LogMessage.CreateSuccessByNameMessage(LogMessage.UserEntityName, userDto.Email, LogMessage.CreateAction, UserId));
             return Ok();
         }
 
@@ -61,17 +55,13 @@ namespace SaphirCloudBox.Host.Controllers
         [Route("update")]
         public async Task<ActionResult> UdpateDepartment([FromBody]UpdateUserDto userDto)
         {
-            var userIdClaim = User.Claims.FirstOrDefault(x => x.Type.Contains("UserId"));
-
-            if (userIdClaim == null)
+            if (!IsAvailableOperation())
             {
                 return BadRequest();
             }
 
-            var userId = Convert.ToInt32(userIdClaim.Value);
-
             await _userService.Update(userDto, _appSettings.CommonPassword);
-            await _logService.Add(Enums.LogType.Update, $"User with id = {userDto.Id} was updated successfully by user = {userId}");
+            AddLog(Enums.LogType.Create, LogMessage.CreateSuccessByIdMessage(LogMessage.UserEntityName, userDto.Id, LogMessage.UpdateAction, UserId));
             return Ok();
         }
 
@@ -79,17 +69,13 @@ namespace SaphirCloudBox.Host.Controllers
         [Route("remove")]
         public async Task<ActionResult> RemoveDepartment([FromBody]RemoveUserDto userDto)
         {
-            var userIdClaim = User.Claims.FirstOrDefault(x => x.Type.Contains("UserId"));
-
-            if (userIdClaim == null)
+            if (!IsAvailableOperation())
             {
                 return BadRequest();
             }
 
-            var userId = Convert.ToInt32(userIdClaim.Value);
-
             await _userService.Remove(userDto);
-            await _logService.Add(Enums.LogType.Remove, $"User with id = {userDto.Id} was removed successfully by user = {userId}");
+            AddLog(Enums.LogType.Create, LogMessage.CreateSuccessByIdMessage(LogMessage.UserEntityName, userDto.Id, LogMessage.RemoveAction, UserId));
             return Ok();
         }
     }

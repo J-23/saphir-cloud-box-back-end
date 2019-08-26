@@ -40,9 +40,9 @@ namespace SaphirCloudBox.Host.Controllers
             return true;
         }
 
-        protected async Task AddLog(LogType logType, string message)
+        protected void AddLog(LogType logType, string message)
         {
-            await _logService.Add(logType, message);
+            _logService.Add(logType, message);
         }
     }
 }

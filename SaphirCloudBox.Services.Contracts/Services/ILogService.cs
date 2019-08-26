@@ -8,6 +8,6 @@ namespace SaphirCloudBox.Services.Contracts.Services
 {
     public interface ILogService
     {
-        Task Add(LogType logType, string text);
+        void Add(LogType logType, string text);
     }
 }

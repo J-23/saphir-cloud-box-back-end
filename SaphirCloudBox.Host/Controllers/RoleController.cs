@@ -18,15 +18,12 @@ namespace SaphirCloudBox.Host.Controllers
     [ApiController]
     [EnableCors("CorsPolicy")]
     [Authorize(Policy = "Bearer")]
-    public class RoleController : ControllerBase
+    public class RoleController : BaseController
     {
         private readonly IRoleService _roleService;
-        private readonly ILogService _logService;
-
-        public RoleController(IRoleService roleService, ILogService logService)
+        public RoleController(IRoleService roleService, ILogService logService): base(logService)
         {
             _roleService = roleService ?? throw new ArgumentNullException(nameof(roleService));
-            _logService = logService ?? throw new ArgumentNullException(nameof(logService));
         }
 
         [HttpGet]
@@ -41,17 +38,13 @@ namespace SaphirCloudBox.Host.Controllers
         [Route("add")]
         public async Task<ActionResult> AddDepartment([FromBody]AddRoleDto roleDto)
         {
-            var userIdClaim = User.Claims.FirstOrDefault(x => x.Type.Contains("UserId"));
-
-            if (userIdClaim == null)
+            if (!IsAvailableOperation())
             {
                 return BadRequest();
             }
 
-            var userId = Convert.ToInt32(userIdClaim.Value);
-
             await _roleService.Add(roleDto);
-            await _logService.Add(Enums.LogType.Create, $"Role with name = {roleDto.Name} was created successfully by user = {userId}");
+            AddLog(Enums.LogType.Create, LogMessage.CreateSuccessByNameMessage( LogMessage.RoleEntityName, roleDto.Name, LogMessage.CreateAction, UserId));
             return Ok();
         }
 
@@ -59,17 +52,13 @@ namespace SaphirCloudBox.Host.Controllers
         [Route("update")]
         public async Task<ActionResult> UdpateDepartment([FromBody]RoleDto roleDto)
         {
-            var userIdClaim = User.Claims.FirstOrDefault(x => x.Type.Contains("UserId"));
-
-            if (userIdClaim == null)
+            if (!IsAvailableOperation())
             {
                 return BadRequest();
             }
 
-            var userId = Convert.ToInt32(userIdClaim.Value);
-
             await _roleService.Update(roleDto);
-            await _logService.Add(Enums.LogType.Update, $"Role with id = {roleDto.Id} was updated successfully by user = {userId}");
+            AddLog(Enums.LogType.Create, LogMessage.CreateSuccessByIdMessage(LogMessage.RoleEntityName, roleDto.Id, LogMessage.UpdateAction, UserId));
             return Ok();
         }
 
@@ -77,17 +66,13 @@ namespace SaphirCloudBox.Host.Controllers
         [Route("remove")]
         public async Task<ActionResult> RemoveDepartment([FromBody]RemoveRoleDto roleDto)
         {
-            var userIdClaim = User.Claims.FirstOrDefault(x => x.Type.Contains("UserId"));
-
-            if (userIdClaim == null)
+            if (!IsAvailableOperation())
             {
                 return BadRequest();
             }
 
-            var userId = Convert.ToInt32(userIdClaim.Value);
-
             await _roleService.Remove(roleDto);
-            await _logService.Add(Enums.LogType.Remove, $"Role with id = {roleDto.Id} was removed successfully by user = {userId}");
+            AddLog(Enums.LogType.Create, LogMessage.CreateSuccessByIdMessage(LogMessage.RoleEntityName, roleDto.Id, LogMessage.RemoveAction, UserId));
             return Ok();
         }
     }

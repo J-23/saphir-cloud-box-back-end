@@ -52,10 +52,7 @@ namespace SaphirCloudBox.Host.Controllers
             }
 
             await _fileStorageService.AddFolder(folderDto, UserId, ClientId);
-
-            await AddLog(Enums.LogType.Create, LogMessage.CreateSuccessByNameMessage(LogMessage.FolderEntityName,
-                folderDto.Name, LogMessage.CreateAction, UserId));
-
+            AddLog(Enums.LogType.Create, LogMessage.CreateSuccessByNameMessage(LogMessage.FolderEntityName, folderDto.Name, LogMessage.CreateAction, UserId));
             return Ok();
         }
 
@@ -69,7 +66,7 @@ namespace SaphirCloudBox.Host.Controllers
             }
 
             await _fileStorageService.UpdateFolder(folderDto, UserId, ClientId);
-            await AddLog(Enums.LogType.Create, LogMessage.CreateSuccessByIdMessage(LogMessage.FolderEntityName, folderDto.Id, LogMessage.CreateAction, UserId));
+            AddLog(Enums.LogType.Create, LogMessage.CreateSuccessByIdMessage(LogMessage.FolderEntityName, folderDto.Id, LogMessage.CreateAction, UserId));
             return Ok();
         }
 
@@ -83,7 +80,7 @@ namespace SaphirCloudBox.Host.Controllers
             }
 
             await _fileStorageService.RemoveFolder(folderDto, UserId, ClientId);
-            await AddLog(Enums.LogType.Create, LogMessage.CreateSuccessByIdMessage(LogMessage.FolderEntityName, folderDto.Id, LogMessage.RemoveAction, UserId));
+            AddLog(Enums.LogType.Create, LogMessage.CreateSuccessByIdMessage(LogMessage.FolderEntityName, folderDto.Id, LogMessage.RemoveAction, UserId));
             return Ok();
         }
 
@@ -98,7 +95,7 @@ namespace SaphirCloudBox.Host.Controllers
 
 
             await _fileStorageService.AddFile(fileDto, UserId, ClientId);
-            await AddLog(Enums.LogType.Create, LogMessage.CreateSuccessByNameMessage(LogMessage.FileEntityName, fileDto.Name, LogMessage.CreateAction, UserId));
+            AddLog(Enums.LogType.Create, LogMessage.CreateSuccessByNameMessage(LogMessage.FileEntityName, fileDto.Name, LogMessage.CreateAction, UserId));
             return Ok();
         }
 
@@ -125,7 +122,7 @@ namespace SaphirCloudBox.Host.Controllers
 
 
             await _fileStorageService.UpdateFile(fileDto, UserId, ClientId);
-            await AddLog(Enums.LogType.Update, LogMessage.CreateSuccessByIdMessage(LogMessage.FileEntityName, fileDto.Id, LogMessage.UpdateAction, UserId));
+            AddLog(Enums.LogType.Update, LogMessage.CreateSuccessByIdMessage(LogMessage.FileEntityName, fileDto.Id, LogMessage.UpdateAction, UserId));
             return Ok();
         }
 
@@ -140,7 +137,7 @@ namespace SaphirCloudBox.Host.Controllers
 
 
             await _fileStorageService.RemoveFile(fileDto, UserId, ClientId);
-            await AddLog(Enums.LogType.Remove, LogMessage.CreateSuccessByIdMessage(LogMessage.FileEntityName, fileDto.Id, LogMessage.RemoveAction, UserId));
+            AddLog(Enums.LogType.Remove, LogMessage.CreateSuccessByIdMessage(LogMessage.FileEntityName, fileDto.Id, LogMessage.RemoveAction, UserId));
             return Ok();
         }
 
@@ -154,7 +151,7 @@ namespace SaphirCloudBox.Host.Controllers
             }
 
             await _fileStorageService.AddPermission(permissionDto, UserId, ClientId);
-            await AddLog(Enums.LogType.Create, LogMessage.CreatePermissionMessage(permissionDto.FileStorageId, LogMessage.CreateVerb, UserId));
+            AddLog(Enums.LogType.Create, LogMessage.CreatePermissionMessage(permissionDto.FileStorageId, LogMessage.CreateVerb, UserId));
             return Ok();
         }
 
@@ -168,7 +165,7 @@ namespace SaphirCloudBox.Host.Controllers
             }
 
             await _fileStorageService.UpdatePermission(permissionDto, UserId, ClientId);
-            await AddLog(Enums.LogType.Update, LogMessage.CreatePermissionMessage(permissionDto.FileStorageId, LogMessage.UpdateVerb, UserId));
+            AddLog(Enums.LogType.Update, LogMessage.CreatePermissionMessage(permissionDto.FileStorageId, LogMessage.UpdateVerb, UserId));
             return Ok();
         }
 
@@ -182,7 +179,7 @@ namespace SaphirCloudBox.Host.Controllers
             }
 
             await _fileStorageService.RemovePermission(permissionDto, UserId, ClientId);
-            await AddLog(Enums.LogType.Remove, LogMessage.CreatePermissionMessage(permissionDto.FileStorageId, LogMessage.UpdateVerb, UserId));
+            AddLog(Enums.LogType.Remove, LogMessage.CreatePermissionMessage(permissionDto.FileStorageId, LogMessage.UpdateVerb, UserId));
             return Ok();
         }
 

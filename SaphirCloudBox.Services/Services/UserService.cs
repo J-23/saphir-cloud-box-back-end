@@ -239,7 +239,7 @@ namespace SaphirCloudBox.Services.Services
                 if (!result.Succeeded)
                 {
                     scope.Dispose();
-                    throw new UserManagerException("add to role", newUser.Email));
+                    throw new UserManagerException("add to role", newUser.Email);
                 }
 
                 scope.Complete();

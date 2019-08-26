@@ -18,15 +18,13 @@ namespace SaphirCloudBox.Host.Controllers
     [ApiController]
     [EnableCors("CorsPolicy")]
     [Authorize(Policy = "Bearer")]
-    public class DepartmentController : ControllerBase
+    public class DepartmentController : BaseController
     {
         private readonly IDepartmentService _departmentService;
-        private readonly ILogService _logService;
 
-        public DepartmentController(IDepartmentService departmentService, ILogService logService)
+        public DepartmentController(IDepartmentService departmentService, ILogService logService): base(logService)
         {
             _departmentService = departmentService ?? throw new ArgumentNullException(nameof(departmentService));
-            _logService = logService ?? throw new ArgumentNullException(nameof(logService));
         }
 
         [HttpGet]
@@ -50,17 +48,13 @@ namespace SaphirCloudBox.Host.Controllers
         [Route("add")]
         public async Task<ActionResult> AddDepartment([FromBody]AddDepartmentDto departmentDto)
         {
-            var userIdClaim = User.Claims.FirstOrDefault(x => x.Type.Contains("UserId"));
-
-            if (userIdClaim == null)
+            if (!IsAvailableOperation())
             {
                 return BadRequest();
             }
 
-            var userId = Convert.ToInt32(userIdClaim.Value);
-
             await _departmentService.Add(departmentDto);
-            await _logService.Add(Enums.LogType.Create, $"Department with name = {departmentDto.Name} was created successfully by user = {userId}");
+            AddLog(Enums.LogType.Create, LogMessage.CreateSuccessByNameMessage(LogMessage.DepartmentEntityName, departmentDto.Name, LogMessage.CreateAction, UserId));
             return Ok();
         }
 
@@ -68,17 +62,13 @@ namespace SaphirCloudBox.Host.Controllers
         [Route("update")]
         public async Task<ActionResult> UdpateDepartment([FromBody]UpdateDepartmentDto departmentDto)
         {
-            var userIdClaim = User.Claims.FirstOrDefault(x => x.Type.Contains("UserId"));
-
-            if (userIdClaim == null)
+            if (!IsAvailableOperation())
             {
                 return BadRequest();
             }
 
-            var userId = Convert.ToInt32(userIdClaim.Value);
-
             await _departmentService.Update(departmentDto);
-            await _logService.Add(Enums.LogType.Update, $"Department with id = {departmentDto.Id} was updated successfully by user = {userId}");
+            AddLog(Enums.LogType.Create, LogMessage.CreateSuccessByIdMessage(LogMessage.DepartmentEntityName, departmentDto.Id, LogMessage.UpdateAction, UserId));
             return Ok();
         }
 
@@ -86,17 +76,13 @@ namespace SaphirCloudBox.Host.Controllers
         [Route("remove")]
         public async Task<ActionResult> RemoveDepartment([FromBody]RemoveDepartmentDto departmentDto)
         {
-            var userIdClaim = User.Claims.FirstOrDefault(x => x.Type.Contains("UserId"));
-
-            if (userIdClaim == null)
+            if (!IsAvailableOperation())
             {
                 return BadRequest();
             }
 
-            var userId = Convert.ToInt32(userIdClaim.Value);
-
             await _departmentService.Remove(departmentDto);
-            await _logService.Add(Enums.LogType.Remove, $"Department with id = {departmentDto.Id} was removed successfully by user = {userId}");
+            AddLog(Enums.LogType.Create, LogMessage.CreateSuccessByIdMessage(LogMessage.DepartmentEntityName, departmentDto.Id, LogMessage.RemoveAction, UserId));
             return Ok();
         }
     }
