@@ -362,7 +362,7 @@ namespace SaphirCloudBox.Services.Services
             await fileStorageRepository.Update(fileStorage);
         }
 
-        public async Task AddPermission(AddPermissionDto permissionDto, int userId, int clientId)
+        public async Task<FileStorageDto.StorageDto> AddPermission(AddPermissionDto permissionDto, int userId, int clientId)
         {
             var fileStorageRepository = DataContextManager.CreateRepository<IFileStorageRepository>();
             var fileStorage = await fileStorageRepository.GetById(permissionDto.FileStorageId, userId, clientId);
@@ -421,9 +421,20 @@ namespace SaphirCloudBox.Services.Services
                     await fileStorageRepository.Update(storage);
                 }
             }
+
+            var storageDto = MapperFactory.CreateMapper<IFileStorageMapper>().MapToModel(fileStorage);
+
+            var userPermission = storageDto.Permissions.FirstOrDefault(x => x.Type == permissionDto.Type && x.Recipient == null);
+
+            if (userPermission != null)
+            {
+                userPermission.Recipient = recipient;
+            }
+
+            return storageDto;
         }
 
-        public async Task UpdatePermission(UpdatePermissionDto permissionDto, int userId, int clientId)
+        public async Task<FileStorageDto.StorageDto> UpdatePermission(UpdatePermissionDto permissionDto, int userId, int clientId)
         {
             var fileStorageRepository = DataContextManager.CreateRepository<IFileStorageRepository>();
             var fileStorage = await fileStorageRepository.GetById(permissionDto.FileStorageId, userId, clientId);
@@ -476,9 +487,11 @@ namespace SaphirCloudBox.Services.Services
                     await fileStorageRepository.Update(storage);
                 }
             }
+
+            return MapperFactory.CreateMapper<IFileStorageMapper>().MapToModel(fileStorage);
         }
 
-        public async Task RemovePermission(RemovePermissionDto permissionDto, int userId, int clientId)
+        public async Task<FileStorageDto.StorageDto> RemovePermission(RemovePermissionDto permissionDto, int userId, int clientId)
         {
             var fileStorageRepository = DataContextManager.CreateRepository<IFileStorageRepository>();
             var fileStorage = await fileStorageRepository.GetById(permissionDto.FileStorageId, userId, clientId);
@@ -518,6 +531,8 @@ namespace SaphirCloudBox.Services.Services
                     }
                 }
             }
+
+            return MapperFactory.CreateMapper<IFileStorageMapper>().MapToModel(fileStorage);
         }
 
         public async Task<IEnumerable<FileStorageDto.StorageDto>> GetSharedFiles(int userId)

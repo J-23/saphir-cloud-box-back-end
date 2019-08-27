@@ -25,6 +25,8 @@ namespace SaphirCloudBox.Services.Contracts.Dtos
         {
             public int Id { get; set; }
 
+            public int? ParentStorageId { get; set; }
+
             public string Name { get; set; }
 
             public bool IsDirectory { get; set; }
@@ -49,7 +51,9 @@ namespace SaphirCloudBox.Services.Contracts.Dtos
 
             public class PermissionDto
             {
-                public virtual UserDto Recipient { get; set; }
+                public UserDto Sender { get; set; }
+
+                public UserDto Recipient { get; set; }
 
                 public PermissionType Type { get; set; }
             }

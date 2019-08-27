@@ -44,6 +44,7 @@ namespace SaphirCloudBox.Data
             container.RegisterType<ILogRepository, LogRepository>(new TLifetime());
             container.RegisterType<IFileStorageRepository, FileStorageRepository>(new TLifetime());
             container.RegisterType<IUserRepository, UserRepository>(new TLifetime());
+            container.RegisterType<INotificationRepository, NotificationRepository>(new TLifetime());
         }
 
         public class LookupNormalizer : ILookupNormalizer

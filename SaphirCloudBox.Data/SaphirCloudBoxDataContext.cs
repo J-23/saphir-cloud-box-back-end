@@ -45,6 +45,8 @@ namespace SaphirCloudBox.Data
             builder.ApplyConfiguration(new FileMap());
             builder.ApplyConfiguration(new AzureBlobStorageMap());
 
+            builder.ApplyConfiguration(new NotificationMap());
+
             /*builder.Entity<IdentityRole<int>>().HasData(
                 new IdentityRole<int> { Id = 1, Name = "SUPER ADMIN", NormalizedName = "super admin" },
                 new IdentityRole<int> { Id = 2, Name = "CLIENT ADMIN", NormalizedName = "client admin" },

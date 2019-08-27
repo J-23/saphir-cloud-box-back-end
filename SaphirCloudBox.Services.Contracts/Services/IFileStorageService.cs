@@ -23,11 +23,11 @@ namespace SaphirCloudBox.Services.Contracts.Services
 
         Task UpdateFile(UpdateFileDto fileDto, int userId, int clientId);
 
-        Task AddPermission(AddPermissionDto permissionDto, int userId, int clientId);
+        Task<FileStorageDto.StorageDto> AddPermission(AddPermissionDto permissionDto, int userId, int clientId);
 
-        Task UpdatePermission(UpdatePermissionDto permissionDto, int userId, int clientId);
+        Task<FileStorageDto.StorageDto> UpdatePermission(UpdatePermissionDto permissionDto, int userId, int clientId);
 
-        Task RemovePermission(RemovePermissionDto permissionDto, int userId, int clientId);
+        Task<FileStorageDto.StorageDto> RemovePermission(RemovePermissionDto permissionDto, int userId, int clientId);
 
         Task<IEnumerable<FileStorageDto.StorageDto>> GetSharedFiles(int userId);
     }

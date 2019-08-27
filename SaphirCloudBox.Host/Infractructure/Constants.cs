@@ -33,6 +33,21 @@ Theme: {2}
 Message:
 {3}";
             public const string TechnicalSupportSubject = @"Message from user {0}";
+
+            public const string NotificationSubject = @"Your permissions is changed";
+
+            public const string AddPermissionNotificationMessage = @"Guten Tag Herr {0},
+User {1} added your permission to {2} to {3} {4}. To see it, go to the following link: {5}";
+
+            public const string UpdatePermissionNotificationMessage = @"Guten Tag Herr {0},
+User {1} has changed your permission to {2} {3}. Now you can {4}. To see this, follow this link: {5}";
+
+            public const string RemovePermissionNotificationMessage = @"Guten Tag Herr {0},
+User {1} deleted your permission to {2} {3}";
+
+
+            public const string Folder = "folder";
+            public const string File = "file";
         }
 
         
@@ -53,45 +68,6 @@ Message:
                 {".gif", "image/gif"},
                 {".csv", "text/csv"}
             };
-        }
-    }
-
-    public class LogMessage
-    {
-        public const string SuccessActionMessage = @"{0} with Name = {1} was {2} successfully by user = {3}";
-        public const string SuccessActionByIdMessage = @"{0} with Id = {1} was {2} successfully by user = {3}";
-        public const string PermissionMessage = @"Permission for file storage with id = {0} was {1} successfully by user with id = {2}";
-
-        public const string FileEntityName = "File";
-        public const string FolderEntityName = "Folder";
-        public const string UserEntityName = "User";
-        public const string RoleEntityName = "Role";
-        public const string DepartmentEntityName = "Department";
-        public const string ClientEntityName = "Client";
-
-        public const string CreateAction = "created";
-        public const string UpdateAction = "updated";
-        public const string RemoveAction = "removed";
-
-        public const string CreateVerb = "create";
-        public const string UpdateVerb = "update";
-        public const string RemoveVerb = "remove";
-
-        public static string CreateSuccessByNameMessage(string entityName, string name, string action, int userId)
-        {
-            var result = String.Format(SuccessActionMessage, entityName, name, action, userId);
-            return result;
-        }
-
-        public static string CreateSuccessByIdMessage(string entityName, int id, string action, int userId)
-        {
-            var result = String.Format(SuccessActionByIdMessage, entityName, id, action, userId);
-            return result;
-        }
-
-        public static string CreatePermissionMessage(int fileStorageId, string action, int userId)
-        {
-            return String.Format(PermissionMessage, fileStorageId, action, userId);
         }
     }
 }

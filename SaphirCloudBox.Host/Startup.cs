@@ -119,6 +119,9 @@ namespace SaphirCloudBox.Host
             var appSettings = _appConfiguration.GetSection("AppSettings");
             container.RegisterInstance(appSettings.Get<AppSettings>());
 
+            var emailSettings = _appConfiguration.GetSection("EmailSettings");
+            container.RegisterInstance(emailSettings.Get<EmailSettings>());
+
             ContainerConfiguration.RegisterTypes<HierarchicalLifetimeManager>(container);
         }
     }

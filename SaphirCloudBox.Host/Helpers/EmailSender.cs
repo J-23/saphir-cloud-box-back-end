@@ -11,24 +11,28 @@ namespace SaphirCloudBox.Host.Helpers
 {
     public class EmailSender : IEmailSender
     {
-        public EmailSender()
+        private readonly EmailSettings _emailSettings;
+
+        public EmailSender(EmailSettings emailSettings)
         {
+            _emailSettings = emailSettings ?? throw new ArgumentNullException(nameof(emailSettings));
         }
 
-        public async Task Send(string senderHost, int senderPort, string senderEmail, string senderPassword, 
-            MailAddress recipient, string subject, string message, string fileName = "", string fileContent = "")
+        public async Task Send(EmailType emailType, MailAddress recipient, string subject, string message, string fileName = "", string fileContent = "")
         {
+            var settings = GetSettings(emailType);
+
             using (var smtpClient = new SmtpClient())
             {
-                smtpClient.Host = senderHost;
-                smtpClient.Port = senderPort;
+                smtpClient.Host = settings.SmtpHost;
+                smtpClient.Port = settings.SmtpPort;
                 smtpClient.EnableSsl = true;
                 smtpClient.UseDefaultCredentials = false;
-                smtpClient.Credentials = new NetworkCredential(senderEmail, senderPassword);
+                smtpClient.Credentials = new NetworkCredential(settings.Email, settings.Password);
 
                 using (var msg = new MailMessage())
                 {
-                    msg.From = new MailAddress(senderEmail);
+                    msg.From = new MailAddress(settings.Email);
                     msg.To.Add(recipient);
                     msg.Subject = subject;
                     msg.Body = message;
@@ -48,6 +52,21 @@ namespace SaphirCloudBox.Host.Helpers
                         await smtpClient.SendMailAsync(msg);
                     }
                 }
+            }
+        }
+
+        private (string SmtpHost, int SmtpPort, string Email, string Password) GetSettings(EmailType emailType)
+        {
+            switch (emailType)
+            {
+                case EmailType.Auth:
+                    return (_emailSettings.AuthSmtpHost, _emailSettings.AuthSmtpPort, _emailSettings.AuthSenderEmail, _emailSettings.AuthSenderPassword);
+                case EmailType.TechSupport:
+                    return (_emailSettings.TechSupportSmtpHost, _emailSettings.TechSupportSmtpPort, _emailSettings.TechSupportEmail, _emailSettings.TechSupportPassword);
+                case EmailType.Notification:
+                    return (_emailSettings.NotificationSmtpHost, _emailSettings.NotificationSmtpPort, _emailSettings.NotificationEmail, _emailSettings.NotificationPassword);
+                default:
+                    throw new ArgumentException(nameof(emailType));
             }
         }
     }

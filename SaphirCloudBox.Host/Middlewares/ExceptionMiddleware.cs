@@ -5,6 +5,7 @@ using System.Net;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
+using SaphirCloudBox.Host.Helpers;
 using SaphirCloudBox.Host.Infractructure;
 using SaphirCloudBox.Services.Contracts.Exceptions;
 using SaphirCloudBox.Services.Contracts.Services;
@@ -16,11 +17,16 @@ namespace SaphirCloudBox.Host.Middlewares
     {
         private readonly RequestDelegate _next;
         private readonly ILogService _logService;
+        private readonly INotificationService _notificationService;
 
-        public ExceptionMiddleware(RequestDelegate next, ILogService logService)
+        public ExceptionMiddleware(RequestDelegate next, 
+            ILogService logService,
+            INotificationService notificationService)
         {
             _next = next;
+
             _logService = logService;
+            _notificationService = notificationService;
         }
 
         public async Task Invoke(HttpContext httpContext)

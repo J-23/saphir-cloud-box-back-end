@@ -36,10 +36,12 @@ namespace SaphirCloudBox.Services.Mappers
 
                 cfg.CreateMap<FileStoragePermission, FileStorageDto.StorageDto.PermissionDto>()
                     .ForMember(x => x.Recipient, y => y.MapFrom(x => x.Recipient))
-                    .ForMember(x => x.Type, y => y.MapFrom(x => x.Type));
+                    .ForMember(x => x.Type, y => y.MapFrom(x => x.Type))
+                    .ForMember(x => x.Sender, y => y.MapFrom(x => x.Sender));
 
                 cfg.CreateMap<FileStorage, FileStorageDto.StorageDto>()
                     .ForMember(x => x.Id, y => y.MapFrom(z => z.Id))
+                    .ForMember(x => x.ParentStorageId, y => y.MapFrom(z => z.ParentFileStorageId))
                     .ForMember(x => x.Name, y => y.MapFrom(z => z.Name))
                     .ForMember(x => x.CreateDate, y => y.MapFrom(z => z.CreateDate))
                     .ForMember(x => x.UpdateDate, y => y.MapFrom(z => z.UpdateDate))

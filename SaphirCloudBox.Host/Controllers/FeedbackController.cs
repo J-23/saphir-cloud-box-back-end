@@ -25,17 +25,17 @@ namespace SaphirCloudBox.Host.Controllers
         private readonly IUserService _userService;
         private readonly IEmailSender _emailSender;
 
-        private readonly AppSettings _appSettings;
+        private readonly EmailSettings _emailSettings;
 
         public FeedbackController(ILogService logService, 
             IUserService userService,
             IEmailSender emailSender,
-            AppSettings appSettings) 
+            EmailSettings emailSettings) 
             : base(logService)
         {
             _userService = userService ?? throw new ArgumentNullException(nameof(userService));
             _emailSender = emailSender ?? throw new ArgumentNullException(nameof(emailSender));
-            _appSettings = appSettings ?? throw new ArgumentNullException(nameof(appSettings));
+            _emailSettings = emailSettings ?? throw new ArgumentNullException(nameof(emailSettings));
         }
 
         [HttpPost]
@@ -52,8 +52,7 @@ namespace SaphirCloudBox.Host.Controllers
             var subject = String.Format(Constants.NotificationMessages.TechnicalSupportSubject, model.UserName);
             var message = String.Format(Constants.NotificationMessages.TechnicalSupportMessage, model.UserName, user.Email, model.Theme, model.Message);
 
-            await _emailSender.Send(_appSettings.TechSupportHost, _appSettings.TechSupportPort, _appSettings.TechSupportEmail, _appSettings.TechSupportPassword,
-                new MailAddress(_appSettings.TechSupportEmail), subject, message, model.FileName, model.FileContent);
+            await _emailSender.Send(EmailType.TechSupport, new MailAddress(_emailSettings.TechSupportEmail), subject, message, model.FileName, model.FileContent);
 
             return Ok();
         }

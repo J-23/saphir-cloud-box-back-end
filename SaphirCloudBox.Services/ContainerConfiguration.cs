@@ -28,6 +28,7 @@ namespace SaphirCloudBox.Services
             container.RegisterType<IRoleService, RoleService>(new TLifetime());
             container.RegisterType<ILogService, LogService>(new TLifetime());
             container.RegisterType<IFileStorageService, FileStorageService>(new TLifetime());
+            container.RegisterType<INotificationService, NotificationService>(new TLifetime());
 
             container.RegisterType<IUserMapper, UserMapper>(new TLifetime());
             container.RegisterType<IClientMapper, ClientMapper>(new TLifetime());
