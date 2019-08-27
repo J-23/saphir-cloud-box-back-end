@@ -376,20 +376,41 @@ namespace SaphirCloudBox.Services.Services
 
             var recipient = await _userService.GetByEmail(permissionDto.RecipientEmail);
 
-            if (recipient.Id == userId && fileStorage.Permissions.Any(x => x.RecipientId == userId))
+            if (recipient.Id == userId || fileStorage.Permissions.Any(x => x.RecipientId == recipient.Id))
             {
                 throw new FoundSameObjectException("File storage permission", fileStorage.Id, permissionDto.RecipientEmail);
             }
 
-            fileStorage.Permissions.Add(new FileStoragePermission
+            var permission = new FileStoragePermission
             {
                 SenderId = userId,
                 RecipientId = recipient.Id,
                 Type = permissionDto.Type,
-                StartDate = DateTime.Now
-            });
+                StartDate = DateTime.Now,
+            };
+
+            fileStorage.Permissions.Add(permission);
 
             await fileStorageRepository.Update(fileStorage);
+
+            if (!fileStorage.ClientId.HasValue && !fileStorage.OwnerId.HasValue || fileStorage.ClientId.HasValue && !fileStorage.OwnerId.HasValue)
+            {
+                var parents = await fileStorageRepository.GetParents(fileStorage.ParentFileStorageId, userId, clientId);
+
+                foreach (var storage in parents)
+                {
+                    var newPermission = new FileStoragePermission
+                    {
+                        SenderId = userId,
+                        RecipientId = recipient.Id,
+                        Type = permissionDto.Type,
+                        StartDate = DateTime.Now,
+                    };
+
+                    storage.Permissions.Add(newPermission);
+                    await fileStorageRepository.Update(storage);
+                }
+            }
         }
 
         public async Task UpdatePermission(UpdatePermissionDto permissionDto, int userId, int clientId)
@@ -417,6 +438,34 @@ namespace SaphirCloudBox.Services.Services
             fileStoragePermission.EndDate = null;
 
             await fileStorageRepository.Update(fileStorage);
+
+            if (!fileStorage.ClientId.HasValue && !fileStorage.OwnerId.HasValue || fileStorage.ClientId.HasValue && !fileStorage.OwnerId.HasValue)
+            {
+                var parents = await fileStorageRepository.GetParents(fileStorage.ParentFileStorageId, userId, clientId);
+
+                foreach (var storage in parents)
+                {
+                    var permission = storage.Permissions.FirstOrDefault(x => x.RecipientId == recipient.Id);
+
+                    if (permission != null)
+                    {
+                        permission.Type = permissionDto.Type;
+                        permission.EndDate = null;
+                    }
+                    else
+                    {
+                        storage.Permissions.Add(new FileStoragePermission
+                        {
+                            RecipientId = recipient.Id,
+                            SenderId = userId,
+                            Type = permissionDto.Type,
+                            StartDate = DateTime.Now
+                        });
+                    }
+
+                    await fileStorageRepository.Update(storage);
+                }
+            }
         }
 
         public async Task RemovePermission(RemovePermissionDto permissionDto, int userId, int clientId)
@@ -443,6 +492,22 @@ namespace SaphirCloudBox.Services.Services
             fileStoragePermission.EndDate = DateTime.Now;
 
             await fileStorageRepository.Update(fileStorage);
+
+            if (!fileStorage.ClientId.HasValue && !fileStorage.OwnerId.HasValue || fileStorage.ClientId.HasValue && !fileStorage.OwnerId.HasValue)
+            {
+                var parents = await fileStorageRepository.GetParents(fileStorage.ParentFileStorageId, userId, clientId);
+
+                foreach (var storage in parents)
+                {
+                    var permission = storage.Permissions.FirstOrDefault(x => x.RecipientId == recipient.Id);
+
+                    if (permission != null)
+                    {
+                        permission.EndDate = DateTime.Now;
+                        await fileStorageRepository.Update(storage);
+                    }
+                }
+            }
         }
 
         public async Task<IEnumerable<FileStorageDto.StorageDto>> GetSharedFiles(int userId)

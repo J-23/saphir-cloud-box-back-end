@@ -138,7 +138,7 @@ namespace SaphirCloudBox.Data.Repositories
                             || (x.Owner == null && x.Client != null && roles.Any(y => y.RoleType == RoleType.ClientAdmin) && x.ClientId == clientId)
                             || (x.Owner != null && x.Client == null && (roles.Any(y => y.RoleType == RoleType.DepartmentHead)
                             || roles.Any(y => y.RoleType == RoleType.Employee) || x.OwnerId == userId))
-                            || (x.Permissions.Any(y => y.RecipientId == userId && y.Type == PermissionType.ReadAndWrite))));
+                            || (x.Permissions.Any(y => y.RecipientId == userId && !y.EndDate.HasValue && y.Type == PermissionType.ReadAndWrite))));
 
             if (fileStorage == null)
             {
@@ -196,8 +196,62 @@ namespace SaphirCloudBox.Data.Repositories
         {
             return await Context.Set<FileStorage>()
                 .Where(x => !x.ClientId.HasValue && x.OwnerId.HasValue
-                            && x.Permissions.Any(y => y.RecipientId == userId))
+                            && x.Permissions.Any(y => y.RecipientId == userId && !y.EndDate.HasValue))
                 .ToListAsync();
+        }
+
+        public async Task<IEnumerable<FileStorage>> GetParents(int? parentId, int userId, int clientId)
+        {
+            var user = await _userManager.FindByIdAsync(userId.ToString());
+            var roleNames = await _userManager.GetRolesAsync(user);
+            var roles = await _roleManager.Roles.Where(x => roleNames.Contains(x.Name)).ToListAsync();
+            var parents = new List<FileStorage>();
+
+            if (parentId.HasValue && parentId.Value != 1)
+            {
+                var parent = await Context.Set<FileStorage>()
+                    .FirstOrDefaultAsync(x => x.IsDirectory
+                                            && x.ParentFileStorageId != 1
+                                            && x.Id == parentId.Value 
+                                            && ((!x.ClientId.HasValue && !x.OwnerId.HasValue && roles.Any(y => y.RoleType == RoleType.SuperAdmin))
+                                            || (x.ClientId.HasValue && !x.OwnerId.HasValue && x.ClientId.Value == clientId && roles.Any(y => y.RoleType == RoleType.ClientAdmin))
+                                            || (x.Permissions.Any(y => y.RecipientId == userId && !y.EndDate.HasValue))));
+
+                if (parent != null)
+                {
+                    parents.Add(parent);
+
+                    parents.AddRange(await GetParents(parent.ParentFileStorageId, userId, roles, clientId));
+                }
+                
+            }
+
+            return parents;
+        }
+
+        private async Task<IEnumerable<FileStorage>> GetParents(int? parentId, int userId, List<Role> roles, int clientId)
+        {
+            var parents = new List<FileStorage>();
+
+            if (parentId.HasValue && parentId.Value != 1)
+            {
+                var parent = await Context.Set<FileStorage>()
+                    .FirstOrDefaultAsync(x => x.IsDirectory
+                                            && x.ParentFileStorageId != 1
+                                            && x.Id == parentId.Value
+                                            && ((!x.ClientId.HasValue && !x.OwnerId.HasValue && roles.Any(y => y.RoleType == RoleType.SuperAdmin))
+                                            || (x.ClientId.HasValue && !x.OwnerId.HasValue && x.ClientId.Value == clientId && roles.Any(y => y.RoleType == RoleType.ClientAdmin))
+                                            || (x.Permissions.Any(y => y.RecipientId == userId && !y.EndDate.HasValue))));
+
+                if (parent != null)
+                {
+                    parents.Add(parent);
+
+                    parents.AddRange(await GetParents(parent.ParentFileStorageId, userId, roles, clientId));
+                }
+            }
+
+            return parents;
         }
     }
 }

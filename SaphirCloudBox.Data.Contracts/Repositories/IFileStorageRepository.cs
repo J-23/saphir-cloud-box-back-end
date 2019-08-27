@@ -29,5 +29,7 @@ namespace SaphirCloudBox.Data.Contracts.Repositories
         Task<IEnumerable<FileStorage>> GetFilesByParentId(int id, int userId, int clientId);
 
         Task<IEnumerable<FileStorage>> GetSharedFiles(int userId);
+
+        Task<IEnumerable<FileStorage>> GetParents(int? parentId, int userId, int clientId);
     }
 }
