@@ -177,15 +177,14 @@ namespace SaphirCloudBox.Host.Controllers
             try
             {
                 await _emailSender.Send(EmailType.Notification, new MailAddress(message.Recipient.Email, message.Recipient.UserName), message.Subject, message.MessageBody);
-
                 await _notificationService.Add(message.Recipient.Id, storage.Id, message.Subject, message.MessageBody, Enums.NotificationType.Success);
-                return Ok();
             }
             catch (Exception)
             {
                 await _notificationService.Add(message.Recipient.Id, storage.Id, message.Subject, message.MessageBody, Enums.NotificationType.NotSent);
-                throw;
             }
+
+            return Ok();
         }
 
         [HttpPost]
@@ -205,15 +204,13 @@ namespace SaphirCloudBox.Host.Controllers
             try
             {
                 await _emailSender.Send(EmailType.Notification, new MailAddress(message.Recipient.Email, message.Recipient.UserName), message.Subject, message.MessageBody);
-
-                await _notificationService.Add(message.Recipient.Id, storage.Id, message.Subject, message.MessageBody, Enums.NotificationType.Success);
-                return Ok();
+                await _notificationService.Add(message.Recipient.Id, storage.Id, message.Subject, message.MessageBody, Enums.NotificationType.Success); 
             }
             catch (Exception)
             {
                 await _notificationService.Add(message.Recipient.Id, storage.Id, message.Subject, message.MessageBody, Enums.NotificationType.NotSent);
-                throw;
             }
+            return Ok();
         }
 
         [HttpPost]
@@ -233,15 +230,14 @@ namespace SaphirCloudBox.Host.Controllers
             try
             {
                 await _emailSender.Send(EmailType.Notification, new MailAddress(message.Recipient.Email, message.Recipient.UserName), message.Subject, message.MessageBody);
-
                 await _notificationService.Add(message.Recipient.Id, storage.Id, message.Subject, message.MessageBody, Enums.NotificationType.Success);
-                return Ok();
             }
             catch (Exception)
             {
                 await _notificationService.Add(message.Recipient.Id, storage.Id, message.Subject, message.MessageBody, Enums.NotificationType.NotSent);
-                throw;
             }
+
+            return Ok();
         }
 
         [HttpGet]
