@@ -376,7 +376,7 @@ namespace SaphirCloudBox.Services.Services
 
             var recipient = await _userService.GetByEmail(permissionDto.RecipientEmail);
 
-            if (recipient.Id == userId || fileStorage.Permissions.Any(x => x.RecipientId == recipient.Id))
+            if (recipient.Id == userId || fileStorage.Permissions.Any(x => x.RecipientId == recipient.Id && !x.EndDate.HasValue))
             {
                 throw new FoundSameObjectException("File storage permission", fileStorage.Id, permissionDto.RecipientEmail);
             }
@@ -386,7 +386,7 @@ namespace SaphirCloudBox.Services.Services
                 SenderId = userId,
                 RecipientId = recipient.Id,
                 Type = permissionDto.Type,
-                StartDate = DateTime.Now,
+                StartDate = DateTime.Now
             };
 
             fileStorage.Permissions.Add(permission);
@@ -399,15 +399,25 @@ namespace SaphirCloudBox.Services.Services
 
                 foreach (var storage in parents)
                 {
-                    var newPermission = new FileStoragePermission
-                    {
-                        SenderId = userId,
-                        RecipientId = recipient.Id,
-                        Type = permissionDto.Type,
-                        StartDate = DateTime.Now,
-                    };
+                    var parentPermission= storage.Permissions.FirstOrDefault(x => x.RecipientId == recipient.Id && !x.EndDate.HasValue);
 
-                    storage.Permissions.Add(newPermission);
+                    if (parentPermission != null)
+                    {
+                        parentPermission.Type = permissionDto.Type;
+                    }
+                    else
+                    {
+                        var newPermission = new FileStoragePermission
+                        {
+                            SenderId = userId,
+                            RecipientId = recipient.Id,
+                            Type = permissionDto.Type,
+                            StartDate = DateTime.Now,
+                        };
+
+                        storage.Permissions.Add(newPermission);
+                    }
+                    
                     await fileStorageRepository.Update(storage);
                 }
             }
@@ -427,7 +437,7 @@ namespace SaphirCloudBox.Services.Services
 
             var recipient = await _userService.GetByEmail(permissionDto.RecipientEmail);
 
-            var fileStoragePermission = fileStorage.Permissions.FirstOrDefault(x => x.RecipientId == recipient.Id);
+            var fileStoragePermission = fileStorage.Permissions.FirstOrDefault(x => x.RecipientId == recipient.Id && !x.EndDate.HasValue);
 
             if (fileStoragePermission == null)
             {
@@ -445,7 +455,7 @@ namespace SaphirCloudBox.Services.Services
 
                 foreach (var storage in parents)
                 {
-                    var permission = storage.Permissions.FirstOrDefault(x => x.RecipientId == recipient.Id);
+                    var permission = storage.Permissions.FirstOrDefault(x => x.RecipientId == recipient.Id && !x.EndDate.HasValue);
 
                     if (permission != null)
                     {
@@ -482,7 +492,7 @@ namespace SaphirCloudBox.Services.Services
 
             var recipient = await _userService.GetByEmail(permissionDto.RecipientEmail);
 
-            var fileStoragePermission = fileStorage.Permissions.FirstOrDefault(x => x.RecipientId == recipient.Id);
+            var fileStoragePermission = fileStorage.Permissions.FirstOrDefault(x => x.RecipientId == recipient.Id && !x.EndDate.HasValue);
 
             if (fileStoragePermission == null)
             {
@@ -499,7 +509,7 @@ namespace SaphirCloudBox.Services.Services
 
                 foreach (var storage in parents)
                 {
-                    var permission = storage.Permissions.FirstOrDefault(x => x.RecipientId == recipient.Id);
+                    var permission = storage.Permissions.FirstOrDefault(x => x.RecipientId == recipient.Id && !x.EndDate.HasValue);
 
                     if (permission != null)
                     {

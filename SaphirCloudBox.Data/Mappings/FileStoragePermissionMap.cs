@@ -11,7 +11,7 @@ namespace SaphirCloudBox.Data.Mappings
     {
         public void Configure(EntityTypeBuilder<FileStoragePermission> builder)
         {
-            builder.HasKey(x => new { x.FileStorageId, x.RecipientId });
+            builder.HasKey(x => x.Id);
 
             builder.Property(x => x.Type).IsRequired();
 

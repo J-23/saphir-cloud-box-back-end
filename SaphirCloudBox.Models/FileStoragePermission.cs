@@ -7,6 +7,8 @@ namespace SaphirCloudBox.Models
 {
     public class FileStoragePermission
     {
+        public int Id { get; set; }
+
         public int FileStorageId { get; set; }
 
         public int RecipientId { get; set; }
