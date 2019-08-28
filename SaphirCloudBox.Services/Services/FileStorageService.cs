@@ -163,7 +163,7 @@ namespace SaphirCloudBox.Services.Services
                 Client = MapperFactory.CreateMapper<IClientMapper>().MapToModel(parentFileStorage.Client),
                 Owner = MapperFactory.CreateMapper<IUserMapper>().MapToModel(parentFileStorage.Owner),
                 Permissions = MapperFactory.CreateMapper<IPermissionMapper>()
-                    .MapCollectionToModel(parentFileStorage.Permissions),
+                    .MapCollectionToModel(parentFileStorage.Permissions.Where(x => !x.EndDate.HasValue)),
                 Storages = storages
             };
         }
@@ -209,7 +209,7 @@ namespace SaphirCloudBox.Services.Services
 
             if (!isAvailableToChange)
             {
-                throw new UnavailableOperationException("remove file", fileStorage.Id, userId);
+                throw new UnavailableOperationException("remove file", "File storage", fileStorage.Id, userId);
             }
 
             foreach (var file in fileStorage.Files)
@@ -234,7 +234,7 @@ namespace SaphirCloudBox.Services.Services
 
             if (!isAvailableToChange)
             {
-                throw new UnavailableOperationException("remove folder", fileStorage.Id, userId);
+                throw new UnavailableOperationException("remove folder", "File storage", fileStorage.Id, userId);
             }
 
             var files = await fileStorageRepository.GetFilesByParentId(fileStorage.Id, userId, clientId);
@@ -263,7 +263,7 @@ namespace SaphirCloudBox.Services.Services
 
             if (!isAvailableToChange)
             {
-                throw new UnavailableOperationException("update folder", fileStorage.Id, userId);
+                throw new UnavailableOperationException("update folder", "File storage", fileStorage.Id, userId);
             }
 
             if (fileStorage.ParentFileStorageId.HasValue)
@@ -297,7 +297,7 @@ namespace SaphirCloudBox.Services.Services
 
             if (!isAvailableToChange)
             {
-                throw new UnavailableOperationException("update file", fileStorage.Id, userId);
+                throw new UnavailableOperationException("update file", "File storage", fileStorage.Id, userId);
             }
 
             var fileName = Path.GetFileNameWithoutExtension(fileDto.Name);
@@ -362,7 +362,7 @@ namespace SaphirCloudBox.Services.Services
             await fileStorageRepository.Update(fileStorage);
         }
 
-        public async Task<FileStorageDto.StorageDto> AddPermission(AddPermissionDto permissionDto, int userId, int clientId)
+        public async Task<CheckPermissionResultDto> CheckPermission(CheckPermissionDto permissionDto, int userId, int clientId)
         {
             var fileStorageRepository = DataContextManager.CreateRepository<IFileStorageRepository>();
             var fileStorage = await fileStorageRepository.GetById(permissionDto.FileStorageId, userId, clientId);
@@ -371,70 +371,130 @@ namespace SaphirCloudBox.Services.Services
 
             if (!isAvailableToChange)
             {
-                throw new UnavailableOperationException("add permission", fileStorage.Id, permissionDto.RecipientEmail, userId);
+                throw new UnavailableOperationException("update permission", "Permission", fileStorage.Id, userId);
             }
 
-            var recipient = await _userService.GetByEmail(permissionDto.RecipientEmail);
+            var sender = await _userService.GetById(userId);
 
-            if (recipient.Id == userId || fileStorage.Permissions.Any(x => x.RecipientId == recipient.Id && !x.EndDate.HasValue))
-            {
-                throw new FoundSameObjectException("File storage permission", fileStorage.Id, permissionDto.RecipientEmail);
-            }
+            var users = await GetUsers(permissionDto.ClientIds, permissionDto.UserIds, sender.Id);
 
-            var permission = new FileStoragePermission
-            {
-                SenderId = userId,
-                RecipientId = recipient.Id,
-                Type = permissionDto.Type,
-                StartDate = DateTime.Now
-            };
+            var parentFileStorages = await fileStorageRepository.GetParents(fileStorage.ParentFileStorageId, sender.Id, clientId);
 
-            fileStorage.Permissions.Add(permission);
+            var recipients = new List<CheckPermissionResultDto.RecipientDto>();
 
-            await fileStorageRepository.Update(fileStorage);
+            fileStorage.Permissions.Where(x => users.Select(s => s.Id).Contains(x.RecipientId) && !x.EndDate.HasValue)
+                .ToList()
+                .ForEach(perm =>
+                {
+                    perm.Type = permissionDto.Type;
+                    recipients.Add(new CheckPermissionResultDto.RecipientDto
+                    {
+                        Id = perm.Recipient.Id,
+                        UserName = perm.Recipient.UserName,
+                        Email = perm.Recipient.Email,
+                        Type = CheckPermissionResultDto.UpdateType.Update
+                    });
+                });
+
+            users.Where(x => !fileStorage.Permissions.Any(y => y.RecipientId == x.Id && !y.EndDate.HasValue))
+                .ToList()
+                .ForEach(user =>
+                {
+                    fileStorage.Permissions.Add(new FileStoragePermission
+                    {
+                        RecipientId = user.Id,
+                        SenderId = sender.Id,
+                        Type = permissionDto.Type,
+                        StartDate = DateTime.Now
+                    });
+
+                    recipients.Add(new CheckPermissionResultDto.RecipientDto
+                    {
+                        Id = user.Id,
+                        UserName = user.UserName,
+                        Email = user.Email,
+                        Type = CheckPermissionResultDto.UpdateType.Add
+                    });
+                });
+
+            fileStorage.Permissions.Where(x => !users.Select(s => s.Id).Contains(x.RecipientId) && !x.EndDate.HasValue)
+                .ToList()
+                .ForEach(perm =>
+                {
+                    perm.EndDate = DateTime.Now;
+                    recipients.Add(new CheckPermissionResultDto.RecipientDto
+                    {
+                        Id = perm.Recipient.Id,
+                        UserName = perm.Recipient.UserName,
+                        Email = perm.Recipient.Email,
+                        Type = CheckPermissionResultDto.UpdateType.Remove
+                    });
+                });
 
             if (!fileStorage.ClientId.HasValue && !fileStorage.OwnerId.HasValue || fileStorage.ClientId.HasValue && !fileStorage.OwnerId.HasValue)
             {
-                var parents = await fileStorageRepository.GetParents(fileStorage.ParentFileStorageId, userId, clientId);
-
-                foreach (var storage in parents)
-                {
-                    var parentPermission= storage.Permissions.FirstOrDefault(x => x.RecipientId == recipient.Id && !x.EndDate.HasValue);
-
-                    if (parentPermission != null)
+                parentFileStorages.ToList()
+                    .ForEach(storage =>
                     {
-                        parentPermission.Type = permissionDto.Type;
-                    }
-                    else
-                    {
-                        var newPermission = new FileStoragePermission
-                        {
-                            SenderId = userId,
-                            RecipientId = recipient.Id,
-                            Type = permissionDto.Type,
-                            StartDate = DateTime.Now,
-                        };
+                        storage.Permissions.Where(x => users.Select(s => s.Id).Contains(x.RecipientId) && !x.EndDate.HasValue)
+                            .ToList()
+                            .ForEach(perm =>
+                            {
+                                perm.Type = permissionDto.Type;
+                            });
 
-                        storage.Permissions.Add(newPermission);
-                    }
-                    
-                    await fileStorageRepository.Update(storage);
-                }
+                        users.Where(x => !fileStorage.Permissions.Any(y => y.RecipientId == x.Id && !y.EndDate.HasValue))
+                            .ToList()
+                            .ForEach(user =>
+                            {
+                                storage.Permissions.Add(new FileStoragePermission
+                                {
+                                    RecipientId = user.Id,
+                                    SenderId = sender.Id,
+                                    Type = permissionDto.Type,
+                                    StartDate = DateTime.Now
+                                });
+                            });
+
+                        storage.Permissions.Where(x => !users.Select(s => s.Id).Contains(x.RecipientId) && !x.EndDate.HasValue)
+                            .ToList()
+                            .ForEach(perm =>
+                            {
+                                perm.EndDate = DateTime.Now;
+                            });
+                    });
             }
 
-            var storageDto = MapperFactory.CreateMapper<IFileStorageMapper>().MapToModel(fileStorage);
+            await SaveChanges(fileStorageRepository, fileStorage, parentFileStorages);
 
-            var userPermission = storageDto.Permissions.FirstOrDefault(x => x.Type == permissionDto.Type && x.Recipient == null);
-
-            if (userPermission != null)
+            return new CheckPermissionResultDto
             {
-                userPermission.Recipient = recipient;
-            }
-
-            return storageDto;
+                Storage = MapperFactory.CreateMapper<IFileStorageMapper>().MapToModel(fileStorage),
+                Sender = sender,
+                Recipients = recipients
+            };
         }
 
-        public async Task<FileStorageDto.StorageDto> UpdatePermission(UpdatePermissionDto permissionDto, int userId, int clientId)
+        private async Task SaveChanges(IFileStorageRepository fileStorageRepository, FileStorage fileStorage, IEnumerable<FileStorage> parentFileStorages)
+        {
+            using (var scope = new TransactionScope(TransactionScopeAsyncFlowOption.Enabled))
+            {
+                try
+                {
+                    await fileStorageRepository.Update(fileStorage);
+                    await fileStorageRepository.Update(parentFileStorages);
+                }
+                catch (Exception ex)
+                {
+                    scope.Dispose();
+                    throw new Exception(ex.Message, ex);
+                }
+
+                scope.Complete();
+            }
+        }
+
+        public async Task<CheckPermissionResultDto> UpdatePermission(UpdatePermissionDto permissionDto, int userId, int clientId)
         {
             var fileStorageRepository = DataContextManager.CreateRepository<IFileStorageRepository>();
             var fileStorage = await fileStorageRepository.GetById(permissionDto.FileStorageId, userId, clientId);
@@ -443,55 +503,66 @@ namespace SaphirCloudBox.Services.Services
 
             if (!isAvailableToChange)
             {
-                throw new UnavailableOperationException("update permission", fileStorage.Id, permissionDto.RecipientEmail, userId);
+                throw new UnavailableOperationException("update permission", "Permission", fileStorage.Id, userId);
             }
 
-            var recipient = await _userService.GetByEmail(permissionDto.RecipientEmail);
+            var sender = await _userService.GetById(userId);
+            var recipient = await _userService.GetById(permissionDto.RecipientId);
 
             var fileStoragePermission = fileStorage.Permissions.FirstOrDefault(x => x.RecipientId == recipient.Id && !x.EndDate.HasValue);
 
             if (fileStoragePermission == null)
             {
-                throw new NotFoundException("File storage permission", fileStorage.Id, permissionDto.RecipientEmail);
+                throw new NotFoundException("File storage permission", fileStorage.Id, recipient.Email);
             }
 
             fileStoragePermission.Type = permissionDto.Type;
-            fileStoragePermission.EndDate = null;
-
-            await fileStorageRepository.Update(fileStorage);
+            var parentFileStorages = await fileStorageRepository.GetParents(fileStorage.ParentFileStorageId, userId, clientId);
 
             if (!fileStorage.ClientId.HasValue && !fileStorage.OwnerId.HasValue || fileStorage.ClientId.HasValue && !fileStorage.OwnerId.HasValue)
             {
-                var parents = await fileStorageRepository.GetParents(fileStorage.ParentFileStorageId, userId, clientId);
-
-                foreach (var storage in parents)
-                {
-                    var permission = storage.Permissions.FirstOrDefault(x => x.RecipientId == recipient.Id && !x.EndDate.HasValue);
-
-                    if (permission != null)
+                parentFileStorages.ToList()
+                    .ForEach(storage =>
                     {
-                        permission.Type = permissionDto.Type;
-                        permission.EndDate = null;
-                    }
-                    else
-                    {
-                        storage.Permissions.Add(new FileStoragePermission
+                        var permission = storage.Permissions.FirstOrDefault(x => x.RecipientId == recipient.Id && !x.EndDate.HasValue);
+
+                        if (permission != null)
                         {
-                            RecipientId = recipient.Id,
-                            SenderId = userId,
-                            Type = permissionDto.Type,
-                            StartDate = DateTime.Now
-                        });
-                    }
-
-                    await fileStorageRepository.Update(storage);
-                }
+                            permission.Type = permissionDto.Type;
+                        }
+                        else
+                        {
+                            storage.Permissions.Add(new FileStoragePermission
+                            {
+                                RecipientId = recipient.Id,
+                                SenderId = userId,
+                                Type = permissionDto.Type,
+                                StartDate = DateTime.Now
+                            });
+                        }
+                    });
             }
 
-            return MapperFactory.CreateMapper<IFileStorageMapper>().MapToModel(fileStorage);
+            await SaveChanges(fileStorageRepository, fileStorage, parentFileStorages);
+
+            return new CheckPermissionResultDto
+            {
+                Storage = MapperFactory.CreateMapper<IFileStorageMapper>().MapToModel(fileStorage),
+                Sender = sender,
+                Recipients = new List<CheckPermissionResultDto.RecipientDto>
+                {
+                    new CheckPermissionResultDto.RecipientDto
+                    {
+                        Id = recipient.Id,
+                        UserName = recipient.UserName,
+                        Email = recipient.Email,
+                        Type = CheckPermissionResultDto.UpdateType.Update
+                    }
+                }
+            };
         }
 
-        public async Task<FileStorageDto.StorageDto> RemovePermission(RemovePermissionDto permissionDto, int userId, int clientId)
+        public async Task<CheckPermissionResultDto> RemovePermission(RemovePermissionDto permissionDto, int userId, int clientId)
         {
             var fileStorageRepository = DataContextManager.CreateRepository<IFileStorageRepository>();
             var fileStorage = await fileStorageRepository.GetById(permissionDto.FileStorageId, userId, clientId);
@@ -500,39 +571,65 @@ namespace SaphirCloudBox.Services.Services
 
             if (!isAvailableToChange)
             {
-                throw new UnavailableOperationException("remove permission", fileStorage.Id, permissionDto.RecipientEmail, userId);
+                throw new UnavailableOperationException("remove permission", "Permission", fileStorage.Id, userId);
             }
 
-            var recipient = await _userService.GetByEmail(permissionDto.RecipientEmail);
+            var sender = await _userService.GetById(userId);
+            var recipient = await _userService.GetById(permissionDto.RecipientId);
 
             var fileStoragePermission = fileStorage.Permissions.FirstOrDefault(x => x.RecipientId == recipient.Id && !x.EndDate.HasValue);
 
             if (fileStoragePermission == null)
             {
-                throw new NotFoundException("File storage permission", fileStorage.Id, permissionDto.RecipientEmail);
+                throw new NotFoundException("File storage permission", fileStorage.Id, recipient.Email);
             }
 
             fileStoragePermission.EndDate = DateTime.Now;
 
-            await fileStorageRepository.Update(fileStorage);
+            var parentFileStorages = await fileStorageRepository.GetParents(fileStorage.ParentFileStorageId, userId, clientId);
 
             if (!fileStorage.ClientId.HasValue && !fileStorage.OwnerId.HasValue || fileStorage.ClientId.HasValue && !fileStorage.OwnerId.HasValue)
             {
-                var parents = await fileStorageRepository.GetParents(fileStorage.ParentFileStorageId, userId, clientId);
-
-                foreach (var storage in parents)
-                {
-                    var permission = storage.Permissions.FirstOrDefault(x => x.RecipientId == recipient.Id && !x.EndDate.HasValue);
-
-                    if (permission != null)
+                parentFileStorages.ToList()
+                    .ForEach(storage =>
                     {
-                        permission.EndDate = DateTime.Now;
-                        await fileStorageRepository.Update(storage);
-                    }
-                }
+                        var permission = storage.Permissions.FirstOrDefault(x => x.RecipientId == recipient.Id && !x.EndDate.HasValue);
+
+                        if (permission != null)
+                        {
+                            permission.EndDate = DateTime.Now;
+                        }
+                    });
             }
 
-            return MapperFactory.CreateMapper<IFileStorageMapper>().MapToModel(fileStorage);
+            await SaveChanges(fileStorageRepository, fileStorage, parentFileStorages);
+
+            return new CheckPermissionResultDto
+            {
+                Storage = MapperFactory.CreateMapper<IFileStorageMapper>().MapToModel(fileStorage),
+                Sender = sender,
+                Recipients = new List<CheckPermissionResultDto.RecipientDto>
+                {
+                    new CheckPermissionResultDto.RecipientDto
+                    {
+                        Id = recipient.Id,
+                        UserName = recipient.UserName,
+                        Email = recipient.Email,
+                        Type = CheckPermissionResultDto.UpdateType.Remove
+                    }
+                }
+            };
+        }
+
+        private async Task<IEnumerable<UserDto>> GetUsers(IEnumerable<int> clientIds, IEnumerable<int> userIds, int userId)
+        {
+            var users = (await _userService.GetByClientIds(clientIds)).ToList();
+
+            userIds = userIds.Where(x => !users.Select(s => s.Id).Contains(x));
+
+            users.AddRange(await _userService.GetByIds(userIds));
+
+            return users.Where(x => x.Id != userId).ToList();
         }
 
         public async Task<IEnumerable<FileStorageDto.StorageDto>> GetSharedFiles(int userId)

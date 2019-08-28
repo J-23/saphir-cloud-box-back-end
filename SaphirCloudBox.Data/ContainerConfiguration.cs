@@ -35,7 +35,10 @@ namespace SaphirCloudBox.Data
             container.RegisterType<ILookupNormalizer, LookupNormalizer>();
             container.RegisterType<IPasswordHasher<User>, PasswordHasher<User>>();
             container.RegisterType<IUserStore<User>, UserStore<User, Role, SaphirCloudBoxDataContext, int>>();
+            container.RegisterType<UserStore<User, Role, SaphirCloudBoxDataContext, int>, SaphirUserStore>();
             container.RegisterType<UserManager<User>>();
+            container.RegisterType<SaphirUserManager>();
+            container.RegisterType<SaphirUserManager>();
             container.RegisterType<SignInManager<User>>();
             container.RegisterType<RoleManager<Role>>();
 

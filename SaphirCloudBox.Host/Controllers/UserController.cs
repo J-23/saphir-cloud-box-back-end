@@ -33,7 +33,12 @@ namespace SaphirCloudBox.Host.Controllers
         [Route("list")]
         public async Task<ActionResult> GetUserList()
         {
-            var users = await _userService.GetAll();
+            if (!IsAvailableOperation())
+            {
+                return BadRequest();
+            }
+
+            var users = await _userService.GetAll(UserId, ClientId);
             return Ok(users);
         }
 

@@ -14,10 +14,10 @@ namespace SaphirCloudBox.Data.Repositories
 {
     public class FileStorageRepository : AbstractRepository<User, Role, int>, IFileStorageRepository
     {
-        private readonly UserManager<User> _userManager;
+        private readonly SaphirUserManager _userManager;
         private readonly RoleManager<Role> _roleManager;
 
-        public FileStorageRepository(SaphirCloudBoxDataContext context, UserManager<User> userManager, RoleManager<Role> roleManager) : base(context)
+        public FileStorageRepository(SaphirCloudBoxDataContext context, SaphirUserManager userManager, RoleManager<Role> roleManager) : base(context)
         {
             _userManager = userManager ?? throw new ArgumentNullException(nameof(userManager));
             _roleManager = roleManager ?? throw new ArgumentNullException(nameof(roleManager));
@@ -252,6 +252,16 @@ namespace SaphirCloudBox.Data.Repositories
             }
 
             return parents;
+        }
+
+        public async Task Update(IEnumerable<FileStorage> fileStorages)
+        {
+            foreach (var fileStorage in fileStorages)
+            {
+                Context.Entry(fileStorage).State = EntityState.Modified;
+            }
+
+            await Context.SaveChangesAsync();
         }
     }
 }

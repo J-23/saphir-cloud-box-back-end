@@ -23,6 +23,18 @@ namespace SaphirCloudBox.Host.Controllers
             _logService = logService ?? throw new ArgumentNullException(nameof(logService));
         }
 
+        protected int? GetUserId()
+        {
+            var userIdClaim = User.Claims.FirstOrDefault(x => x.Type.Contains("UserId"));
+
+            if (userIdClaim == null)
+            {
+                return null;
+            }
+
+            return Convert.ToInt32(userIdClaim.Value);
+        }
+
         protected bool IsAvailableOperation()
         {
             var userIdClaim = User.Claims.FirstOrDefault(x => x.Type.Contains("UserId"));

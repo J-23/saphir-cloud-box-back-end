@@ -18,8 +18,13 @@ namespace SaphirCloudBox.Services.Services
 {
     public class ClientService : AbstractService, IClientService
     {
-        public ClientService(IUnityContainer container, ISaphirCloudBoxDataContextManager dataContextManager) : base(container, dataContextManager)
+        private readonly IUserService _userService;
+
+        public ClientService(IUnityContainer container, 
+            ISaphirCloudBoxDataContextManager dataContextManager,
+            IUserService userService) : base(container, dataContextManager)
         {
+            _userService = userService ?? throw new ArgumentNullException(nameof(userService));
         }
 
         public async Task Add(AddClientDto clientDto)
@@ -47,6 +52,27 @@ namespace SaphirCloudBox.Services.Services
             var clientRepository = DataContextManager.CreateRepository<IClientRepository>();
 
             var clients = await clientRepository.GetAll();
+
+            return MapperFactory.CreateMapper<IClientMapper>().MapCollectionToModel(clients);
+        }
+
+        public async Task<IEnumerable<ClientDto>> GetByUserId(int userId)
+        {
+            var clientRepository = DataContextManager.CreateRepository<IClientRepository>();
+
+            var user = await _userService.GetById(userId);
+
+            var clients = new List<Client>();
+
+            switch (user.Role.RoleType)
+            {
+                case Enums.RoleType.SuperAdmin:
+                    clients = (await clientRepository.GetAll()).ToList();
+                    break;
+                case Enums.RoleType.ClientAdmin:
+                    clients.Add(await clientRepository.GetById(user.Client.Id));
+                    break;
+            }
 
             return MapperFactory.CreateMapper<IClientMapper>().MapCollectionToModel(clients);
         }

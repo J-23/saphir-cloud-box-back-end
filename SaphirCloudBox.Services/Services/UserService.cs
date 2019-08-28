@@ -2,6 +2,7 @@
 using Anthill.Common.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using SaphirCloudBox.Data;
 using SaphirCloudBox.Data.Contracts;
 using SaphirCloudBox.Data.Contracts.Repositories;
 using SaphirCloudBox.Models;
@@ -22,13 +23,13 @@ namespace SaphirCloudBox.Services.Services
 {
     public class UserService : AbstractService, IUserService
     {
-        private readonly UserManager<User> _userManager;
+        private readonly SaphirUserManager _userManager;
         private readonly SignInManager<User> _signInManager;
         private readonly RoleManager<Role> _roleManager;
 
         public UserService(IUnityContainer container,
             ISaphirCloudBoxDataContextManager dataContextManager,
-            UserManager<User> userManager,
+            SaphirUserManager userManager,
             SignInManager<User> signInManager,
             RoleManager<Role> roleManager) : base(container, dataContextManager)
         {
@@ -108,9 +109,40 @@ namespace SaphirCloudBox.Services.Services
             return user.ResetPasswordCode;
         }
 
-        public async Task<IEnumerable<UserDto>> GetAll()
+        public async Task<IEnumerable<UserDto>> GetAll(int userId, int clientId)
         {
-            var users = await _userManager.Users.OrderByDescending(ord => ord.CreateDate).ThenByDescending(ord => ord.UpdateDate).ToListAsync();
+            var currentUser = await GetById(userId);
+
+            var users = new List<User>();
+
+            switch (currentUser.Role.RoleType)
+            {
+                case Enums.RoleType.SuperAdmin:
+                    users = await _userManager.Users.ToListAsync();
+                    break;
+                case Enums.RoleType.ClientAdmin:
+                    users = await _userManager.Users.Where(x => x.ClientId == currentUser.Client.Id).ToListAsync();
+                    break;
+                case Enums.RoleType.DepartmentHead:
+                    if (currentUser.Department != null)
+                    {
+                        users = await _userManager.Users.Where(x => x.ClientId == currentUser.Client.Id && x.DepartmentId == currentUser.Department.Id).ToListAsync();
+                    }
+                    break;
+                case Enums.RoleType.Employee:
+                    if (currentUser.Department != null)
+                    {
+                        users = await _userManager.Users.Where(x => x.ClientId == currentUser.Client.Id && x.DepartmentId == currentUser.Department.Id).ToListAsync();
+                    }
+                    break;
+                default:
+                    break;
+            }
+
+            users = users.OrderByDescending(ord => ord.CreateDate)
+                .ThenByDescending(ord => ord.UpdateDate)
+                .ToList();
+
             var roles = await _roleManager.Roles.ToListAsync();
             var userDtos = new List<UserDto>();
 
@@ -442,6 +474,18 @@ namespace SaphirCloudBox.Services.Services
 
                 await fileStorageRepository.Add(newFolder);
             }
+        }
+
+        public async Task<IEnumerable<UserDto>> GetByClientIds(IEnumerable<int> clientIds)
+        {
+            var users = await _userManager.FindByClientIds(clientIds);
+            return MapperFactory.CreateMapper<IUserMapper>().MapCollectionToModel(users);
+        }
+
+        public async Task<IEnumerable<UserDto>> GetByIds(IEnumerable<int> userIds)
+        {
+            var users = await _userManager.FindByIds(userIds);
+            return MapperFactory.CreateMapper<IUserMapper>().MapCollectionToModel(users);
         }
     }
 }

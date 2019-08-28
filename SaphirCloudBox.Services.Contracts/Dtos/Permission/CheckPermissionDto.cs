@@ -6,10 +6,11 @@ using System.Text;
 
 namespace SaphirCloudBox.Services.Contracts.Dtos.Permission
 {
-    public class AddPermissionDto
+    public class CheckPermissionDto
     {
-        [Required]
-        public string RecipientEmail { get; set; }
+        public IEnumerable<int> UserIds { get; set; }
+
+        public IEnumerable<int> ClientIds { get; set; }
 
         [Required]
         public int FileStorageId { get; set; }

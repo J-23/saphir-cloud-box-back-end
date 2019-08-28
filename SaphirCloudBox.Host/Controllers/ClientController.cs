@@ -34,7 +34,19 @@ namespace SaphirCloudBox.Host.Controllers
         [AllowAnonymous]
         public async Task<ActionResult> GetClientList()
         {
-            var clients = await _clientService.GetAll();
+            var userId = GetUserId();
+
+            IEnumerable<ClientDto> clients = new List<ClientDto>();
+
+            if (userId.HasValue)
+            {
+                clients = await _clientService.GetByUserId(userId.Value);
+            }
+            else
+            {
+                clients = await _clientService.GetAll();
+            }
+
             return Ok(clients);
         }
 

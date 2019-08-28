@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using SaphirCloudBox.Enums;
 using SaphirCloudBox.Host.Helpers;
 using SaphirCloudBox.Host.Infractructure;
 using SaphirCloudBox.Services.Contracts.Dtos;
@@ -46,6 +47,7 @@ namespace SaphirCloudBox.Host.Controllers
             _emailSender = emailSender ?? throw new ArgumentNullException(nameof(emailSender));
 
             _appSettings = appSettings ?? throw new ArgumentNullException(nameof(appSettings));
+            MessageUtil.AppSettings = _appSettings;
         }
 
         [HttpGet]
@@ -161,29 +163,32 @@ namespace SaphirCloudBox.Host.Controllers
         }
 
         [HttpPost]
-        [Route("add/permission")]
-        public async Task<ActionResult> AddPermission([FromBody]AddPermissionDto permissionDto)
+        [Route("check/permission")]
+        public async Task<ActionResult> AddPermission([FromBody]CheckPermissionDto permissionDto)
         {
-            if (!IsAvailableOperation())
+            if (!IsAvailableOperation() || permissionDto.UserIds.Count() == 0 && permissionDto.ClientIds.Count() == 0)
             {
                 return BadRequest();
             }
 
-            var storage = await _fileStorageService.AddPermission(permissionDto, UserId, ClientId);
-            AddLog(Enums.LogType.Create, LogMessage.CreatePermissionMessage(permissionDto.FileStorageId, LogMessage.CreateVerb, UserId));
+            var result = await _fileStorageService.CheckPermission(permissionDto, UserId, ClientId);
+            AddLog(LogType.Create, LogMessage.CreatePermissionMessage(permissionDto.FileStorageId, LogMessage.CreateVerb, UserId));
 
-            var message = GetAddPermissionMessage(storage, permissionDto);
-
-            try
+            foreach (var recipient in result.Recipients)
             {
-                await _emailSender.Send(EmailType.Notification, new MailAddress(message.Recipient.Email, message.Recipient.UserName), message.Subject, message.MessageBody);
-                await _notificationService.Add(message.Recipient.Id, storage.Id, message.Subject, message.MessageBody, Enums.NotificationType.Success);
-            }
-            catch (Exception)
-            {
-                await _notificationService.Add(message.Recipient.Id, storage.Id, message.Subject, message.MessageBody, Enums.NotificationType.NotSent);
-            }
+                var message = MessageUtil.GetMessage(permissionDto.Type, recipient, result.Storage, result.Sender);
 
+                try
+                {
+                    await _emailSender.Send(EmailType.Notification, new MailAddress(recipient.Email, recipient.UserName), message.Subject, message.MessageBody);
+                    await _notificationService.Add(recipient.Id, result.Storage.Id, message.Subject, message.MessageBody, Enums.NotificationType.Success);
+                }
+                catch (Exception)
+                {
+                    await _notificationService.Add(recipient.Id, result.Storage.Id, message.Subject, message.MessageBody, Enums.NotificationType.NotSent);
+                }
+            }
+            
             return Ok();
         }
 
@@ -196,19 +201,20 @@ namespace SaphirCloudBox.Host.Controllers
                 return BadRequest();
             }
 
-            var storage = await _fileStorageService.UpdatePermission(permissionDto, UserId, ClientId);
-            AddLog(Enums.LogType.Update, LogMessage.CreatePermissionMessage(permissionDto.FileStorageId, LogMessage.UpdateVerb, UserId));
+            var result = await _fileStorageService.UpdatePermission(permissionDto, UserId, ClientId);
+            AddLog(LogType.Update, LogMessage.CreatePermissionMessage(permissionDto.FileStorageId, LogMessage.UpdateVerb, UserId));
 
-            var message = GetUpdatePermissionMessage(storage, permissionDto);
+            var recipient = result.Recipients.First();
+            var message = MessageUtil.GetUpdatePermissionMessage(permissionDto.Type, recipient, result.Storage, result.Sender);
 
             try
             {
-                await _emailSender.Send(EmailType.Notification, new MailAddress(message.Recipient.Email, message.Recipient.UserName), message.Subject, message.MessageBody);
-                await _notificationService.Add(message.Recipient.Id, storage.Id, message.Subject, message.MessageBody, Enums.NotificationType.Success); 
+                await _emailSender.Send(EmailType.Notification, new MailAddress(recipient.Email, recipient.UserName), message.Subject, message.MessageBody);
+                await _notificationService.Add(recipient.Id, result.Storage.Id, message.Subject, message.MessageBody, Enums.NotificationType.Success); 
             }
             catch (Exception)
             {
-                await _notificationService.Add(message.Recipient.Id, storage.Id, message.Subject, message.MessageBody, Enums.NotificationType.NotSent);
+                await _notificationService.Add(recipient.Id, result.Storage.Id, message.Subject, message.MessageBody, Enums.NotificationType.NotSent);
             }
             return Ok();
         }
@@ -222,19 +228,20 @@ namespace SaphirCloudBox.Host.Controllers
                 return BadRequest();
             }
 
-            var storage = await _fileStorageService.RemovePermission(permissionDto, UserId, ClientId);
-            AddLog(Enums.LogType.Remove, LogMessage.CreatePermissionMessage(permissionDto.FileStorageId, LogMessage.UpdateVerb, UserId));
+            var result = await _fileStorageService.RemovePermission(permissionDto, UserId, ClientId);
+            AddLog(LogType.Remove, LogMessage.CreatePermissionMessage(permissionDto.FileStorageId, LogMessage.UpdateVerb, UserId));
 
-            var message = GetRemovePermissionMessage(storage, permissionDto, UserId);
+            var recipient = result.Recipients.First();
+            var message = MessageUtil.GetRemovePermissionMessage(recipient, result.Storage, result.Sender);
 
             try
             {
-                await _emailSender.Send(EmailType.Notification, new MailAddress(message.Recipient.Email, message.Recipient.UserName), message.Subject, message.MessageBody);
-                await _notificationService.Add(message.Recipient.Id, storage.Id, message.Subject, message.MessageBody, Enums.NotificationType.Success);
+                await _emailSender.Send(EmailType.Notification, new MailAddress(recipient.Email, recipient.UserName), message.Subject, message.MessageBody);
+                await _notificationService.Add(recipient.Id, result.Storage.Id, message.Subject, message.MessageBody, Enums.NotificationType.Success);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                await _notificationService.Add(message.Recipient.Id, storage.Id, message.Subject, message.MessageBody, Enums.NotificationType.NotSent);
+                await _notificationService.Add(recipient.Id, result.Storage.Id, message.Subject, message.MessageBody, Enums.NotificationType.NotSent);
             }
 
             return Ok();
@@ -251,55 +258,6 @@ namespace SaphirCloudBox.Host.Controllers
 
             var storages = await _fileStorageService.GetSharedFiles(UserId);
             return Ok(storages);
-        }
-
-        private (string Subject, string MessageBody, UserDto Recipient) GetAddPermissionMessage(FileStorageDto.StorageDto storage, AddPermissionDto permissionDto)
-        {
-            var permission = storage.Permissions.FirstOrDefault(x => x.Type == permissionDto.Type && x.Recipient.Email.Equals(permissionDto.RecipientEmail));
-
-            var fileStorageName = String.Join("", storage.Name, storage.File?.Extension);
-            var parentStorageId = storage.Client == null && storage.Owner != null ? _appSettings.SharedWithMeUrlPart : storage.ParentStorageId.ToString();
-            var fileStorageType = storage.IsDirectory ? Constants.NotificationMessages.Folder : Constants.NotificationMessages.File;
-
-            var link = String.Join("/", _appSettings.FrontEndUrl, _appSettings.FileManagerUrlPart, parentStorageId);
-
-            var subject = Constants.NotificationMessages.NotificationSubject;
-            var message = String.Format(Constants.NotificationMessages.AddPermissionNotificationMessage, permission.Recipient.UserName, permission.Sender.UserName,
-                permissionDto.Type.ToString(), fileStorageType, fileStorageName, link);
-
-            return (subject, message, permission.Recipient);
-        }
-
-        private (string Subject, string MessageBody, UserDto Recipient) GetUpdatePermissionMessage(FileStorageDto.StorageDto storage, UpdatePermissionDto permissionDto)
-        {
-            var permission = storage.Permissions.FirstOrDefault(x => x.Type == permissionDto.Type && x.Recipient.Email.Equals(permissionDto.RecipientEmail));
-
-            var fileStorageName = String.Join("", storage.Name, storage.File?.Extension);
-            var parentStorageId = storage.Client == null && storage.Owner != null ? _appSettings.SharedWithMeUrlPart : storage.ParentStorageId.ToString();
-            var fileStorageType = storage.IsDirectory ? Constants.NotificationMessages.Folder : Constants.NotificationMessages.File;
-
-            var link = String.Join("/", _appSettings.FrontEndUrl, _appSettings.FileManagerUrlPart, parentStorageId);
-
-            var subject = Constants.NotificationMessages.NotificationSubject;
-            var message = String.Format(Constants.NotificationMessages.UpdatePermissionNotificationMessage, permission.Recipient.UserName, permission.Sender.UserName,
-                fileStorageType, fileStorageName, permissionDto.Type.ToString(), link);
-
-            return (subject, message, permission.Recipient);
-        }
-
-        private (string Subject, string MessageBody, UserDto Recipient) GetRemovePermissionMessage(FileStorageDto.StorageDto storage, RemovePermissionDto permissionDto, int userId)
-        {
-            var permission = storage.Permissions.FirstOrDefault(x => x.Recipient.Email.Equals(permissionDto.RecipientEmail) && x.Sender.Id == userId);
-
-            var fileStorageName = String.Join("", storage.Name, storage.File?.Extension);
-            var parentStorageId = storage.Client == null && storage.Owner != null ? _appSettings.SharedWithMeUrlPart : storage.ParentStorageId.ToString();
-            var fileStorageType = storage.IsDirectory ? Constants.NotificationMessages.Folder : Constants.NotificationMessages.File;
-
-            var subject = Constants.NotificationMessages.NotificationSubject;
-            var message = String.Format(Constants.NotificationMessages.RemovePermissionNotificationMessage, permission.Recipient.UserName, permission.Sender.UserName,
-                fileStorageType, fileStorageName);
-
-            return (subject, message, permission.Recipient);
         }
     }
 }

@@ -1,6 +1,7 @@
 ﻿using Anthill.Common.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using SaphirCloudBox.Data;
 using SaphirCloudBox.Data.Contracts;
 using SaphirCloudBox.Models;
 using SaphirCloudBox.Services.Contracts.Dtos;
@@ -19,12 +20,12 @@ namespace SaphirCloudBox.Services.Services
     public class RoleService : AbstractService, IRoleService
     {
         private readonly RoleManager<Role> _roleManager;
-        private readonly UserManager<User> _userManager;
+        private readonly SaphirUserManager _userManager;
 
         public RoleService(IUnityContainer container,
             ISaphirCloudBoxDataContextManager dataContextManager, 
             RoleManager<Role> roleManager,
-            UserManager<User> userManager) : base(container, dataContextManager)
+            SaphirUserManager userManager) : base(container, dataContextManager)
         {
             _roleManager = roleManager ?? throw new ArgumentNullException(nameof(roleManager));
             _userManager = userManager ?? throw new ArgumentNullException(nameof(userManager));

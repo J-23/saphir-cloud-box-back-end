@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using SaphirCloudBox.Data;
 using SaphirCloudBox.Enums;
 using SaphirCloudBox.Models;
 using System;
@@ -12,10 +13,10 @@ namespace SaphirCloudBox.Services.Utils
 {
     public class PermissionHelper: IPermissionHelper
     {
-        private readonly UserManager<User> _userManager;
+        private readonly SaphirUserManager _userManager;
         private readonly RoleManager<Role> _roleManager;
 
-        public PermissionHelper(UserManager<User> userManager, RoleManager<Role> roleManager)
+        public PermissionHelper(SaphirUserManager userManager, RoleManager<Role> roleManager)
         {
             _userManager = userManager ?? throw new ArgumentNullException(nameof(userManager));
             _roleManager = roleManager ?? throw new ArgumentNullException(nameof(roleManager));

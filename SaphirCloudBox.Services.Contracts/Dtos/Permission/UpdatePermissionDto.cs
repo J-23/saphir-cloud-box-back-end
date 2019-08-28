@@ -9,7 +9,7 @@ namespace SaphirCloudBox.Services.Contracts.Dtos.Permission
     public class UpdatePermissionDto
     {
         [Required]
-        public string RecipientEmail { get; set; }
+        public int RecipientId { get; set; }
 
         [Required]
         public int FileStorageId { get; set; }

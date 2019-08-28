@@ -20,7 +20,7 @@ namespace SaphirCloudBox.Services.Mappers
             {
                 cfg.CreateMap<User, UserDto>()
                     .ForMember(x => x.UserName, y => y.MapFrom(z => z.UserName))
-                    .ForMember(x => x.Client, y => y.Ignore())
+                    .ForMember(x => x.Client, y => y.MapFrom(z => z.Client))
                     .ForMember(x => x.Department, y => y.Ignore())
                     .ForMember(x => x.Role, y => y.Ignore());
 
