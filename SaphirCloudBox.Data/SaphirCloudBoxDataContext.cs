@@ -55,6 +55,11 @@ namespace SaphirCloudBox.Data
 
             /*builder.Entity<FileStorage>().HasData(
                 new FileStorage { Id = 1, Name = "root", CreateById = 3, IsDirectory = true });*/
+
+            //builder.Entity<User>().Property(x => x.IsActive).HasDefaultValue(1);
+            //builder.Entity<Role>().Property(x => x.IsActive).HasDefaultValue(1);
+            //builder.Entity<Client>().Property(x => x.IsActive).HasDefaultValue(1);
+            //builder.Entity<Department>().Property(x => x.IsActive).HasDefaultValue(1);
         }
     }
 }

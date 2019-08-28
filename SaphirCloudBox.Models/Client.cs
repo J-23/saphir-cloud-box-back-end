@@ -17,5 +17,7 @@ namespace SaphirCloudBox.Models
         public virtual IEnumerable<User> Users { get; set; }
 
         public virtual ICollection<Department> Departments { get; set; }
+
+        public Boolean IsActive { get; set; }
     }
 }

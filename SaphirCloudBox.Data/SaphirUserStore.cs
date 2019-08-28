@@ -19,14 +19,14 @@ namespace SaphirCloudBox.Data
         public async Task<IEnumerable<User>> FindByClientIds(IEnumerable<int> clientIds)
         {
             return await Context.Set<User>()
-                .Where(x => clientIds.Contains(x.ClientId))
+                .Where(x => clientIds.Contains(x.ClientId) && x.IsActive)
                 .ToListAsync();
         }
 
         public async Task<IEnumerable<User>> FindByIds(IEnumerable<int> userIds)
         {
             return await Context.Set<User>()
-                 .Where(x => userIds.Contains(x.Id))
+                 .Where(x => userIds.Contains(x.Id) && x.IsActive)
                  .ToListAsync();
         }
     }

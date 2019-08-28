@@ -19,5 +19,7 @@ namespace SaphirCloudBox.Models
         public virtual Client Client { get; set; }
 
         public virtual IEnumerable<User> Users { get; set; }
+
+        public Boolean IsActive { get; set; }
     }
 }

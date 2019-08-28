@@ -20,6 +20,7 @@ namespace SaphirCloudBox.Data.Repositories
         public async Task<IEnumerable<Department>> GetAll()
         {
             return await Context.Set<Department>()
+                .Where(x => x.IsActive)
                 .OrderByDescending(ord => ord.CreateDate)
                 .ThenByDescending(ord => ord.UpdateDate)
                 .ToListAsync();
@@ -28,7 +29,7 @@ namespace SaphirCloudBox.Data.Repositories
         public async Task<IEnumerable<Department>> GetByClientId(int clientId)
         {
             return await Context.Set<Department>()
-                .Where(x => x.ClientId == clientId)
+                .Where(x => x.ClientId == clientId && x.Client.IsActive)
                 .OrderByDescending(ord => ord.CreateDate)
                 .ThenByDescending(ord => ord.UpdateDate)
                 .ToListAsync();
@@ -36,7 +37,7 @@ namespace SaphirCloudBox.Data.Repositories
 
         public async Task<Department> GetById(int departmentId)
         {
-            return await Context.Set<Department>().FirstOrDefaultAsync(x => x.Id == departmentId);
+            return await Context.Set<Department>().FirstOrDefaultAsync(x => x.Id == departmentId && x.IsActive);
         }
 
         public async Task Remove(Department department)

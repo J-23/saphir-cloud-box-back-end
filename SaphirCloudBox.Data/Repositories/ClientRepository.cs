@@ -29,6 +29,7 @@ namespace SaphirCloudBox.Data.Repositories
         public async Task<IEnumerable<Client>> GetAll()
         {
             return await Context.Set<Client>()
+                .Where(x => x.IsActive)
                 .OrderByDescending(ord => ord.CreateDate)
                 .ThenByDescending(ord => ord.UpdateDate)
                 .ToListAsync();
@@ -36,12 +37,12 @@ namespace SaphirCloudBox.Data.Repositories
 
         public async Task<Client> GetById(int clientId)
         {
-            return await Context.Set<Client>().FirstOrDefaultAsync(x => x.Id == clientId);
+            return await Context.Set<Client>().FirstOrDefaultAsync(x => x.Id == clientId && x.IsActive);
         }
 
         public async Task<Client> GetByName(string clientName)
         {
-            return await Context.Set<Client>().FirstOrDefaultAsync(x => x.Name.Equals(clientName));
+            return await Context.Set<Client>().FirstOrDefaultAsync(x => x.Name.Equals(clientName) && x.IsActive);
         }
 
         public async Task Remove(Client client)

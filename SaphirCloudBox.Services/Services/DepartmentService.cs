@@ -33,7 +33,7 @@ namespace SaphirCloudBox.Services.Services
                 throw new NotFoundDependencyObjectException("Client", departmentDto.ClientId);
             }
 
-            if (client.Departments.Select(s => s.Name).Contains(departmentDto.Name))
+            if (client.Departments.Where(x => x.IsActive).Select(s => s.Name).Contains(departmentDto.Name))
             {
                 throw new FoundSameObjectException("Department", departmentDto.Name);
             }
@@ -41,7 +41,8 @@ namespace SaphirCloudBox.Services.Services
             var department = new Department
             {
                 Name = departmentDto.Name,
-                CreateDate = DateTime.Now
+                CreateDate = DateTime.Now,
+                IsActive = true
             };
 
             client.Departments.Add(department);
@@ -77,12 +78,14 @@ namespace SaphirCloudBox.Services.Services
                 throw new NotFoundException("Department", departmentDto.Id);
             }
 
-            if (department.Users.Count() > 0)
+            if (department.Users.Where(x => x.IsActive).Count() > 0)
             {
                 throw new ExistDependencyException("Department", departmentDto.Id, new List<string> { "Users" });
             }
 
-            await departmentRepository.Remove(department);
+            department.IsActive = false;
+
+            await departmentRepository.Update(department);
         }
 
         public async Task Update(UpdateDepartmentDto departmentDto)
@@ -105,7 +108,7 @@ namespace SaphirCloudBox.Services.Services
                 throw new NotFoundDependencyObjectException("Client", departmentDto.ClientId);
             }
 
-            var otherDepartment = client.Departments.FirstOrDefault(x => x.Name.Equals(departmentDto.Name));
+            var otherDepartment = client.Departments.FirstOrDefault(x => x.Name.Equals(departmentDto.Name) && x.IsActive);
             if (otherDepartment != null && otherDepartment.Id != departmentDto.Id)
             {
                 throw new FoundSameObjectException("Department", departmentDto.Name);

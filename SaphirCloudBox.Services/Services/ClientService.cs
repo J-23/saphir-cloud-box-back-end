@@ -41,7 +41,8 @@ namespace SaphirCloudBox.Services.Services
             var newClient = new Client
             {
                 Name = clientDto.Name,
-                CreateDate = DateTime.Now
+                CreateDate = DateTime.Now,
+                IsActive = true
             };
 
             await clientRepository.Add(newClient);
@@ -88,12 +89,13 @@ namespace SaphirCloudBox.Services.Services
                 throw new NotFoundException("Client", clientDto.Id);
             }
 
-            if (client.Departments.Count() > 0 || client.Users.Count() > 0)
+            if (client.Departments.Where(x => x.IsActive).Count() > 0 || client.Users.Where(x => x.IsActive).Count() > 0)
             {
                 throw new ExistDependencyException("Client", clientDto.Id, new List<string> { "Departments", "Users" });
             }
 
-            await clientRepository.Remove(client);
+            client.IsActive = false;
+            await clientRepository.Update(client);
         }
 
         public async Task Update(UpdateClientDto clientDto)

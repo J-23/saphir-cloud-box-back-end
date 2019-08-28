@@ -22,8 +22,6 @@ namespace SaphirCloudBox.Data.Contracts.Repositories
 
         Task<Boolean> UserHasFolder(int id);
 
-        Task RemoveFolder(FileStorage fileStorage);
-
         Task<Boolean> IsAvailableToChange(int id, int userId, int clientId);
 
         Task<IEnumerable<FileStorage>> GetFilesByParentId(int id, int userId, int clientId);
@@ -33,5 +31,7 @@ namespace SaphirCloudBox.Data.Contracts.Repositories
         Task<IEnumerable<FileStorage>> GetParents(int? parentId, int userId, int clientId);
 
         Task Update(IEnumerable<FileStorage> fileStorages);
+
+        Task<IEnumerable<FileStorage>> GetByUserId(int id);
     }
 }

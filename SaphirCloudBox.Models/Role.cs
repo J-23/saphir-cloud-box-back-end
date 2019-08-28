@@ -9,5 +9,7 @@ namespace SaphirCloudBox.Models
     public class Role: IdentityRole<int>
     {
         public RoleType RoleType { get; set; }
+
+        public Boolean IsActive { get; set; }
     }
 }

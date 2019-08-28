@@ -82,12 +82,11 @@ namespace SaphirCloudBox.Data.Repositories
 
         public async Task Remove(FileStorage fileStorage)
         {
-            Context.Set<FileStorage>().Remove(fileStorage);
-            await Context.SaveChangesAsync();
-        }
+            Context.Set<Notification>().RemoveRange(Context.Set<Notification>().Where(x => x.FileStorageId.HasValue && x.FileStorageId.Value == fileStorage.Id).ToList());
+            Context.Set<AzureBlobStorage>().RemoveRange(fileStorage.Files.Select(s => s.AzureBlobStorage));
+            Context.Set<File>().RemoveRange(fileStorage.Files);
+            Context.Set<FileStoragePermission>().RemoveRange(fileStorage.Permissions);
 
-        public async Task RemoveFolder(FileStorage fileStorage)
-        {
             var fileStorages = await Context.Set<FileStorage>()
                     .Where(x => x.ParentFileStorageId.HasValue && x.ParentFileStorageId.Value == fileStorage.Id)
                     .ToListAsync();
@@ -97,7 +96,15 @@ namespace SaphirCloudBox.Data.Repositories
                 await RemoveChildFileStorages(storage);
             }
 
+            var fileStorageIds = fileStorages.Select(s => s.Id).ToList();
+            Context.Set<Notification>().RemoveRange(Context.Set<Notification>().Where(x => x.FileStorageId.HasValue && fileStorageIds.Contains(x.FileStorageId.Value)).ToList());
+            Context.Set<AzureBlobStorage>().RemoveRange(fileStorages.SelectMany(s => s.Files).Select(s => s.AzureBlobStorage));
+            Context.Set<File>().RemoveRange(fileStorages.SelectMany(s => s.Files));
+            Context.Set<FileStoragePermission>().RemoveRange(fileStorages.SelectMany(s => s.Permissions));
+            Context.Set<FileStorage>().RemoveRange(fileStorages);
+
             Context.Set<FileStorage>().Remove(fileStorage);
+
             await Context.SaveChangesAsync();
         }
 
@@ -107,12 +114,18 @@ namespace SaphirCloudBox.Data.Repositories
                     .Where(x => x.ParentFileStorageId.HasValue && x.ParentFileStorageId.Value == fileStorage.Id)
                     .ToListAsync();
 
+            var fileStorageIds = fileStorages.Select(s => s.Id).ToList();
+            Context.Set<Notification>().RemoveRange(Context.Set<Notification>().Where(x => x.FileStorageId.HasValue && fileStorageIds.Contains(x.FileStorageId.Value)).ToList());
+            Context.Set<AzureBlobStorage>().RemoveRange(fileStorages.SelectMany(s => s.Files).Select(s => s.AzureBlobStorage));
+            Context.Set<File>().RemoveRange(fileStorages.SelectMany(s => s.Files));
+            Context.Set<FileStoragePermission>().RemoveRange(fileStorages.SelectMany(s => s.Permissions));
+
             foreach (var storage in fileStorages)
             {
                 await RemoveChildFileStorages(storage);
             }
 
-            Context.Set<FileStorage>().Remove(fileStorage);
+            Context.Set<FileStorage>().RemoveRange(fileStorages);
         }
 
         public async Task Update(FileStorage fileStorage)
@@ -262,6 +275,13 @@ namespace SaphirCloudBox.Data.Repositories
             }
 
             await Context.SaveChangesAsync();
+        }
+
+        public async Task<IEnumerable<FileStorage>> GetByUserId(int id)
+        {
+            return await Context.Set<FileStorage>()
+                .Where(x => !x.ClientId.HasValue && x.OwnerId.HasValue && x.OwnerId.Value == id)
+                .ToListAsync();
         }
     }
 }

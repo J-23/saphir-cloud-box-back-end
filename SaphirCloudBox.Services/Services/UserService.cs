@@ -40,7 +40,7 @@ namespace SaphirCloudBox.Services.Services
 
         public async Task Add(AddUserDto userDto, string password)
         {
-            var user = await _userManager.FindByEmailAsync(userDto.Email);
+            var user = await _userManager.Users.FirstOrDefaultAsync(x => x.Email.Equals(userDto.Email) && x.IsActive);
 
             if (user != null)
             {
@@ -53,10 +53,11 @@ namespace SaphirCloudBox.Services.Services
                 Email = userDto.Email,
                 CreateDate = DateTime.Now,
                 ClientId = (await GetClientById(userDto.ClientId)).Id,
-                DepartmentId = (await GetDepartmentById(userDto.DepartmentId))?.Id
+                DepartmentId = (await GetDepartmentById(userDto.DepartmentId))?.Id,
+                IsActive = true
             };
 
-            var role = await _roleManager.FindByIdAsync(userDto.RoleId.ToString());
+            var role = await _roleManager.Roles.FirstOrDefaultAsync(x => x.Id == userDto.RoleId && x.IsActive);
 
             if (role == null)
             {
@@ -90,7 +91,7 @@ namespace SaphirCloudBox.Services.Services
 
         public async Task<string> ForgotPassword(string email)
         {
-            var user = await _userManager.FindByEmailAsync(email);
+            var user = await _userManager.Users.FirstOrDefaultAsync(x => x.Email.Equals(email) && x.IsActive);
 
             if (user == null)
             {
@@ -118,21 +119,21 @@ namespace SaphirCloudBox.Services.Services
             switch (currentUser.Role.RoleType)
             {
                 case Enums.RoleType.SuperAdmin:
-                    users = await _userManager.Users.ToListAsync();
+                    users = await _userManager.Users.Where(x => x.IsActive).ToListAsync();
                     break;
                 case Enums.RoleType.ClientAdmin:
-                    users = await _userManager.Users.Where(x => x.ClientId == currentUser.Client.Id).ToListAsync();
+                    users = await _userManager.Users.Where(x => x.ClientId == currentUser.Client.Id && x.IsActive).ToListAsync();
                     break;
                 case Enums.RoleType.DepartmentHead:
                     if (currentUser.Department != null)
                     {
-                        users = await _userManager.Users.Where(x => x.ClientId == currentUser.Client.Id && x.DepartmentId == currentUser.Department.Id).ToListAsync();
+                        users = await _userManager.Users.Where(x => x.ClientId == currentUser.Client.Id && x.DepartmentId == currentUser.Department.Id && x.IsActive).ToListAsync();
                     }
                     break;
                 case Enums.RoleType.Employee:
                     if (currentUser.Department != null)
                     {
-                        users = await _userManager.Users.Where(x => x.ClientId == currentUser.Client.Id && x.DepartmentId == currentUser.Department.Id).ToListAsync();
+                        users = await _userManager.Users.Where(x => x.ClientId == currentUser.Client.Id && x.DepartmentId == currentUser.Department.Id && x.IsActive).ToListAsync();
                     }
                     break;
                 default:
@@ -143,7 +144,7 @@ namespace SaphirCloudBox.Services.Services
                 .ThenByDescending(ord => ord.UpdateDate)
                 .ToList();
 
-            var roles = await _roleManager.Roles.ToListAsync();
+            var roles = await _roleManager.Roles.Where(x => x.IsActive).ToListAsync();
             var userDtos = new List<UserDto>();
 
             foreach (var user in users)
@@ -168,7 +169,7 @@ namespace SaphirCloudBox.Services.Services
 
         public async Task<UserDto> GetByEmail(string email)
         {
-            var user = await _userManager.FindByEmailAsync(email);
+            var user = await _userManager.Users.FirstOrDefaultAsync(x => x.Email.Equals(email) && x.IsActive);
 
             if (user == null)
             {
@@ -180,7 +181,7 @@ namespace SaphirCloudBox.Services.Services
 
         public async Task<UserDto> GetById(int userId)
         {
-            var user = await _userManager.FindByIdAsync(userId.ToString());
+            var user = await _userManager.Users.FirstOrDefaultAsync(x => x.Id == userId && x.IsActive);
 
             if (user == null)
             {
@@ -193,14 +194,17 @@ namespace SaphirCloudBox.Services.Services
 
             if (userRoles.Count > 0)
             {
-                var role = await _roleManager.FindByNameAsync(userRoles.FirstOrDefault());
+                var role = await _roleManager.Roles.FirstOrDefaultAsync(x => x.Name.Equals(userRoles.FirstOrDefault()) && x.IsActive);
 
-                userDto.Role = new RoleDto
+                if (role != null)
                 {
-                    Id = role.Id,
-                    Name = role.Name,
-                    RoleType = role.RoleType
-                };
+                    userDto.Role = new RoleDto
+                    {
+                        Id = role.Id,
+                        Name = role.Name,
+                        RoleType = role.RoleType
+                    };
+                }
             }
 
             return userDto;
@@ -208,7 +212,7 @@ namespace SaphirCloudBox.Services.Services
 
         public async Task<UserDto> Login(string email, string password)
         {
-            var user = await _userManager.FindByEmailAsync(email);
+            var user = await _userManager.Users.FirstOrDefaultAsync(x => x.Email.Equals(email) && x.IsActive);
 
             if (user == null)
             {
@@ -233,7 +237,7 @@ namespace SaphirCloudBox.Services.Services
 
         public async Task Register(RegisterUserDto userDto, string commonRole)
         {
-            var user = await _userManager.FindByEmailAsync(userDto.Email);
+            var user = await _userManager.Users.FirstOrDefaultAsync(x => x.Email.Equals(userDto.Email) && x.IsActive);
 
             if (user != null)
             {
@@ -246,7 +250,8 @@ namespace SaphirCloudBox.Services.Services
                 Email = userDto.Email,
                 CreateDate = DateTime.Now,
                 ClientId = (await GetClientById(userDto.ClientId)).Id,
-                DepartmentId = (await GetDepartmentById(userDto.DepartmentId))?.Id
+                DepartmentId = (await GetDepartmentById(userDto.DepartmentId))?.Id,
+                IsActive = true
             };
 
             var role = await _roleManager.FindByNameAsync(commonRole);
@@ -283,7 +288,7 @@ namespace SaphirCloudBox.Services.Services
 
         public async Task ResetPassword(ResetPasswordUserDto resetPasswordUserDto)
         {
-            var user = await _userManager.FindByEmailAsync(resetPasswordUserDto.Email);
+            var user = await _userManager.Users.FirstOrDefaultAsync(x => x.Email.Equals(resetPasswordUserDto.Email) && x.IsActive);
 
             if (user == null)
             {
@@ -301,14 +306,14 @@ namespace SaphirCloudBox.Services.Services
 
         public async Task Update(UpdateUserDto userDto, string commonPassword)
         {
-            var user = await _userManager.FindByIdAsync(userDto.Id.ToString());
+            var user = await _userManager.Users.FirstOrDefaultAsync(x => x.Id == userDto.Id && x.IsActive);
 
             if (user == null)
             {
                 throw new NotFoundException("User", userDto.Id);
             }
 
-            var otherUser = await _userManager.FindByEmailAsync(userDto.Email);
+            var otherUser = await _userManager.Users.FirstOrDefaultAsync(x => x.Email.Equals(userDto.Email) && x.IsActive);
 
             if (otherUser != null && otherUser.Id != user.Id)
             {
@@ -321,7 +326,7 @@ namespace SaphirCloudBox.Services.Services
             user.ClientId = (await GetClientById(userDto.ClientId)).Id;
             user.DepartmentId = (await GetDepartmentById(userDto.DepartmentId))?.Id;
 
-            var role = await _roleManager.FindByIdAsync(userDto.RoleId.ToString());
+            var role = await _roleManager.Roles.FirstOrDefaultAsync(x => x.Id == userDto.RoleId && x.IsActive);
 
             if (role == null)
             {
@@ -354,26 +359,21 @@ namespace SaphirCloudBox.Services.Services
 
         public async Task Remove(RemoveUserDto userDto)
         {
-            var user = await _userManager.FindByIdAsync(userDto.Id.ToString());
+            var user = await _userManager.Users.FirstOrDefaultAsync(x => x.Id == userDto.Id && x.IsActive);
 
             if (user == null)
             {
                 throw new NotFoundException("User", userDto.Id);
             }
 
-            var roles = await _userManager.GetRolesAsync(user);
+            var fileStorageRepository = DataContextManager.CreateRepository<IFileStorageRepository>();
+
+            var fileStorages = await fileStorageRepository.GetByUserId(user.Id);
 
             using (var scope = new TransactionScope(TransactionScopeAsyncFlowOption.Enabled))
             {
-                var result = await _userManager.RemoveFromRolesAsync(user, roles);
-
-                if (!result.Succeeded)
-                {
-                    scope.Dispose();
-                    throw new UserManagerException("remove from role", user.Email);
-                }
-
-                result = await _userManager.DeleteAsync(user);
+                user.IsActive = false;
+                var result = await _userManager.UpdateAsync(user);
 
                 if (!result.Succeeded)
                 {
@@ -382,7 +382,17 @@ namespace SaphirCloudBox.Services.Services
                 }
 
                 scope.Complete();
-            } 
+            }
+
+            fileStorages.SelectMany(s => s.Permissions)
+                .Where(x => !x.EndDate.HasValue)
+                .ToList()
+                .ForEach(perm =>
+                {
+                    perm.EndDate = DateTime.Now;
+                });
+
+            await fileStorageRepository.Update(fileStorages);
         }
 
         private async Task<Client> GetClientById(int id)

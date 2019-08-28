@@ -246,7 +246,7 @@ namespace SaphirCloudBox.Services.Services
                 await _azureBlobClient.DeleteFile(_blobSettings.ContainerName, blob.BlobName.ToString());
             }
 
-            await fileStorageRepository.RemoveFolder(fileStorage);
+            await fileStorageRepository.Remove(fileStorage);
         }
 
         public async Task UpdateFolder(UpdateFolderDto folderDto, int userId, int clientId)

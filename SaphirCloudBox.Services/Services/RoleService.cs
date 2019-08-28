@@ -33,7 +33,7 @@ namespace SaphirCloudBox.Services.Services
 
         public async Task Add(AddRoleDto roleDto)
         {
-            var role = await _roleManager.FindByNameAsync(roleDto.Name);
+            var role = await _roleManager.Roles.FirstOrDefaultAsync(x => x.Name.Equals(roleDto.Name) && x.IsActive);
 
             if (role != null)
             {
@@ -42,7 +42,8 @@ namespace SaphirCloudBox.Services.Services
 
             role = new Role {
                 Name = roleDto.Name,
-                RoleType = Enums.RoleType.Employee
+                RoleType = Enums.RoleType.Employee,
+                IsActive = true
             };
 
             var result = await _roleManager.CreateAsync(role);
@@ -55,27 +56,30 @@ namespace SaphirCloudBox.Services.Services
 
         public async Task<IEnumerable<RoleDto>> GetAll()
         {
-            var roles = await _roleManager.Roles.OrderBy(ord => ord.Name).ToListAsync();
+            var roles = await _roleManager.Roles.Where(x => x.IsActive).OrderBy(ord => ord.Name).ToListAsync();
             return MapperFactory.CreateMapper<IRoleMapper>().MapCollectionToModel(roles);
         }
 
         public async Task Remove(RemoveRoleDto roleDto)
         {
-            var role = await _roleManager.FindByIdAsync(roleDto.Id.ToString());
+            var role = await _roleManager.Roles.FirstOrDefaultAsync(x => x.Id == roleDto.Id && x.IsActive);
 
             if (role == null)
             {
                 throw new NotFoundException("Role", roleDto.Id);
             }
 
+
             var users = await _userManager.GetUsersInRoleAsync(role.Name);
 
-            if (users.Count > 0)
+            if (users.Where(x => x.IsActive).Count() > 0)
             {
                 throw new ExistDependencyException("Role", role.Id, new List<string> { "Users" });
             }
 
-            var result = await _roleManager.DeleteAsync(role);
+            role.IsActive = false;
+
+            var result = await _roleManager.UpdateAsync(role);
 
             if (!result.Succeeded)
             {
@@ -85,14 +89,14 @@ namespace SaphirCloudBox.Services.Services
 
         public async Task Update(RoleDto roleDto)
         {
-            var role = await _roleManager.FindByIdAsync(roleDto.Id.ToString());
+            var role = await _roleManager.Roles.FirstOrDefaultAsync(x => x.Id == roleDto.Id && x.IsActive);
 
             if (role == null)
             {
                 throw new NotFoundException("Role", roleDto.Id);
             }
 
-            var otherRole = await _roleManager.FindByNameAsync(roleDto.Name);
+            var otherRole = await _roleManager.Roles.FirstOrDefaultAsync(x => x.Name.Equals(roleDto.Name) && x.IsActive);
 
             if (otherRole != null && otherRole.Id != role.Id)
             {
