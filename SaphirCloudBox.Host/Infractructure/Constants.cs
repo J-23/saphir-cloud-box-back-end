@@ -34,7 +34,7 @@ Message:
 {3}";
             public const string TechnicalSupportSubject = @"Message from user {0}";
 
-            public const string NotificationSubject = @"Your permissions is changed";
+            public const string NotificationSubject = @"Ihre Berechtigung wurde geändert";
 
             public const string AddPermissionNotificationMessage = @"Hallo {0},
 Benutzer {1} erteilte Ihnen die Rechte: {2} für  {3} {4}. Sie können ihn über folgendem Link sehen: {5}";
