@@ -36,14 +36,14 @@ Message:
 
             public const string NotificationSubject = @"Your permissions is changed";
 
-            public const string AddPermissionNotificationMessage = @"Guten Tag Herr {0},
-User {1} added your permission to {2} to {3} {4}. To see it, go to the following link: {5}";
+            public const string AddPermissionNotificationMessage = @"Hallo {0},
+Benutzer {1} erteilte Ihnen die Rechte: {2} für  {3} {4}. Sie können ihn über folgendem Link sehen: {5}";
 
-            public const string UpdatePermissionNotificationMessage = @"Guten Tag Herr {0},
-User {1} has changed your permission to {2} {3}. Now you can {4}. To see this, follow this link: {5}";
+            public const string UpdatePermissionNotificationMessage = @"Hallo {0},
+Benutzer {1} änderte Ihre Rechte für {2} {3}. Sie besitzen {4} Rechte. Sie können es über folgendem Link sehen: {5}";
 
-            public const string RemovePermissionNotificationMessage = @"Guten Tag Herr {0},
-User {1} deleted your permission to {2} {3}";
+            public const string RemovePermissionNotificationMessage = @"Hallo {0},
+Benutzer {1} entfernte Ihre Rechte für  {2} {3}";
 
 
             public const string Folder = "folder";
