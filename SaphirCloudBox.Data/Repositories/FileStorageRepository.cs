@@ -34,7 +34,7 @@ namespace SaphirCloudBox.Data.Repositories
             if (id == 1)
             {
                 return await Context.Set<FileStorage>()
-                    .FirstOrDefaultAsync(x => x.Id == 1 && ((!x.ClientId.HasValue && !x.OwnerId.HasValue)
+                    .FirstOrDefaultAsync(x => x.Id == 1 && x.IsActive && ((!x.ClientId.HasValue && !x.OwnerId.HasValue)
                         || (x.ClientId.HasValue && !x.OwnerId.HasValue && x.ClientId.Value == clientId)
                         || (!x.ClientId.HasValue && x.OwnerId.HasValue && x.OwnerId.Value == userId)));
             }
@@ -44,7 +44,7 @@ namespace SaphirCloudBox.Data.Repositories
             var roles = await _roleManager.Roles.Where(x => roleNames.Contains(x.Name)).ToListAsync();
 
             return await Context.Set<FileStorage>()
-                .FirstOrDefaultAsync(x => x.Id == id && ((!x.ClientId.HasValue && !x.OwnerId.HasValue && (roles.Any(y => y.RoleType == RoleType.SuperAdmin) || x.ParentFileStorageId.HasValue && x.ParentFileStorageId.Value == 1))
+                .FirstOrDefaultAsync(x => x.Id == id && x.IsActive && ((!x.ClientId.HasValue && !x.OwnerId.HasValue && (roles.Any(y => y.RoleType == RoleType.SuperAdmin) || x.ParentFileStorageId.HasValue && x.ParentFileStorageId.Value == 1))
                     || (x.ClientId.HasValue && !x.OwnerId.HasValue && x.ClientId.Value == clientId && (roles.Any(y => y.RoleType == RoleType.ClientAdmin) || x.ParentFileStorageId.HasValue && x.ParentFileStorageId.Value == 1))
                     || (!x.ClientId.HasValue && x.OwnerId.HasValue && (x.OwnerId.Value == userId || x.ParentFileStorageId.HasValue && x.ParentFileStorageId.Value == 1))
                     || (x.Permissions.Any(y => y.RecipientId == userId && !y.EndDate.HasValue))));
@@ -56,6 +56,7 @@ namespace SaphirCloudBox.Data.Repositories
             {
                 return await Context.Set<FileStorage>()
                     .Where(x => x.ParentFileStorageId == 1
+                            && x.IsActive
                             && ((!x.ClientId.HasValue && !x.OwnerId.HasValue)
                                 || (x.ClientId.HasValue && !x.OwnerId.HasValue && x.ClientId.Value == clientId)
                                 || (!x.ClientId.HasValue && x.OwnerId.HasValue && x.OwnerId.Value == userId)
@@ -71,6 +72,7 @@ namespace SaphirCloudBox.Data.Repositories
 
             return await Context.Set<FileStorage>()
                 .Where(x => x.ParentFileStorageId == parentId 
+                && x.IsActive
                 && ((!x.ClientId.HasValue && !x.OwnerId.HasValue && roles.Any(y => y.RoleType == RoleType.SuperAdmin))
                     || (x.ClientId.HasValue && !x.OwnerId.HasValue && x.ClientId.Value == clientId && roles.Any(y => y.RoleType == RoleType.ClientAdmin))
                     || (!x.ClientId.HasValue && x.OwnerId.HasValue && x.OwnerId.Value == userId)
@@ -78,54 +80,6 @@ namespace SaphirCloudBox.Data.Repositories
                 .OrderBy(ord => !ord.IsDirectory)
                 .ThenBy(ord => ord.Name)
                 .ToListAsync();
-        }
-
-        public async Task Remove(FileStorage fileStorage)
-        {
-            Context.Set<Notification>().RemoveRange(Context.Set<Notification>().Where(x => x.FileStorageId.HasValue && x.FileStorageId.Value == fileStorage.Id).ToList());
-            Context.Set<AzureBlobStorage>().RemoveRange(fileStorage.Files.Select(s => s.AzureBlobStorage));
-            Context.Set<File>().RemoveRange(fileStorage.Files);
-            Context.Set<FileStoragePermission>().RemoveRange(fileStorage.Permissions);
-
-            var fileStorages = await Context.Set<FileStorage>()
-                    .Where(x => x.ParentFileStorageId.HasValue && x.ParentFileStorageId.Value == fileStorage.Id)
-                    .ToListAsync();
-
-            foreach (var storage in fileStorages)
-            {
-                await RemoveChildFileStorages(storage);
-            }
-
-            var fileStorageIds = fileStorages.Select(s => s.Id).ToList();
-            Context.Set<Notification>().RemoveRange(Context.Set<Notification>().Where(x => x.FileStorageId.HasValue && fileStorageIds.Contains(x.FileStorageId.Value)).ToList());
-            Context.Set<AzureBlobStorage>().RemoveRange(fileStorages.SelectMany(s => s.Files).Select(s => s.AzureBlobStorage));
-            Context.Set<File>().RemoveRange(fileStorages.SelectMany(s => s.Files));
-            Context.Set<FileStoragePermission>().RemoveRange(fileStorages.SelectMany(s => s.Permissions));
-            Context.Set<FileStorage>().RemoveRange(fileStorages);
-
-            Context.Set<FileStorage>().Remove(fileStorage);
-
-            await Context.SaveChangesAsync();
-        }
-
-        private async Task RemoveChildFileStorages(FileStorage fileStorage)
-        {
-            var fileStorages = await Context.Set<FileStorage>()
-                    .Where(x => x.ParentFileStorageId.HasValue && x.ParentFileStorageId.Value == fileStorage.Id)
-                    .ToListAsync();
-
-            var fileStorageIds = fileStorages.Select(s => s.Id).ToList();
-            Context.Set<Notification>().RemoveRange(Context.Set<Notification>().Where(x => x.FileStorageId.HasValue && fileStorageIds.Contains(x.FileStorageId.Value)).ToList());
-            Context.Set<AzureBlobStorage>().RemoveRange(fileStorages.SelectMany(s => s.Files).Select(s => s.AzureBlobStorage));
-            Context.Set<File>().RemoveRange(fileStorages.SelectMany(s => s.Files));
-            Context.Set<FileStoragePermission>().RemoveRange(fileStorages.SelectMany(s => s.Permissions));
-
-            foreach (var storage in fileStorages)
-            {
-                await RemoveChildFileStorages(storage);
-            }
-
-            Context.Set<FileStorage>().RemoveRange(fileStorages);
         }
 
         public async Task Update(FileStorage fileStorage)
@@ -147,7 +101,7 @@ namespace SaphirCloudBox.Data.Repositories
             var roles = await _roleManager.Roles.Where(x => roleNames.Contains(x.Name)).ToListAsync();
 
             var fileStorage = await Context.Set<FileStorage>()
-                .FirstOrDefaultAsync(x => x.Id == id && ((x.Owner == null && x.Client == null && roles.Any(y => y.RoleType == RoleType.SuperAdmin))
+                .FirstOrDefaultAsync(x => x.Id == id && x.IsActive && ((x.Owner == null && x.Client == null && roles.Any(y => y.RoleType == RoleType.SuperAdmin))
                             || (x.Owner == null && x.Client != null && roles.Any(y => y.RoleType == RoleType.ClientAdmin) && x.ClientId == clientId)
                             || (x.Owner != null && x.Client == null && (roles.Any(y => y.RoleType == RoleType.DepartmentHead)
                             || roles.Any(y => y.RoleType == RoleType.Employee) || x.OwnerId == userId))
@@ -164,7 +118,7 @@ namespace SaphirCloudBox.Data.Repositories
         private async Task<bool> IsAvailableToChange(int id, int userId, IEnumerable<Role> roles, int clientId)
         {
             var fileStorages = await Context.Set<FileStorage>()
-                .Where(x => x.ParentFileStorageId.HasValue && x.ParentFileStorageId.Value == id)
+                .Where(x => x.ParentFileStorageId.HasValue && x.ParentFileStorageId.Value == id && x.IsActive)
                 .ToListAsync();
 
             if (fileStorages.Any(x => !((x.Owner == null && x.Client == null && roles.Any(y => y.RoleType == RoleType.SuperAdmin))
@@ -225,6 +179,7 @@ namespace SaphirCloudBox.Data.Repositories
                 var parent = await Context.Set<FileStorage>()
                     .FirstOrDefaultAsync(x => x.IsDirectory
                                             && x.ParentFileStorageId != 1
+                                            && x.IsActive
                                             && x.Id == parentId.Value 
                                             && ((!x.ClientId.HasValue && !x.OwnerId.HasValue && roles.Any(y => y.RoleType == RoleType.SuperAdmin))
                                             || (x.ClientId.HasValue && !x.OwnerId.HasValue && x.ClientId.Value == clientId && roles.Any(y => y.RoleType == RoleType.ClientAdmin))
@@ -252,6 +207,7 @@ namespace SaphirCloudBox.Data.Repositories
                     .FirstOrDefaultAsync(x => x.IsDirectory
                                             && x.ParentFileStorageId != 1
                                             && x.Id == parentId.Value
+                                            && x.IsActive
                                             && ((!x.ClientId.HasValue && !x.OwnerId.HasValue && roles.Any(y => y.RoleType == RoleType.SuperAdmin))
                                             || (x.ClientId.HasValue && !x.OwnerId.HasValue && x.ClientId.Value == clientId && roles.Any(y => y.RoleType == RoleType.ClientAdmin))
                                             || (x.Permissions.Any(y => y.RecipientId == userId && !y.EndDate.HasValue))));

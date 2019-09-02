@@ -7,10 +7,6 @@ namespace SaphirCloudBox.Models
 {
     public class User: IdentityUser<int>
     {
-        public User()
-        {
-            IsActive = true;
-        }
         public int ClientId { get; set; }
 
         public int? DepartmentId { get; set; }
@@ -21,10 +17,10 @@ namespace SaphirCloudBox.Models
 
         public string ResetPasswordCode { get; set; }
 
+        public Boolean IsActive { get; set; }
+
         public virtual Client Client { get; set; }
 
         public virtual Department Department { get; set; }
-
-        public Boolean IsActive { get; set; }
     }
 }

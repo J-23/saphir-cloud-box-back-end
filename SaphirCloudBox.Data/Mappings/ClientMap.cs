@@ -14,6 +14,8 @@ namespace SaphirCloudBox.Data.Mappings
             builder.HasKey(x => x.Id);
 
             builder.Property(x => x.Name).HasMaxLength(255).IsRequired();
+
+            builder.Property(x => x.IsActive).HasDefaultValue(1);
         }
     }
 }

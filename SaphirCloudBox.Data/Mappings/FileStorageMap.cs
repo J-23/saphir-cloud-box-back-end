@@ -28,6 +28,8 @@ namespace SaphirCloudBox.Data.Mappings
             builder.HasOne(x => x.Owner).WithMany().HasForeignKey(x => x.OwnerId);
 
             builder.HasOne(x => x.Client).WithMany().HasForeignKey(x => x.ClientId);
+
+            builder.Property(x => x.IsActive).HasDefaultValue(1);
         }
     }
 }

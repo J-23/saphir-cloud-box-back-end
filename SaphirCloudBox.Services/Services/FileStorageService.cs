@@ -83,6 +83,7 @@ namespace SaphirCloudBox.Services.Services
                 CreateById = userId,
                 ClientId = owners.ClientId,
                 OwnerId = owners.OwnerId,
+                IsActive = true,
                 Files = new List<Models.File>
                 {
                     new Models.File
@@ -134,7 +135,8 @@ namespace SaphirCloudBox.Services.Services
                 ParentFileStorageId = parentFileStorage.Id,
                 CreateById = userId,
                 ClientId = owners.ClientId,
-                OwnerId = owners.OwnerId
+                OwnerId = owners.OwnerId,
+                IsActive = true
             };
 
             await fileStorageRepository.Add(newFileStorage);
@@ -212,12 +214,8 @@ namespace SaphirCloudBox.Services.Services
                 throw new UnavailableOperationException("remove file", "File storage", fileStorage.Id, userId);
             }
 
-            foreach (var file in fileStorage.Files)
-            {
-                await _azureBlobClient.DeleteFile(_blobSettings.ContainerName, file.AzureBlobStorage.BlobName.ToString());
-            }
-
-            await fileStorageRepository.Remove(fileStorage);
+            fileStorage.IsActive = false;
+            await fileStorageRepository.Update(fileStorage);
         }
 
         public async Task RemoveFolder(RemoveFileStorageDto folderDto, int userId, int clientId)
@@ -237,16 +235,9 @@ namespace SaphirCloudBox.Services.Services
                 throw new UnavailableOperationException("remove folder", "File storage", fileStorage.Id, userId);
             }
 
-            var files = await fileStorageRepository.GetFilesByParentId(fileStorage.Id, userId, clientId);
+            fileStorage.IsActive = false;
 
-            var blobs = files.SelectMany(s => s.Files).Select(s => s.AzureBlobStorage).ToList();
-
-            foreach (var blob in blobs)
-            {
-                await _azureBlobClient.DeleteFile(_blobSettings.ContainerName, blob.BlobName.ToString());
-            }
-
-            await fileStorageRepository.Remove(fileStorage);
+            await fileStorageRepository.Update(fileStorage);
         }
 
         public async Task UpdateFolder(UpdateFolderDto folderDto, int userId, int clientId)

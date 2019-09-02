@@ -9,9 +9,11 @@ namespace SaphirCloudBox.Models
     {
         public int Id { get; set; }
 
+        public string Name { get; set; }
+
         public Boolean IsDirectory { get; set; }
 
-        public string Name { get; set; }
+        public int? ParentFileStorageId { get; set; }
 
         public int? ClientId { get; set; }
 
@@ -25,7 +27,7 @@ namespace SaphirCloudBox.Models
 
         public DateTime? UpdateDate { get; set; }
 
-        public int? ParentFileStorageId { get; set; }
+        public Boolean IsActive { get; set; }
 
         public virtual Client Client { get; set; }
 

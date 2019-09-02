@@ -121,11 +121,16 @@ namespace SaphirCloudBox.Host.Controllers
         }
 
         [HttpGet]
-        [Route("download/file/{id}/{ownerId}/{clientId}")]
-        [AllowAnonymous]
-        public async Task<IActionResult> DownloadFile(int id, int ownerId, int clientId)
+        [Route("download/file/{id}")]
+        public async Task<IActionResult> DownloadFile(int id)
         {
-            var fileDto = await _fileStorageService.GetFileById(id, ownerId, clientId);
+            if (!IsAvailableOperation())
+            {
+                return BadRequest();
+            }
+
+            var fileDto = await _fileStorageService.GetFileById(id, UserId, ClientId);
+
             var contentType = Constants.Extension.TYPES[Path.GetExtension(fileDto.Extension).ToLowerInvariant()];
 
             return File(fileDto.Buffer, contentType, fileDto.Name + fileDto.Extension);

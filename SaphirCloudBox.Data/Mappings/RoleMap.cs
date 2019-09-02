@@ -12,6 +12,8 @@ namespace SaphirCloudBox.Data.Mappings
         public void Configure(EntityTypeBuilder<Role> builder)
         {
             builder.Property(x => x.RoleType).IsRequired();
+
+            builder.Property(x => x.IsActive).HasDefaultValue(1);
         }
     }
 }

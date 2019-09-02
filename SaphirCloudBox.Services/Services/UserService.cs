@@ -129,11 +129,41 @@ namespace SaphirCloudBox.Services.Services
                     {
                         users = await _userManager.Users.Where(x => x.ClientId == currentUser.Client.Id && x.DepartmentId == currentUser.Department.Id && x.IsActive).ToListAsync();
                     }
+                    else
+                    {
+                        var allClientUsers= await _userManager.Users.Where(x => x.ClientId == currentUser.Client.Id && x.IsActive).ToListAsync();
+                        var role = await _roleManager.Roles.FirstOrDefaultAsync(x => x.RoleType == Enums.RoleType.ClientAdmin);
+
+                        foreach (var user in allClientUsers)
+                        {
+                            var isInRole = await _userManager.IsInRoleAsync(user, role.Name);
+
+                            if (isInRole)
+                            {
+                                users.Add(user);
+                            }
+                        }
+                    }
                     break;
                 case Enums.RoleType.Employee:
                     if (currentUser.Department != null)
                     {
                         users = await _userManager.Users.Where(x => x.ClientId == currentUser.Client.Id && x.DepartmentId == currentUser.Department.Id && x.IsActive).ToListAsync();
+                    }
+                    else
+                    {
+                        var allClientUsers = await _userManager.Users.Where(x => x.ClientId == currentUser.Client.Id && x.IsActive).ToListAsync();
+                        var role = await _roleManager.Roles.FirstOrDefaultAsync(x => x.RoleType == Enums.RoleType.ClientAdmin);
+
+                        foreach (var user in allClientUsers)
+                        {
+                            var isInRole = await _userManager.IsInRoleAsync(user, role.Name);
+
+                            if (isInRole)
+                            {
+                                users.Add(user);
+                            }
+                        }
                     }
                     break;
                 default:

@@ -18,8 +18,6 @@ namespace SaphirCloudBox.Data.Contracts.Repositories
 
         Task Update(FileStorage fileStorage);
 
-        Task Remove(FileStorage fileStorage);
-
         Task<Boolean> UserHasFolder(int id);
 
         Task<Boolean> IsAvailableToChange(int id, int userId, int clientId);

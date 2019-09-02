@@ -14,10 +14,10 @@ namespace SaphirCloudBox.Models
 
         public DateTime? UpdateDate { get; set; }
 
+        public Boolean IsActive { get; set; }
+
         public virtual IEnumerable<User> Users { get; set; }
 
         public virtual ICollection<Department> Departments { get; set; }
-
-        public Boolean IsActive { get; set; }
     }
 }
