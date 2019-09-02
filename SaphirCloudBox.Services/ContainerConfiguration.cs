@@ -29,6 +29,7 @@ namespace SaphirCloudBox.Services
             container.RegisterType<ILogService, LogService>(new TLifetime());
             container.RegisterType<IFileStorageService, FileStorageService>(new TLifetime());
             container.RegisterType<INotificationService, NotificationService>(new TLifetime());
+            container.RegisterType<IUserGroupService, UserGroupService>(new TLifetime());
 
             container.RegisterType<IUserMapper, UserMapper>(new TLifetime());
             container.RegisterType<IClientMapper, ClientMapper>(new TLifetime());
@@ -36,6 +37,7 @@ namespace SaphirCloudBox.Services
             container.RegisterType<IRoleMapper, RoleMapper>(new TLifetime());
             container.RegisterType<IFileStorageMapper, FileStorageMapper>(new TLifetime());
             container.RegisterType<IPermissionMapper, PermissionMapper>(new TLifetime());
+            container.RegisterType<IUserGroupMapper, UserGroupMapper>(new TLifetime());
 
             var configuration = container.Resolve<IConfiguration>();
             var configurationSection = configuration.GetSection("BlobSettings");

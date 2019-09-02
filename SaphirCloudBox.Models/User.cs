@@ -22,5 +22,7 @@ namespace SaphirCloudBox.Models
         public virtual Client Client { get; set; }
 
         public virtual Department Department { get; set; }
+
+        public virtual IEnumerable<Group> Groups { get; set; }
     }
 }
