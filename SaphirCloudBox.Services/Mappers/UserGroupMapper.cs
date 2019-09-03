@@ -17,7 +17,9 @@ namespace SaphirCloudBox.Services.Mappers
         {
             var config = new MapperConfiguration(cfg =>
             {
-                cfg.CreateMap<User, UserDto>();
+                cfg.CreateMap<User, UserDto>()
+                    .ForMember(x => x.Client, y => y.Ignore())
+                    .ForMember(x => x.Department, y => y.Ignore());
 
                 cfg.CreateMap<Group, UserGroupDto>()
                     .ForMember(x => x.Id, y => y.MapFrom(z => z.Id))
