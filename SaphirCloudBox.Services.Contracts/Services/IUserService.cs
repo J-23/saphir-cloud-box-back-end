@@ -31,5 +31,7 @@ namespace SaphirCloudBox.Services.Contracts.Services
         Task<IEnumerable<UserDto>> GetByClientIds(IEnumerable<int> clientIds);
 
         Task<IEnumerable<UserDto>> GetByIds(IEnumerable<int> userIds);
+
+        Task<IEnumerable<UserDto>> GetByGroupIds(IEnumerable<int> groupIds);
     }
 }

@@ -18,5 +18,7 @@ namespace SaphirCloudBox.Data.Contracts.Repositories
         Task<Group> GetById(int groupId, int userId);
 
         Task<Group> GetByName(string groupName, int userId);
+
+        Task<IEnumerable<Group>> GetByIds(IEnumerable<int> groupIds);
     }
 }

@@ -527,5 +527,14 @@ namespace SaphirCloudBox.Services.Services
             var users = await _userManager.FindByIds(userIds);
             return MapperFactory.CreateMapper<IUserMapper>().MapCollectionToModel(users);
         }
+
+        public async Task<IEnumerable<UserDto>> GetByGroupIds(IEnumerable<int> groupIds)
+        {
+            var userGroupRepository = DataContextManager.CreateRepository<IUserGroupRepository>();
+
+            var groups = await userGroupRepository.GetByIds(groupIds);
+            var users = groups.SelectMany(s => s.UsersInGroup).Select(s => s.User).Where(x => x.IsActive).ToList();
+            return MapperFactory.CreateMapper<IUserMapper>().MapCollectionToModel(users);
+        }
     }
 }

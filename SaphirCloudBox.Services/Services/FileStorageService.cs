@@ -367,7 +367,7 @@ namespace SaphirCloudBox.Services.Services
 
             var sender = await _userService.GetById(userId);
 
-            var users = await GetUsers(permissionDto.ClientIds, permissionDto.UserIds, sender.Id);
+            var users = await GetUsers(permissionDto.ClientIds, permissionDto.GroupIds, permissionDto.UserIds, sender.Id);
 
             var parentFileStorages = await fileStorageRepository.GetParents(fileStorage.ParentFileStorageId, sender.Id, clientId);
 
@@ -612,15 +612,14 @@ namespace SaphirCloudBox.Services.Services
             };
         }
 
-        private async Task<IEnumerable<UserDto>> GetUsers(IEnumerable<int> clientIds, IEnumerable<int> userIds, int userId)
+        private async Task<IEnumerable<UserDto>> GetUsers(IEnumerable<int> clientIds, IEnumerable<int> groupIds, IEnumerable<int> userIds, int userId)
         {
             var users = (await _userService.GetByClientIds(clientIds)).ToList();
 
-            userIds = userIds.Where(x => !users.Select(s => s.Id).Contains(x));
-
+            users.AddRange(await _userService.GetByGroupIds(groupIds));
             users.AddRange(await _userService.GetByIds(userIds));
 
-            return users.Where(x => x.Id != userId).ToList();
+            return users.Where(x => x.Id != userId).GroupBy(grp => grp.Id).Select(s => s.FirstOrDefault()).ToList();
         }
 
         public async Task<IEnumerable<FileStorageDto.StorageDto>> GetSharedFiles(int userId)

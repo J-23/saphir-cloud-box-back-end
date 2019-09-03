@@ -12,6 +12,8 @@ namespace SaphirCloudBox.Services.Contracts.Dtos.Permission
 
         public IEnumerable<int> ClientIds { get; set; }
 
+        public IEnumerable<int> GroupIds { get; set; }
+
         [Required]
         public int FileStorageId { get; set; }
 

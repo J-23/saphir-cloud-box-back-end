@@ -27,6 +27,13 @@ namespace SaphirCloudBox.Data.Repositories
                 .FirstOrDefaultAsync(x => x.IsActive && x.Id == groupId && x.OwnerId == userId);
         }
 
+        public async Task<IEnumerable<Group>> GetByIds(IEnumerable<int> groupIds)
+        {
+            return await Context.Set<Group>()
+                .Where(x => groupIds.Contains(x.Id))
+                .ToListAsync();
+        }
+
         public async Task<Group> GetByName(string groupName, int userId)
         {
             return await Context.Set<Group>()

@@ -171,7 +171,7 @@ namespace SaphirCloudBox.Host.Controllers
         [Route("check/permission")]
         public async Task<ActionResult> AddPermission([FromBody]CheckPermissionDto permissionDto)
         {
-            if (!IsAvailableOperation() || permissionDto.UserIds.Count() == 0 && permissionDto.ClientIds.Count() == 0)
+            if (!IsAvailableOperation() || permissionDto.UserIds.Count() == 0 && permissionDto.ClientIds.Count() == 0 && permissionDto.GroupIds.Count() == 0)
             {
                 return BadRequest();
             }
