@@ -536,5 +536,23 @@ namespace SaphirCloudBox.Services.Services
             var users = groups.SelectMany(s => s.UsersInGroup).Select(s => s.User).Where(x => x.IsActive).ToList();
             return MapperFactory.CreateMapper<IUserMapper>().MapCollectionToModel(users);
         }
+
+        public async Task<UserDto> GetClientAdminByClientId(int clientId)
+        {
+            var allClientUsers = await _userManager.Users.Where(x => x.ClientId == clientId && x.IsActive).ToListAsync();
+            var role = await _roleManager.Roles.FirstOrDefaultAsync(x => x.RoleType == Enums.RoleType.ClientAdmin);
+
+            foreach (var user in allClientUsers)
+            {
+                var isInRole = await _userManager.IsInRoleAsync(user, role.Name);
+
+                if (isInRole)
+                {
+                    return MapperFactory.CreateMapper<IUserMapper>().MapToModel(user);
+                }
+            }
+
+            return null;
+        }
     }
 }
