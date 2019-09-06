@@ -41,7 +41,7 @@ namespace SaphirCloudBox.Services.Services
             var newClient = new Client
             {
                 Name = clientDto.Name,
-                CreateDate = DateTime.Now,
+                CreateDate = DateTime.UtcNow,
                 IsActive = true
             };
 
@@ -117,7 +117,7 @@ namespace SaphirCloudBox.Services.Services
             }
 
             client.Name = clientDto.Name;
-            client.UpdateDate = DateTime.Now;
+            client.UpdateDate = DateTime.UtcNow;
 
             await clientRepository.Update(client);
         }

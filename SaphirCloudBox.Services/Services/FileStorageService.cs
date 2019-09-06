@@ -79,7 +79,7 @@ namespace SaphirCloudBox.Services.Services
                 Name = fileName,
                 ParentFileStorageId = parentFileStorage.Id,
                 IsDirectory = false,
-                CreateDate = DateTime.Now,
+                CreateDate = DateTime.UtcNow,
                 CreateById = userId,
                 ClientId = owners.ClientId,
                 OwnerId = owners.OwnerId,
@@ -93,7 +93,7 @@ namespace SaphirCloudBox.Services.Services
                         SizeType = sizeInfo.SizeType,
                         IsActive = true,
                         CreateById = userId,
-                        CreateDate = DateTime.Now,
+                        CreateDate = DateTime.UtcNow,
                         AzureBlobStorage = new AzureBlobStorage
                         {
                             BlobName = blobName
@@ -131,7 +131,7 @@ namespace SaphirCloudBox.Services.Services
             {
                 IsDirectory = true,
                 Name = folderDto.Name,
-                CreateDate = DateTime.Now,
+                CreateDate = DateTime.UtcNow,
                 ParentFileStorageId = parentFileStorage.Id,
                 CreateById = userId,
                 ClientId = owners.ClientId,
@@ -269,7 +269,7 @@ namespace SaphirCloudBox.Services.Services
             
             fileStorage.Name = folderDto.Name;
             fileStorage.UpdateById = userId;
-            fileStorage.UpdateDate = DateTime.Now;
+            fileStorage.UpdateDate = DateTime.UtcNow;
 
             await fileStorageRepository.Update(fileStorage);
         }
@@ -305,7 +305,7 @@ namespace SaphirCloudBox.Services.Services
             }
 
             fileStorage.Name = fileName;
-            fileStorage.UpdateDate = DateTime.Now;
+            fileStorage.UpdateDate = DateTime.UtcNow;
             fileStorage.UpdateById = userId;
 
             if (!String.IsNullOrEmpty(fileDto.Content))
@@ -325,7 +325,7 @@ namespace SaphirCloudBox.Services.Services
                     SizeType = sizeInfo.SizeType,
                     CreateById = userId,
                     IsActive = true,
-                    CreateDate = DateTime.Now,
+                    CreateDate = DateTime.UtcNow,
                     AzureBlobStorage = new AzureBlobStorage
                     {
                         BlobName = blobName
@@ -347,7 +347,7 @@ namespace SaphirCloudBox.Services.Services
 
                 activeFile.Extension = fileExtension;
                 activeFile.UpdateById = userId;
-                activeFile.UpdateDate = DateTime.Now;
+                activeFile.UpdateDate = DateTime.UtcNow;
             }
 
             await fileStorageRepository.Update(fileStorage);
@@ -396,7 +396,7 @@ namespace SaphirCloudBox.Services.Services
                         RecipientId = user.Id,
                         SenderId = sender.Id,
                         Type = permissionDto.Type,
-                        StartDate = DateTime.Now
+                        StartDate = DateTime.UtcNow
                     });
 
                     recipients.Add(new CheckPermissionResultDto.RecipientDto
@@ -412,7 +412,7 @@ namespace SaphirCloudBox.Services.Services
                 .ToList()
                 .ForEach(perm =>
                 {
-                    perm.EndDate = DateTime.Now;
+                    perm.EndDate = DateTime.UtcNow;
                     recipients.Add(new CheckPermissionResultDto.RecipientDto
                     {
                         Id = perm.Recipient.Id,
@@ -443,7 +443,7 @@ namespace SaphirCloudBox.Services.Services
                                     RecipientId = user.Id,
                                     SenderId = sender.Id,
                                     Type = permissionDto.Type,
-                                    StartDate = DateTime.Now
+                                    StartDate = DateTime.UtcNow
                                 });
                             });
 
@@ -451,7 +451,7 @@ namespace SaphirCloudBox.Services.Services
                             .ToList()
                             .ForEach(perm =>
                             {
-                                perm.EndDate = DateTime.Now;
+                                perm.EndDate = DateTime.UtcNow;
                             });
                     });
             }
@@ -528,7 +528,7 @@ namespace SaphirCloudBox.Services.Services
                                 RecipientId = recipient.Id,
                                 SenderId = userId,
                                 Type = permissionDto.Type,
-                                StartDate = DateTime.Now
+                                StartDate = DateTime.UtcNow
                             });
                         }
                     });
@@ -575,7 +575,7 @@ namespace SaphirCloudBox.Services.Services
                 throw new NotFoundException("File storage permission", fileStorage.Id, recipient.Email);
             }
 
-            fileStoragePermission.EndDate = DateTime.Now;
+            fileStoragePermission.EndDate = DateTime.UtcNow;
 
             var parentFileStorages = await fileStorageRepository.GetParents(fileStorage.ParentFileStorageId, userId, clientId);
 
@@ -588,7 +588,7 @@ namespace SaphirCloudBox.Services.Services
 
                         if (permission != null)
                         {
-                            permission.EndDate = DateTime.Now;
+                            permission.EndDate = DateTime.UtcNow;
                         }
                     });
             }

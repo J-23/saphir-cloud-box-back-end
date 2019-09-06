@@ -41,7 +41,7 @@ namespace SaphirCloudBox.Services.Services
             var department = new Department
             {
                 Name = departmentDto.Name,
-                CreateDate = DateTime.Now,
+                CreateDate = DateTime.UtcNow,
                 IsActive = true
             };
 
@@ -115,9 +115,9 @@ namespace SaphirCloudBox.Services.Services
             }
 
             department.Name = departmentDto.Name;
-            department.UpdateDate = DateTime.Now;
+            department.UpdateDate = DateTime.UtcNow;
             department.Client = client;
-            department.UpdateDate = DateTime.Now;
+            department.UpdateDate = DateTime.UtcNow;
 
             await departmentRepository.Update(department);
         }

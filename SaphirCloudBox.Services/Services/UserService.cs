@@ -51,7 +51,7 @@ namespace SaphirCloudBox.Services.Services
             {
                 UserName = userDto.UserName,
                 Email = userDto.Email,
-                CreateDate = DateTime.Now,
+                CreateDate = DateTime.UtcNow,
                 ClientId = (await GetClientById(userDto.ClientId)).Id,
                 DepartmentId = (await GetDepartmentById(userDto.DepartmentId))?.Id,
                 IsActive = true
@@ -278,7 +278,7 @@ namespace SaphirCloudBox.Services.Services
             {
                 UserName = userDto.UserName,
                 Email = userDto.Email,
-                CreateDate = DateTime.Now,
+                CreateDate = DateTime.UtcNow,
                 ClientId = (await GetClientById(userDto.ClientId)).Id,
                 DepartmentId = (await GetDepartmentById(userDto.DepartmentId))?.Id,
                 IsActive = true
@@ -352,7 +352,7 @@ namespace SaphirCloudBox.Services.Services
 
             user.UserName = userDto.UserName;
             user.Email = userDto.Email;
-            user.UpdateDate = DateTime.Now;
+            user.UpdateDate = DateTime.UtcNow;
             user.ClientId = (await GetClientById(userDto.ClientId)).Id;
             user.DepartmentId = (await GetDepartmentById(userDto.DepartmentId))?.Id;
 
@@ -419,7 +419,7 @@ namespace SaphirCloudBox.Services.Services
                 .ToList()
                 .ForEach(perm =>
                 {
-                    perm.EndDate = DateTime.Now;
+                    perm.EndDate = DateTime.UtcNow;
                 });
 
             await fileStorageRepository.Update(fileStorages);
@@ -505,7 +505,7 @@ namespace SaphirCloudBox.Services.Services
                 var newFolder = new FileStorage
                 {
                     CreateById = user.Id,
-                    CreateDate = DateTime.Now,
+                    CreateDate = DateTime.UtcNow,
                     IsDirectory = true,
                     Name = "My Folder",
                     OwnerId = user.Id,

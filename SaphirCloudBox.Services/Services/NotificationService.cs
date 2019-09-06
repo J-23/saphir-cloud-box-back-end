@@ -30,7 +30,7 @@ namespace SaphirCloudBox.Services.Services
                 UserId = userId,
                 Subject = subject,
                 Message = message,
-                CreateDate = DateTime.Now,
+                CreateDate = DateTime.UtcNow,
                 Type = type
             };
 
@@ -46,7 +46,7 @@ namespace SaphirCloudBox.Services.Services
                 UserId = userId,
                 Subject = subject,
                 Message = message,
-                CreateDate = DateTime.Now,
+                CreateDate = DateTime.UtcNow,
                 Type = type
             };
 
@@ -61,7 +61,7 @@ namespace SaphirCloudBox.Services.Services
             {
                 Subject = subject,
                 Message = message,
-                CreateDate = DateTime.Now,
+                CreateDate = DateTime.UtcNow,
                 Type = type
             };
 

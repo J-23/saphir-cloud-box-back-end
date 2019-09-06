@@ -224,7 +224,7 @@ namespace SaphirCloudBox.Data.Migrations
                 columns: new[] { "Id", "Name", "CreateDate", "UpdateDate" },
                 values: new object[,]
                 {
-                    { 1, "Admin client", DateTime.Now, null }
+                    { 1, "Admin client", DateTime.UtcNow, null }
                 });
 
             migrationBuilder.InsertData(
@@ -235,7 +235,7 @@ namespace SaphirCloudBox.Data.Migrations
                                 "DepartmentId", "CreateDate", "UpdateDate" },
                 values: new object[,]
                 {
-                    { 1, "Admin", "admin", "", "", false, null, null, null, null, false, false, null, false, 0, 1, null, DateTime.Now, null }
+                    { 1, "Admin", "admin", "", "", false, null, null, null, null, false, false, null, false, 0, 1, null, DateTime.UtcNow, null }
                 });
 
             migrationBuilder.InsertData(
