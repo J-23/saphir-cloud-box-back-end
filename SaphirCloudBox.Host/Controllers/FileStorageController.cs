@@ -261,8 +261,15 @@ namespace SaphirCloudBox.Host.Controllers
                 return BadRequest();
             }
 
-            var storages = await _fileStorageService.GetSharedFiles(UserId);
-            return Ok(storages);
+            var storages = await _fileStorageService.GetSharedFiles(UserId, ClientId);
+
+            var response = new
+            {
+                Storages = storages.Storages,
+                NewFileCount = storages.NewFileCount
+            };
+
+            return Ok(response);
         }
     }
 }

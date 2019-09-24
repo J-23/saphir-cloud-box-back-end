@@ -176,6 +176,11 @@ namespace SaphirCloudBox.Services.Services
 
             var storages = MapperFactory.CreateMapper<IFileStorageMapper>().MapCollectionToModel(childFileStorages);
 
+            foreach (var storage in storages.Where(x => x.IsDirectory).ToList())
+            {
+                storage.NewFileCount = await fileStorageRepository.GetNewFileCountByParentId(storage.Id, userId, clientId);
+            }
+
             return new FileStorageDto
             {
                 Id = parentFileStorage.Id,
@@ -641,13 +646,22 @@ namespace SaphirCloudBox.Services.Services
             return users.Where(x => x.Id != userId).GroupBy(grp => grp.Id).Select(s => s.FirstOrDefault()).ToList();
         }
 
-        public async Task<IEnumerable<FileStorageDto.StorageDto>> GetSharedFiles(int userId)
+        public async Task<(IEnumerable<FileStorageDto.StorageDto> Storages, int NewFileCount)> GetSharedFiles(int userId, int clientId)
         {
             var fileStorageRepository = DataContextManager.CreateRepository<IFileStorageRepository>();
 
             var fileStorages = await fileStorageRepository.GetSharedFiles(userId);
 
-            return MapperFactory.CreateMapper<IFileStorageMapper>().MapCollectionToModel(fileStorages);
+            var newFileCount = 0;
+
+            foreach (var storage in fileStorages.Where(x => x.IsDirectory))
+            {
+                newFileCount += await fileStorageRepository.GetNewFileCountByParentId(storage.Id, userId, clientId);
+            }
+
+            newFileCount += fileStorages.Where(x => !x.IsDirectory).Count();
+
+            return (MapperFactory.CreateMapper<IFileStorageMapper>().MapCollectionToModel(fileStorages), newFileCount);
         }
     }
 }

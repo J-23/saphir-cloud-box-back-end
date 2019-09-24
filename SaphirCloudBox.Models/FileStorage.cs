@@ -47,5 +47,7 @@ namespace SaphirCloudBox.Models
         public virtual ICollection<FileStoragePermission> Permissions { get; set; }
 
         public virtual ICollection<File> Files { get; set; }
+
+        public virtual ICollection<FileViewing> FileViewings { get; set; }
     }
 }

@@ -49,6 +49,8 @@ namespace SaphirCloudBox.Services.Contracts.Dtos
 
             public IEnumerable<PermissionDto> Permissions { get; set; }
 
+            public int NewFileCount { get; set; }
+
             public class PermissionDto
             {
                 public UserDto Sender { get; set; }

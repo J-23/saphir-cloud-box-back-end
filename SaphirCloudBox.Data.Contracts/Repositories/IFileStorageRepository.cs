@@ -31,5 +31,7 @@ namespace SaphirCloudBox.Data.Contracts.Repositories
         Task Update(IEnumerable<FileStorage> fileStorages);
 
         Task<IEnumerable<FileStorage>> GetByUserId(int id);
+
+        Task<int> GetNewFileCountByParentId(int fileStorageId, int userId, int clientId);
     }
 }

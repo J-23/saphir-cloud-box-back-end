@@ -239,5 +239,50 @@ namespace SaphirCloudBox.Data.Repositories
                 .Where(x => !x.ClientId.HasValue && x.OwnerId.HasValue && x.OwnerId.Value == id)
                 .ToListAsync();
         }
+
+        public async Task<int> GetNewFileCountByParentId(int fileStorageId, int userId, int clientId)
+        {
+            var user = await _userManager.FindByIdAsync(userId.ToString());
+            var roleNames = await _userManager.GetRolesAsync(user);
+            var roles = await _roleManager.Roles.Where(x => roleNames.Contains(x.Name)).ToListAsync();
+
+            var fileStorages = await Context.Set<FileStorage>()
+                .Where(x => x.IsActive && x.ParentFileStorageId == fileStorageId
+                        && ((!x.ClientId.HasValue && !x.OwnerId.HasValue && roles.Any(y => y.RoleType == RoleType.SuperAdmin))
+                        || (x.ClientId.HasValue && !x.OwnerId.HasValue && x.ClientId.Value == clientId && roles.Any(y => y.RoleType == RoleType.ClientAdmin))
+                        || (!x.ClientId.HasValue && x.OwnerId.HasValue && x.OwnerId.Value == userId)
+                        || (x.Permissions.Any(y => y.RecipientId == userId && !y.EndDate.HasValue))))
+                .ToListAsync();
+
+            var newFileCount = fileStorages.Where(x => !x.IsDirectory && !x.FileViewings.Any(y => y.ViewById == userId && x.IsActive) 
+                                && (!x.OwnerId.HasValue || (x.OwnerId.HasValue && x.OwnerId.Value != userId))).Count();
+
+            foreach (var storage in fileStorages.Where(x => x.IsDirectory).ToList())
+            {
+                newFileCount += await GetNewFileCountByParentId(storage.Id, userId, clientId, roles);
+            }
+
+            return newFileCount;
+        }
+
+        private async Task<int> GetNewFileCountByParentId(int fileStorageId, int userId, int clientId, IEnumerable<Role> roles)
+        {
+            var fileStorages = await Context.Set<FileStorage>()
+               .Where(x => x.IsActive && x.ParentFileStorageId == fileStorageId
+                       && ((!x.ClientId.HasValue && !x.OwnerId.HasValue && roles.Any(y => y.RoleType == RoleType.SuperAdmin))
+                       || (x.ClientId.HasValue && !x.OwnerId.HasValue && x.ClientId.Value == clientId && roles.Any(y => y.RoleType == RoleType.ClientAdmin))
+                       || (!x.ClientId.HasValue && x.OwnerId.HasValue && x.OwnerId.Value == userId)
+                       || (x.Permissions.Any(y => y.RecipientId == userId && !y.EndDate.HasValue))))
+               .ToListAsync();
+
+            var newFileCount = fileStorages.Where(x => !x.IsDirectory && !x.FileViewings.Any(y => y.ViewById == userId && x.IsActive)).Count();
+
+            foreach (var storage in fileStorages.Where(x => x.IsDirectory).ToList())
+            {
+                newFileCount += await GetNewFileCountByParentId(storage.Id, userId, clientId);
+            }
+
+            return newFileCount;
+        }
     }
 }
