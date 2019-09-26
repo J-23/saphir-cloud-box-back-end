@@ -105,25 +105,6 @@ namespace SaphirCloudBox.Services.Services
             await _azureBlobClient.UploadFile(_blobSettings.ContainerName, blobName.ToString(), fileDto.Content.ToByteArray());
             
             await fileStorageRepository.Add(newFileStorage);
-
-            if (!owners.ClientId.HasValue && owners.OwnerId.HasValue)
-            {
-                var userDto = await _userService.GetById(userId);
-                var clientAdmin = await _userService.GetClientAdminByClientId(userDto.Client.Id);
-
-                if (clientAdmin != null)
-                {
-                    newFileStorage.Permissions.Add(new FileStoragePermission
-                    {
-                        SenderId = userId,
-                        RecipientId = clientAdmin.Id,
-                        Type = PermissionType.ReadAndWrite,
-                        StartDate = DateTime.UtcNow
-                    });
-
-                    await fileStorageRepository.Update(newFileStorage);
-                }
-            }
         }
 
         public async Task AddFolder(AddFolderDto folderDto, int userId, int clientId)

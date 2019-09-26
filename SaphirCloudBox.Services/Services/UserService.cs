@@ -116,6 +116,9 @@ namespace SaphirCloudBox.Services.Services
 
             var users = new List<User>();
 
+            var allClientUsers = await _userManager.Users.Where(x => x.ClientId == currentUser.Client.Id && x.IsActive).ToListAsync();
+            var clientAdminRole = await _roleManager.Roles.FirstOrDefaultAsync(x => x.RoleType == Enums.RoleType.ClientAdmin);
+
             switch (currentUser.Role.RoleType)
             {
                 case Enums.RoleType.SuperAdmin:
@@ -125,46 +128,40 @@ namespace SaphirCloudBox.Services.Services
                     users = await _userManager.Users.Where(x => x.ClientId == currentUser.Client.Id && x.IsActive).ToListAsync();
                     break;
                 case Enums.RoleType.DepartmentHead:
+
+                    foreach (var user in allClientUsers)
+                    {
+                        var isInRole = await _userManager.IsInRoleAsync(user, clientAdminRole.Name);
+
+                        if (isInRole)
+                        {
+                            users.Add(user);
+                        }
+                    }
+
                     if (currentUser.Department != null)
                     {
                         users = await _userManager.Users.Where(x => x.ClientId == currentUser.Client.Id && x.DepartmentId == currentUser.Department.Id && x.IsActive).ToListAsync();
                     }
-                    else
-                    {
-                        var allClientUsers= await _userManager.Users.Where(x => x.ClientId == currentUser.Client.Id && x.IsActive).ToListAsync();
-                        var role = await _roleManager.Roles.FirstOrDefaultAsync(x => x.RoleType == Enums.RoleType.ClientAdmin);
 
-                        foreach (var user in allClientUsers)
-                        {
-                            var isInRole = await _userManager.IsInRoleAsync(user, role.Name);
-
-                            if (isInRole)
-                            {
-                                users.Add(user);
-                            }
-                        }
-                    }
                     break;
                 case Enums.RoleType.Employee:
+
+                    foreach (var user in allClientUsers)
+                    {
+                        var isInRole = await _userManager.IsInRoleAsync(user, clientAdminRole.Name);
+
+                        if (isInRole)
+                        {
+                            users.Add(user);
+                        }
+                    }
+
                     if (currentUser.Department != null)
                     {
                         users = await _userManager.Users.Where(x => x.ClientId == currentUser.Client.Id && x.DepartmentId == currentUser.Department.Id && x.IsActive).ToListAsync();
                     }
-                    else
-                    {
-                        var allClientUsers = await _userManager.Users.Where(x => x.ClientId == currentUser.Client.Id && x.IsActive).ToListAsync();
-                        var role = await _roleManager.Roles.FirstOrDefaultAsync(x => x.RoleType == Enums.RoleType.ClientAdmin);
 
-                        foreach (var user in allClientUsers)
-                        {
-                            var isInRole = await _userManager.IsInRoleAsync(user, role.Name);
-
-                            if (isInRole)
-                            {
-                                users.Add(user);
-                            }
-                        }
-                    }
                     break;
                 default:
                     break;
@@ -535,24 +532,6 @@ namespace SaphirCloudBox.Services.Services
             var groups = await userGroupRepository.GetByIds(groupIds);
             var users = groups.SelectMany(s => s.UsersInGroup).Select(s => s.User).Where(x => x.IsActive).ToList();
             return MapperFactory.CreateMapper<IUserMapper>().MapCollectionToModel(users);
-        }
-
-        public async Task<UserDto> GetClientAdminByClientId(int clientId)
-        {
-            var allClientUsers = await _userManager.Users.Where(x => x.ClientId == clientId && x.IsActive).ToListAsync();
-            var role = await _roleManager.Roles.FirstOrDefaultAsync(x => x.RoleType == Enums.RoleType.ClientAdmin);
-
-            foreach (var user in allClientUsers)
-            {
-                var isInRole = await _userManager.IsInRoleAsync(user, role.Name);
-
-                if (isInRole)
-                {
-                    return MapperFactory.CreateMapper<IUserMapper>().MapToModel(user);
-                }
-            }
-
-            return null;
         }
     }
 }
