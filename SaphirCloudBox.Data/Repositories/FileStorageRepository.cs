@@ -254,8 +254,14 @@ namespace SaphirCloudBox.Data.Repositories
                         || (x.Permissions.Any(y => y.RecipientId == userId && !y.EndDate.HasValue))))
                 .ToListAsync();
 
-            var newFileCount = fileStorages.Where(x => !x.IsDirectory && !x.FileViewings.Any(y => y.ViewById == userId && x.IsActive) 
-                                && (!x.OwnerId.HasValue || (x.OwnerId.HasValue && x.OwnerId.Value != userId))).Count();
+            var newFileCount = fileStorages
+                .Where(x => !x.IsDirectory && (
+                    !x.FileViewings.Any(y => y.ViewById == userId && y.IsActive)
+                    && !(!x.ClientId.HasValue && !x.OwnerId.HasValue && roles.Any(y => y.RoleType == RoleType.SuperAdmin))
+                    && !(x.ClientId.HasValue && !x.OwnerId.HasValue && x.ClientId.Value == clientId && roles.Any(y => y.RoleType == RoleType.ClientAdmin))
+                    && !(!x.ClientId.HasValue && x.OwnerId.HasValue && x.OwnerId.Value == userId)
+                ))
+                .Count();
 
             foreach (var storage in fileStorages.Where(x => x.IsDirectory).ToList())
             {
@@ -268,18 +274,25 @@ namespace SaphirCloudBox.Data.Repositories
         private async Task<int> GetNewFileCountByParentId(int fileStorageId, int userId, int clientId, IEnumerable<Role> roles)
         {
             var fileStorages = await Context.Set<FileStorage>()
-               .Where(x => x.IsActive && x.ParentFileStorageId == fileStorageId
-                       && ((!x.ClientId.HasValue && !x.OwnerId.HasValue && roles.Any(y => y.RoleType == RoleType.SuperAdmin))
-                       || (x.ClientId.HasValue && !x.OwnerId.HasValue && x.ClientId.Value == clientId && roles.Any(y => y.RoleType == RoleType.ClientAdmin))
-                       || (!x.ClientId.HasValue && x.OwnerId.HasValue && x.OwnerId.Value == userId)
-                       || (x.Permissions.Any(y => y.RecipientId == userId && !y.EndDate.HasValue))))
-               .ToListAsync();
+                 .Where(x => x.IsActive && x.ParentFileStorageId == fileStorageId
+                         && ((!x.ClientId.HasValue && !x.OwnerId.HasValue && roles.Any(y => y.RoleType == RoleType.SuperAdmin))
+                         || (x.ClientId.HasValue && !x.OwnerId.HasValue && x.ClientId.Value == clientId && roles.Any(y => y.RoleType == RoleType.ClientAdmin))
+                         || (!x.ClientId.HasValue && x.OwnerId.HasValue && x.OwnerId.Value == userId)
+                         || (x.Permissions.Any(y => y.RecipientId == userId && !y.EndDate.HasValue))))
+                 .ToListAsync();
 
-            var newFileCount = fileStorages.Where(x => !x.IsDirectory && !x.FileViewings.Any(y => y.ViewById == userId && x.IsActive)).Count();
+            var newFileCount = fileStorages
+                .Where(x => !x.IsDirectory && (
+                    !x.FileViewings.Any(y => y.ViewById == userId && y.IsActive)
+                    && !(!x.ClientId.HasValue && !x.OwnerId.HasValue && roles.Any(y => y.RoleType == RoleType.SuperAdmin))
+                    && !(x.ClientId.HasValue && !x.OwnerId.HasValue && x.ClientId.Value == clientId && roles.Any(y => y.RoleType == RoleType.ClientAdmin))
+                    && !(!x.ClientId.HasValue && x.OwnerId.HasValue && x.OwnerId.Value == userId)
+                ))
+                .Count();
 
             foreach (var storage in fileStorages.Where(x => x.IsDirectory).ToList())
             {
-                newFileCount += await GetNewFileCountByParentId(storage.Id, userId, clientId);
+                newFileCount += await GetNewFileCountByParentId(storage.Id, userId, clientId, roles);
             }
 
             return newFileCount;

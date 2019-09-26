@@ -51,6 +51,8 @@ namespace SaphirCloudBox.Services.Contracts.Dtos
 
             public int NewFileCount { get; set; }
 
+            public bool IsViewed { get; set; }
+
             public class PermissionDto
             {
                 public UserDto Sender { get; set; }

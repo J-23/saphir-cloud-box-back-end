@@ -271,5 +271,31 @@ namespace SaphirCloudBox.Host.Controllers
 
             return Ok(response);
         }
+
+        [HttpPost]
+        [Route("view")]
+        public async Task<ActionResult> ViewFile([FromBody]ViewFileDto fileDto)
+        {
+            if (!IsAvailableOperation())
+            {
+                return BadRequest();
+            }
+
+            await _fileStorageService.ViewFile(fileDto, UserId, ClientId);
+            return Ok();
+        }
+
+        [HttpPost]
+        [Route("cancel-view")]
+        public async Task<ActionResult> CancelFileView([FromBody]ViewFileDto fileDto)
+        {
+            if (!IsAvailableOperation())
+            {
+                return BadRequest();
+            }
+
+            await _fileStorageService.CancelFileView(fileDto, UserId, ClientId);
+            return Ok();
+        }
     }
 }

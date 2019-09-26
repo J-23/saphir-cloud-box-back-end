@@ -181,6 +181,14 @@ namespace SaphirCloudBox.Services.Services
                 storage.NewFileCount = await fileStorageRepository.GetNewFileCountByParentId(storage.Id, userId, clientId);
             }
 
+            childFileStorages.Where(x => !x.IsDirectory && (x.FileViewings.Any(y => y.IsActive && y.ViewById == userId) || x.OwnerId.HasValue && x.OwnerId.Value == userId))
+                .Select(s => s.Id).ToList()
+                .ForEach(stId =>
+                {
+                    var storage = storages.FirstOrDefault(x => x.Id == stId);
+                    storage.IsViewed = true;
+                });
+
             return new FileStorageDto
             {
                 Id = parentFileStorage.Id,
@@ -659,9 +667,77 @@ namespace SaphirCloudBox.Services.Services
                 newFileCount += await fileStorageRepository.GetNewFileCountByParentId(storage.Id, userId, clientId);
             }
 
-            newFileCount += fileStorages.Where(x => !x.IsDirectory).Count();
+            var user = await _userService.GetById(userId);
 
-            return (MapperFactory.CreateMapper<IFileStorageMapper>().MapCollectionToModel(fileStorages), newFileCount);
+            newFileCount += fileStorages
+                .Where(x => !x.IsDirectory && (
+                    !x.FileViewings.Any(y => y.ViewById == userId && y.IsActive)
+                    && !(!x.ClientId.HasValue && !x.OwnerId.HasValue && user.Role.RoleType == RoleType.SuperAdmin)
+                    && !(x.ClientId.HasValue && !x.OwnerId.HasValue && x.ClientId.Value == clientId && user.Role.RoleType == RoleType.ClientAdmin)
+                    && !(!x.ClientId.HasValue && x.OwnerId.HasValue && x.OwnerId.Value == userId)
+                ))
+                .Count();
+
+            var storageDtos = MapperFactory.CreateMapper<IFileStorageMapper>().MapCollectionToModel(fileStorages);
+
+            fileStorages.Where(x => !x.IsDirectory && !(
+                    !x.FileViewings.Any(y => y.ViewById == userId && y.IsActive)
+                    && !(!x.ClientId.HasValue && !x.OwnerId.HasValue && user.Role.RoleType == RoleType.SuperAdmin)
+                    && !(x.ClientId.HasValue && !x.OwnerId.HasValue && x.ClientId.Value == clientId && user.Role.RoleType == RoleType.ClientAdmin)
+                    && !(!x.ClientId.HasValue && x.OwnerId.HasValue && x.OwnerId.Value == userId)
+                ))
+                .ToList()
+                .ForEach(st =>
+                {
+                    var storage = storageDtos.FirstOrDefault(x => x.Id == st.Id);
+                    storage.IsViewed = true;
+                });
+
+            return (storageDtos, newFileCount);
+        }
+
+        public async Task ViewFile(ViewFileDto fileDto, int userId, int clientId)
+        {
+            var fileStorageRepository = DataContextManager.CreateRepository<IFileStorageRepository>();
+
+            var file = await fileStorageRepository.GetById(fileDto.Id, userId, clientId);
+
+            if (file == null)
+            {
+                throw new NotFoundException("File storage", fileDto.Id);
+            }
+
+            file.FileViewings.Add(new FileViewing
+            {
+                IsActive = true,
+                ViewById = userId,
+                ViewDate = DateTime.UtcNow
+            });
+
+            await fileStorageRepository.Update(file);
+        }
+
+        public async Task CancelFileView(ViewFileDto fileDto, int userId, int clientId)
+        {
+            var fileStorageRepository = DataContextManager.CreateRepository<IFileStorageRepository>();
+
+            var file = await fileStorageRepository.GetById(fileDto.Id, userId, clientId);
+
+            if (file == null)
+            {
+                throw new NotFoundException("File storage", fileDto.Id);
+            }
+
+            var viewing = file.FileViewings.FirstOrDefault(x => x.IsActive && x.ViewById == userId);
+
+            if (viewing == null)
+            {
+                throw new NotFoundException("File viewing for file", fileDto.Id);
+            }
+
+            viewing.IsActive = false;
+
+            await fileStorageRepository.Update(file);
         }
     }
 }

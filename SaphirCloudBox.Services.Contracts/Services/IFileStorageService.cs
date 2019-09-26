@@ -30,5 +30,9 @@ namespace SaphirCloudBox.Services.Contracts.Services
         Task<CheckPermissionResultDto> RemovePermission(RemovePermissionDto permissionDto, int userId, int clientId);
 
         Task<(IEnumerable<FileStorageDto.StorageDto> Storages, int NewFileCount)> GetSharedFiles(int userId, int clientId);
+
+        Task ViewFile(ViewFileDto fileDto, int userId, int clientId);
+
+        Task CancelFileView(ViewFileDto fileDto, int userId, int clientId);
     }
 }
