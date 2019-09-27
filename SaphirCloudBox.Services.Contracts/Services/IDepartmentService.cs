@@ -8,7 +8,7 @@ namespace SaphirCloudBox.Services.Contracts.Services
 {
     public interface IDepartmentService
     {
-        Task<IEnumerable<DepartmentDto>> GetAll();
+        Task<IEnumerable<DepartmentDto>> GetAll(int userId, int clientId);
 
         Task Add(AddDepartmentDto departmentDto);
 

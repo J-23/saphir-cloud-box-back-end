@@ -31,7 +31,12 @@ namespace SaphirCloudBox.Host.Controllers
         [Route("list")]
         public async Task<ActionResult> GetDepartmentList()
         {
-            var departments = await _departmentService.GetAll();
+            if (!IsAvailableOperation())
+            {
+                return BadRequest();
+            }
+
+            var departments = await _departmentService.GetAll(UserId, ClientId);
             return Ok(departments);
         }
 

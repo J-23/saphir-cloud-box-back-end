@@ -162,7 +162,7 @@ namespace SaphirCloudBox.Data.Repositories
         public async Task<IEnumerable<FileStorage>> GetSharedFiles(int userId)
         {
             return await Context.Set<FileStorage>()
-                .Where(x => !x.ClientId.HasValue && x.OwnerId.HasValue
+                .Where(x => !x.ClientId.HasValue && x.OwnerId.HasValue && x.IsActive
                             && x.Permissions.Any(y => y.RecipientId == userId && !y.EndDate.HasValue))
                 .ToListAsync();
         }
@@ -257,8 +257,7 @@ namespace SaphirCloudBox.Data.Repositories
             var newFileCount = fileStorages
                 .Where(x => !x.IsDirectory && (
                     !x.FileViewings.Any(y => y.ViewById == userId && y.IsActive)
-                    && !(!x.ClientId.HasValue && !x.OwnerId.HasValue && roles.Any(y => y.RoleType == RoleType.SuperAdmin))
-                    && !(x.ClientId.HasValue && !x.OwnerId.HasValue && x.ClientId.Value == clientId && roles.Any(y => y.RoleType == RoleType.ClientAdmin))
+                    && !(x.CreateById == userId)
                     && !(!x.ClientId.HasValue && x.OwnerId.HasValue && x.OwnerId.Value == userId)
                 ))
                 .Count();
@@ -284,8 +283,7 @@ namespace SaphirCloudBox.Data.Repositories
             var newFileCount = fileStorages
                 .Where(x => !x.IsDirectory && (
                     !x.FileViewings.Any(y => y.ViewById == userId && y.IsActive)
-                    && !(!x.ClientId.HasValue && !x.OwnerId.HasValue && roles.Any(y => y.RoleType == RoleType.SuperAdmin))
-                    && !(x.ClientId.HasValue && !x.OwnerId.HasValue && x.ClientId.Value == clientId && roles.Any(y => y.RoleType == RoleType.ClientAdmin))
+                    && !(x.CreateById == userId)
                     && !(!x.ClientId.HasValue && x.OwnerId.HasValue && x.OwnerId.Value == userId)
                 ))
                 .Count();

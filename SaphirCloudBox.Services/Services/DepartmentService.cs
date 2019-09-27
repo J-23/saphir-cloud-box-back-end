@@ -18,8 +18,13 @@ namespace SaphirCloudBox.Services.Services
 {
     public class DepartmentService : AbstractService, IDepartmentService
     {
-        public DepartmentService(IUnityContainer container, ISaphirCloudBoxDataContextManager dataContextManager) : base(container, dataContextManager)
+        private readonly IUserService _userService;
+
+        public DepartmentService(IUnityContainer container, 
+            ISaphirCloudBoxDataContextManager dataContextManager,
+            IUserService userService) : base(container, dataContextManager)
         {
+            _userService = userService ?? throw new ArgumentNullException(nameof(userService));
         }
 
         public async Task Add(AddDepartmentDto departmentDto)
@@ -50,11 +55,22 @@ namespace SaphirCloudBox.Services.Services
             await clientRepository.Update(client);
         }
 
-        public async Task<IEnumerable<DepartmentDto>> GetAll()
+        public async Task<IEnumerable<DepartmentDto>> GetAll(int userId, int clientId)
         {
+            var currentUser = await _userService.GetById(userId);
+
             var departmentRepository = DataContextManager.CreateRepository<IDepartmentRepository>();
 
-            var departments = await departmentRepository.GetAll();
+            IEnumerable<Department> departments = new List<Department>();
+
+            if (currentUser.Role.RoleType == Enums.RoleType.SuperAdmin)
+            {
+                departments = await departmentRepository.GetAll();
+            }
+            else
+            {
+                departments = await departmentRepository.GetByClientId(clientId);
+            }
 
             return MapperFactory.CreateMapper<IDepartmentMapper>().MapCollectionToModel(departments);
         }

@@ -162,7 +162,8 @@ namespace SaphirCloudBox.Services.Services
                 storage.NewFileCount = await fileStorageRepository.GetNewFileCountByParentId(storage.Id, userId, clientId);
             }
 
-            childFileStorages.Where(x => !x.IsDirectory && (x.FileViewings.Any(y => y.IsActive && y.ViewById == userId) || x.OwnerId.HasValue && x.OwnerId.Value == userId))
+            childFileStorages.Where(x => !x.IsDirectory && (x.FileViewings.Any(y => y.IsActive && y.ViewById == userId) 
+                || x.OwnerId.HasValue && x.OwnerId.Value == userId || x.CreateById == userId))
                 .Select(s => s.Id).ToList()
                 .ForEach(stId =>
                 {
@@ -445,9 +446,16 @@ namespace SaphirCloudBox.Services.Services
                             .ForEach(perm =>
                             {
                                 perm.Type = permissionDto.Type;
+                                recipients.Add(new CheckPermissionResultDto.RecipientDto
+                                {
+                                    Id = perm.Recipient.Id,
+                                    UserName = perm.Recipient.UserName,
+                                    Email = perm.Recipient.Email,
+                                    Type = CheckPermissionResultDto.UpdateType.Update
+                                });
                             });
 
-                        users.Where(x => !fileStorage.Permissions.Any(y => y.RecipientId == x.Id && !y.EndDate.HasValue))
+                        users.Where(x => !storage.Permissions.Any(y => y.RecipientId == x.Id && !y.EndDate.HasValue))
                             .ToList()
                             .ForEach(user =>
                             {
@@ -458,6 +466,14 @@ namespace SaphirCloudBox.Services.Services
                                     Type = permissionDto.Type,
                                     StartDate = DateTime.UtcNow
                                 });
+
+                                recipients.Add(new CheckPermissionResultDto.RecipientDto
+                                {
+                                    Id = user.Id,
+                                    UserName = user.UserName,
+                                    Email = user.Email,
+                                    Type = CheckPermissionResultDto.UpdateType.Add
+                                });
                             });
 
                         storage.Permissions.Where(x => !users.Select(s => s.Id).Contains(x.RecipientId) && !x.EndDate.HasValue)
@@ -465,6 +481,13 @@ namespace SaphirCloudBox.Services.Services
                             .ForEach(perm =>
                             {
                                 perm.EndDate = DateTime.UtcNow;
+                                recipients.Add(new CheckPermissionResultDto.RecipientDto
+                                {
+                                    Id = perm.Recipient.Id,
+                                    UserName = perm.Recipient.UserName,
+                                    Email = perm.Recipient.Email,
+                                    Type = CheckPermissionResultDto.UpdateType.Remove
+                                });
                             });
                     });
             }
@@ -653,20 +676,15 @@ namespace SaphirCloudBox.Services.Services
             newFileCount += fileStorages
                 .Where(x => !x.IsDirectory && (
                     !x.FileViewings.Any(y => y.ViewById == userId && y.IsActive)
-                    && !(!x.ClientId.HasValue && !x.OwnerId.HasValue && user.Role.RoleType == RoleType.SuperAdmin)
-                    && !(x.ClientId.HasValue && !x.OwnerId.HasValue && x.ClientId.Value == clientId && user.Role.RoleType == RoleType.ClientAdmin)
+                    && !(x.CreateById == userId)
                     && !(!x.ClientId.HasValue && x.OwnerId.HasValue && x.OwnerId.Value == userId)
                 ))
                 .Count();
 
             var storageDtos = MapperFactory.CreateMapper<IFileStorageMapper>().MapCollectionToModel(fileStorages);
 
-            fileStorages.Where(x => !x.IsDirectory && !(
-                    !x.FileViewings.Any(y => y.ViewById == userId && y.IsActive)
-                    && !(!x.ClientId.HasValue && !x.OwnerId.HasValue && user.Role.RoleType == RoleType.SuperAdmin)
-                    && !(x.ClientId.HasValue && !x.OwnerId.HasValue && x.ClientId.Value == clientId && user.Role.RoleType == RoleType.ClientAdmin)
-                    && !(!x.ClientId.HasValue && x.OwnerId.HasValue && x.OwnerId.Value == userId)
-                ))
+            fileStorages.Where(x => !x.IsDirectory && (x.FileViewings.Any(y => y.IsActive && y.ViewById == userId)
+                || x.OwnerId.HasValue && x.OwnerId.Value == userId || x.CreateById == userId))
                 .ToList()
                 .ForEach(st =>
                 {
