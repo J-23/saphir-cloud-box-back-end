@@ -3,6 +3,7 @@ using SaphirCloudBox.Enums;
 using SaphirCloudBox.Models;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -33,5 +34,7 @@ namespace SaphirCloudBox.Data.Contracts.Repositories
         Task<IEnumerable<FileStorage>> GetByUserId(int id);
 
         Task<int> GetNewFileCountByParentId(int fileStorageId, int userId, int clientId);
+
+        Task<IQueryable<FileStorage>> GetQuery(int userId, int clientId);
     }
 }

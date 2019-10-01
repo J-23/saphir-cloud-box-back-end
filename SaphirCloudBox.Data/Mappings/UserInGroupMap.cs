@@ -13,7 +13,7 @@ namespace SaphirCloudBox.Data.Mappings
         {
             builder.HasKey(x => new { x.GroupId, x.UserId });
 
-            builder.HasOne(x => x.User).WithMany().HasForeignKey(x => x.UserId);
+            builder.HasOne(x => x.User).WithMany(x => x.UserInGroups).HasForeignKey(x => x.UserId);
         }
     }
 }

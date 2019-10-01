@@ -297,5 +297,19 @@ namespace SaphirCloudBox.Host.Controllers
             await _fileStorageService.CancelFileView(fileDto, UserId, ClientId);
             return Ok();
         }
+
+        [HttpPost]
+        [Route("advanced-search")]
+        public async Task<ActionResult> SearchByFileStorage([FromBody]AdvancedSearchDto advancedSearchDto)
+        {
+            if (!IsAvailableOperation())
+            {
+                return BadRequest();
+            }
+
+            var fileStorages = await _fileStorageService.Search(advancedSearchDto, UserId, ClientId);
+
+            return Ok(fileStorages);
+        }
     }
 }

@@ -34,5 +34,7 @@ namespace SaphirCloudBox.Services.Contracts.Services
         Task ViewFile(ViewFileDto fileDto, int userId, int clientId);
 
         Task CancelFileView(ViewFileDto fileDto, int userId, int clientId);
+
+        Task<IEnumerable<FileStorageDto.StorageDto>> Search(AdvancedSearchDto advancedSearchDto, int userId, int clientId);
     }
 }

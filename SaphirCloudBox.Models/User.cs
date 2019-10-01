@@ -24,5 +24,7 @@ namespace SaphirCloudBox.Models
         public virtual Department Department { get; set; }
 
         public virtual IEnumerable<Group> Groups { get; set; }
+
+        public virtual IEnumerable<UserInGroup> UserInGroups { get; set; }
     }
 }

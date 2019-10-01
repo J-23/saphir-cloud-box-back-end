@@ -738,5 +738,16 @@ namespace SaphirCloudBox.Services.Services
 
             await fileStorageRepository.Update(file);
         }
+
+        public async Task<IEnumerable<FileStorageDto.StorageDto>> Search(AdvancedSearchDto advancedSearchDto, int userId, int clientId)
+        {
+            var fileStorageRepository = DataContextManager.CreateRepository<IFileStorageRepository>();
+
+            var fileStorages = await fileStorageRepository.GetQuery(userId, clientId);
+
+            fileStorages = fileStorages.GetForFileStorage(advancedSearchDto);
+
+            return MapperFactory.CreateMapper<IFileStorageMapper>().MapCollectionToModel(await fileStorages.ToListAsync());
+        }
     }
 }
