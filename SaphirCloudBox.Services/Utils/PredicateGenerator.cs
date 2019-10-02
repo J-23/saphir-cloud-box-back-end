@@ -48,7 +48,8 @@ namespace SaphirCloudBox.Services.Utils
             if (clientIds.Count() > 0)
             {
                 predicate.And(x => x.ClientId.HasValue && clientIds.Contains(x.ClientId.Value)
-                                                || x.OwnerId.HasValue && clientIds.Contains(x.Owner.ClientId));
+                                    || x.OwnerId.HasValue && clientIds.Contains(x.Owner.ClientId)
+                                    || x.Permissions.Any(y => !y.EndDate.HasValue && clientIds.Contains(y.Recipient.ClientId)));
             }
         }
 
@@ -57,7 +58,8 @@ namespace SaphirCloudBox.Services.Utils
             if (departmentIds.Count() > 0)
             {
                 predicate.And(x => x.ClientId.HasValue && x.Client.Departments.Any(y => departmentIds.Contains(y.Id))
-                                                || x.OwnerId.HasValue && x.Owner.DepartmentId.HasValue && departmentIds.Contains(x.Owner.DepartmentId.Value));
+                                    || x.OwnerId.HasValue && x.Owner.DepartmentId.HasValue && departmentIds.Contains(x.Owner.DepartmentId.Value)
+                                    || x.Permissions.Any(y => !y.EndDate.HasValue && y.Recipient.DepartmentId.HasValue && departmentIds.Contains(y.Recipient.DepartmentId.Value)));
             } 
         }
 
@@ -66,7 +68,8 @@ namespace SaphirCloudBox.Services.Utils
             if (userIds.Count() > 0)
             {
                 predicate.And(x => x.OwnerId.HasValue && userIds.Contains(x.OwnerId.Value)
-                                                || x.ClientId.HasValue && x.Client.Users.Any(y => userIds.Contains(x.Id)));
+                                    || x.ClientId.HasValue && x.Client.Users.Any(y => userIds.Contains(x.Id))
+                                    || x.Permissions.Any(y => !y.EndDate.HasValue && userIds.Contains(y.RecipientId)));
             }
         }
 
@@ -74,7 +77,8 @@ namespace SaphirCloudBox.Services.Utils
         {
             if (userGroupIds.Count() > 0)
             {
-                predicate.And(x => x.OwnerId.HasValue && x.Owner.UserInGroups.Any(y => userGroupIds.Contains(y.GroupId)));
+                predicate.And(x => x.OwnerId.HasValue && x.Owner.UserInGroups.Any(y => userGroupIds.Contains(y.GroupId))
+                                    || x.Permissions.Any(y => !y.EndDate.HasValue && y.Recipient.UserInGroups.Any(z => userGroupIds.Contains(z.GroupId))));
             }
         }
 
@@ -98,8 +102,7 @@ namespace SaphirCloudBox.Services.Utils
         {
             if (!String.IsNullOrEmpty(searchString))
             {
-                var strings = searchString.Split(".");
-                predicate.And(x => searchString.Contains(String.Join("", x.Name, x.Files.FirstOrDefault(y => y.IsActive) != null ? x.Files.FirstOrDefault(y => y.IsActive).Extension : String.Empty)));
+                predicate.And(x => x.Name.ToLower().Contains(searchString.ToLower()));
             }
         }
     }
