@@ -24,6 +24,7 @@ namespace SaphirCloudBox.Host.Infractructure
             container.RegisterType<RoleController>();
             container.RegisterType<UserController>();
             container.RegisterType<FeedbackController>();
+            container.RegisterType<FileStorageHierarchyController>();
         }
     }
 }

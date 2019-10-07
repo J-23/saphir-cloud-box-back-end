@@ -27,26 +27,24 @@ namespace SaphirCloudBox.Host.Controllers
     {
         private readonly IFileStorageService _fileStorageService;
         private readonly INotificationService _notificationService;
-        private readonly IUserService _userService;
 
         private readonly IEmailSender _emailSender;
 
         private readonly AppSettings _appSettings;
 
         public FileStorageController(IFileStorageService fileStorageService,
-            INotificationService notificationService, 
-            IUserService userService,
+            INotificationService notificationService,
             ILogService logService,
             IEmailSender emailSender,
             AppSettings appSettings) : base(logService)
         {
             _fileStorageService = fileStorageService ?? throw new ArgumentNullException(nameof(fileStorageService));
             _notificationService = notificationService ?? throw new ArgumentNullException(nameof(notificationService));
-            _userService = userService ?? throw new ArgumentNullException(nameof(userService));
 
             _emailSender = emailSender ?? throw new ArgumentNullException(nameof(emailSender));
 
             _appSettings = appSettings ?? throw new ArgumentNullException(nameof(appSettings));
+
             MessageUtil.AppSettings = _appSettings;
         }
 
