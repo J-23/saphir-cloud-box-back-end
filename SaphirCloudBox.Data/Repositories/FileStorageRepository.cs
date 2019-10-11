@@ -44,9 +44,9 @@ namespace SaphirCloudBox.Data.Repositories
             var roles = await _roleManager.Roles.Where(x => roleNames.Contains(x.Name)).ToListAsync();
 
             return await Context.Set<FileStorage>()
-                .FirstOrDefaultAsync(x => x.Id == id && x.IsActive && ((!x.ClientId.HasValue && !x.OwnerId.HasValue && (roles.Any(y => y.RoleType == RoleType.SuperAdmin) || x.ParentFileStorageId.HasValue && x.ParentFileStorageId.Value == 1))
-                    || (x.ClientId.HasValue && !x.OwnerId.HasValue && x.ClientId.Value == clientId && (roles.Any(y => y.RoleType == RoleType.ClientAdmin) || x.ParentFileStorageId.HasValue && x.ParentFileStorageId.Value == 1))
-                    || (!x.ClientId.HasValue && x.OwnerId.HasValue && (x.OwnerId.Value == userId || x.ParentFileStorageId.HasValue && x.ParentFileStorageId.Value == 1))
+                .FirstOrDefaultAsync(x => x.Id == id && x.IsActive && ((!x.ClientId.HasValue && !x.OwnerId.HasValue && roles.Any(y => y.RoleType == RoleType.SuperAdmin))
+                    || (x.ClientId.HasValue && !x.OwnerId.HasValue && x.ClientId.Value == clientId && roles.Any(y => y.RoleType == RoleType.ClientAdmin))
+                    || (!x.ClientId.HasValue && x.OwnerId.HasValue && x.OwnerId.Value == userId)
                     || (x.Permissions.Any(y => y.RecipientId == userId && !y.EndDate.HasValue))));
         }
 
