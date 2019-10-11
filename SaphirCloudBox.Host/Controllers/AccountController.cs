@@ -118,7 +118,7 @@ namespace SaphirCloudBox.Host.Controllers
 
             if (userId == null)
             {
-                return BadRequest();
+                return Ok(null);
             }
 
             var user = await _userService.GetById(Int32.Parse(userId.Value));

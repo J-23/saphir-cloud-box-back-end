@@ -39,6 +39,19 @@ namespace SaphirCloudBox.Host.Controllers
             return Ok(groupDtos);
         }
 
+        [HttpGet]
+        [Route("{groupId}")]
+        public async Task<ActionResult> GetUserGroup(int groupId)
+        {
+            if (!IsAvailableOperation())
+            {
+                return BadRequest();
+            }
+
+            var groupDto = await _userGroupService.GetById(groupId, UserId);
+            return Ok(groupDto);
+        }
+
         [HttpPost]
         [Route("add")]
         public async Task<ActionResult> AddGroup([FromBody]AddUserGroupDto groupDto)
@@ -48,8 +61,8 @@ namespace SaphirCloudBox.Host.Controllers
                 return BadRequest();
             }
 
-            await _userGroupService.Add(groupDto, UserId);
-            return Ok();
+            var newGroupId = await _userGroupService.Add(groupDto, UserId);
+            return Ok(newGroupId);
         }
 
         [HttpPost]

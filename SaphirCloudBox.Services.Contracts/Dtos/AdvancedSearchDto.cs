@@ -14,6 +14,8 @@ namespace SaphirCloudBox.Services.Contracts.Dtos
 
         public IEnumerable<int> UserGroupIds { get; set; }
 
+        public IEnumerable<int> FolderIds { get; set; }
+
         public DateTime? StartDate { get; set; }
 
         public DateTime? EndDate { get; set; }

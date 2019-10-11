@@ -4,6 +4,7 @@ using SaphirCloudBox.Services.Contracts.Dtos;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Text;
 
 namespace SaphirCloudBox.Services.Utils
@@ -40,7 +41,8 @@ namespace SaphirCloudBox.Services.Utils
                 || advancedSearch.UserGroupIds.Count() > 0
                 || advancedSearch.StartDate.HasValue
                 || advancedSearch.EndDate.HasValue
-                || !String.IsNullOrEmpty(advancedSearch.SearchString);
+                || !String.IsNullOrEmpty(advancedSearch.SearchString)
+                || advancedSearch.FolderIds.Count() > 0;
         }
 
         private static void GetByClients(this ExpressionStarter<FileStorage> predicate, IEnumerable<int> clientIds)

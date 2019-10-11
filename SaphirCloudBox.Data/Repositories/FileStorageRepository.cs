@@ -296,18 +296,20 @@ namespace SaphirCloudBox.Data.Repositories
             return newFileCount;
         }
 
-        public async Task<IQueryable<FileStorage>> GetQuery(int userId, int clientId)
+        public async Task<IQueryable<FileStorage>> GetQuery(int userId, int clientId, IEnumerable<int> folderIds)
         {
             var user = await _userManager.FindByIdAsync(userId.ToString());
             var roleNames = await _userManager.GetRolesAsync(user);
             var roles = await _roleManager.Roles.Where(x => roleNames.Contains(x.Name)).ToListAsync();
 
-            return Context.Set<FileStorage>()
+            var fileStorages = Context.Set<FileStorage>()
                 .Where(x => x.IsActive && ((!x.ClientId.HasValue && !x.OwnerId.HasValue && roles.Any(y => y.RoleType == RoleType.SuperAdmin))
                         || (x.ClientId.HasValue && !x.OwnerId.HasValue && x.ClientId.Value == clientId && roles.Any(y => y.RoleType == RoleType.ClientAdmin))
                         || (!x.ClientId.HasValue && x.OwnerId.HasValue && x.OwnerId.Value == userId)
                         || (x.Permissions.Any(y => y.RecipientId == userId && !y.EndDate.HasValue))))
                 .AsQueryable();
+
+            return fileStorages;
         }
     }
 }

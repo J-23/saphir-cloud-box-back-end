@@ -10,10 +10,12 @@ namespace SaphirCloudBox.Services.Contracts.Services
     {
         Task<IEnumerable<UserGroupDto>> GetGroups(int userId);
 
-        Task Add(AddUserGroupDto groupDto, int userId);
+        Task<int> Add(AddUserGroupDto groupDto, int userId);
 
         Task Update(UpdateUserGroupDto groupDto, int userId);
 
         Task Remove(RemoveUserGroupDto groupDto, int userId);
+
+        Task<UserGroupDto> GetById(int groupId, int userId);
     }
 }

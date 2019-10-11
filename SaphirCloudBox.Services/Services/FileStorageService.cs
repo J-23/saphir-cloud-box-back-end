@@ -743,11 +743,54 @@ namespace SaphirCloudBox.Services.Services
         {
             var fileStorageRepository = DataContextManager.CreateRepository<IFileStorageRepository>();
 
-            var fileStorages = await fileStorageRepository.GetQuery(userId, clientId);
+            var fileStorages = await fileStorageRepository.GetQuery(userId, clientId, advancedSearchDto.FolderIds);
 
-            fileStorages = fileStorages.GetForFileStorage(advancedSearchDto);
+            var resFileStorages = await fileStorages.GetForFileStorage(advancedSearchDto).ToListAsync();
 
-            return MapperFactory.CreateMapper<IFileStorageMapper>().MapCollectionToModel(await fileStorages.ToListAsync());
+            var result = new List<FileStorage>();
+
+            if (advancedSearchDto.FolderIds.Count() > 0)
+            {
+                foreach (var fileStorage in resFileStorages)
+                {
+                    var res = GetByParentIds(fileStorage, advancedSearchDto.FolderIds);
+
+                    if (res != null)
+                    {
+                        result.Add(res);
+                    }
+                }
+            }
+            else
+            {
+                result = resFileStorages;
+            }
+            
+            return MapperFactory.CreateMapper<IFileStorageMapper>().MapCollectionToModel(result);
+        }
+
+        private FileStorage GetByParentIds(FileStorage fileStorage, IEnumerable<int> folderIds)
+        {
+            if (fileStorage.ParentFileStorageId.HasValue)
+            {
+                if (folderIds.Contains(fileStorage.ParentFileStorageId.Value))
+                {
+                    return fileStorage;
+                }
+                else
+                {
+                    var parent = GetByParentIds(fileStorage.ParentFileStorage, folderIds);
+
+                    if (parent != null)
+                    {
+                        return fileStorage;
+                    }
+
+                    return null;
+                }
+            }
+
+            return null;
         }
     }
 }

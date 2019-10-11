@@ -28,7 +28,7 @@ namespace SaphirCloudBox.Services.Services
             _userService = userService ?? throw new ArgumentNullException(nameof(userService));
         }
 
-        public async Task Add(AddUserGroupDto groupDto, int userId)
+        public async Task<int> Add(AddUserGroupDto groupDto, int userId)
         {
             var userGroupRepository = DataContextManager.CreateRepository<IUserGroupRepository>();
 
@@ -53,6 +53,21 @@ namespace SaphirCloudBox.Services.Services
             };
 
             await userGroupRepository.Add(newGroup);
+
+            return newGroup.Id;
+        }
+
+        public async Task<UserGroupDto> GetById(int groupId, int userId)
+        {
+            var userGroupRepository = DataContextManager.CreateRepository<IUserGroupRepository>();
+            var group = await userGroupRepository.GetById(groupId, userId);
+
+            if (group == null)
+            {
+                throw new NotFoundException("Group", groupId);
+            }
+
+            return MapperFactory.CreateMapper<IUserGroupMapper>().MapToModel(group);
         }
 
         public async Task<IEnumerable<UserGroupDto>> GetGroups(int userId)
