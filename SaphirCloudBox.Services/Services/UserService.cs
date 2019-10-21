@@ -141,25 +141,27 @@ namespace SaphirCloudBox.Services.Services
 
                     if (currentUser.Department != null)
                     {
-                        users = await _userManager.Users.Where(x => x.ClientId == currentUser.Client.Id && x.DepartmentId == currentUser.Department.Id && x.IsActive).ToListAsync();
+                        users.AddRange(await _userManager.Users.Where(x => x.ClientId == currentUser.Client.Id && x.DepartmentId == currentUser.Department.Id && x.IsActive).ToListAsync());
                     }
 
                     break;
                 case Enums.RoleType.Employee:
 
-                    foreach (var user in allClientUsers)
-                    {
-                        var isInRole = await _userManager.IsInRoleAsync(user, clientAdminRole.Name);
-
-                        if (isInRole)
-                        {
-                            users.Add(user);
-                        }
-                    }
-
                     if (currentUser.Department != null)
                     {
-                        users = await _userManager.Users.Where(x => x.ClientId == currentUser.Client.Id && x.DepartmentId == currentUser.Department.Id && x.IsActive).ToListAsync();
+                        users.AddRange(await _userManager.Users.Where(x => x.ClientId == currentUser.Client.Id && x.DepartmentId == currentUser.Department.Id && x.IsActive).ToListAsync());
+                    }
+                    else
+                    {
+                        foreach (var user in allClientUsers)
+                        {
+                            var isInRole = await _userManager.IsInRoleAsync(user, clientAdminRole.Name);
+
+                            if (isInRole)
+                            {
+                                users.Add(user);
+                            }
+                        }
                     }
 
                     break;
@@ -191,7 +193,7 @@ namespace SaphirCloudBox.Services.Services
                 userDtos.Add(userDto);
             }
 
-            return userDtos;
+            return userDtos.OrderBy(ord => ord.UserName).ToList();
         }
 
         public async Task<UserDto> GetByEmail(string email)
