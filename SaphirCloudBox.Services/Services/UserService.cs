@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using SaphirCloudBox.Data;
 using SaphirCloudBox.Data.Contracts;
 using SaphirCloudBox.Data.Contracts.Repositories;
+using SaphirCloudBox.Enums;
 using SaphirCloudBox.Models;
 using SaphirCloudBox.Services.Contracts.Dtos;
 using SaphirCloudBox.Services.Contracts.Exceptions;
@@ -264,7 +265,7 @@ namespace SaphirCloudBox.Services.Services
         }
 
 
-        public async Task Register(RegisterUserDto userDto, string commonRole)
+        public async Task Register(RegisterUserDto userDto, RoleType commonRole)
         {
             var user = await _userManager.Users.FirstOrDefaultAsync(x => x.Email.Equals(userDto.Email) && x.IsActive);
 
@@ -283,7 +284,7 @@ namespace SaphirCloudBox.Services.Services
                 IsActive = true
             };
 
-            var role = await _roleManager.FindByNameAsync(commonRole);
+            var role = await _roleManager.Roles.FirstOrDefaultAsync(x => x.RoleType == commonRole && x.IsActive);
 
             if (role == null)
             {

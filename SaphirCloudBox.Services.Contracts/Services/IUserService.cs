@@ -1,4 +1,5 @@
-﻿using SaphirCloudBox.Services.Contracts.Dtos;
+﻿using SaphirCloudBox.Enums;
+using SaphirCloudBox.Services.Contracts.Dtos;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -8,7 +9,7 @@ namespace SaphirCloudBox.Services.Contracts.Services
 {
     public interface IUserService
     {
-        Task Register(RegisterUserDto userDto, string commonRole);
+        Task Register(RegisterUserDto userDto, RoleType commonRole);
 
         Task<UserDto> Login(string email, string password);
 

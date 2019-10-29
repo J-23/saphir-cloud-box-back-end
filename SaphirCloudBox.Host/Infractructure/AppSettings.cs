@@ -1,4 +1,5 @@
-﻿using System;
+﻿using SaphirCloudBox.Enums;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -11,7 +12,7 @@ namespace SaphirCloudBox.Host.Infractructure
 
         public string CommonPassword { get; set; }
 
-        public string CommonRole { get; set; }
+        public RoleType CommonRole { get; set; }
 
         public string FileManagerUrlPart { get; set; }
 
