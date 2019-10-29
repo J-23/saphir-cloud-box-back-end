@@ -20,6 +20,14 @@ namespace SaphirCloudBox.Services.Services
         {
         }
 
+        public async Task<FolderDto> GetByChildId(int childId, int userId, int clientId)
+        {
+            var fileStorageHierarchyRepository = DataContextManager.CreateRepository<IFileStorageHierarchyRepository>();
+            var folderDto = await fileStorageHierarchyRepository.GetByChildId(childId, userId, clientId);
+
+            return MapperFactory.CreateMapper<IFolderMapper>().MapToModel(folderDto);
+        }
+
         public async Task<IEnumerable<FolderDto>> GetByParentId(int parentId, int userId, int clientId)
         {
             var fileStorageHierarchyRepository = DataContextManager.CreateRepository<IFileStorageHierarchyRepository>();

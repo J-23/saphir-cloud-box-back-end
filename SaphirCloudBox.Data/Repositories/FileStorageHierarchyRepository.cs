@@ -23,6 +23,35 @@ namespace SaphirCloudBox.Data.Repositories
             _roleManager = roleManager ?? throw new ArgumentNullException(nameof(roleManager));
         }
 
+        public async Task<FileStorage> GetByChildId(int childId, int userId, int clientId)
+        {
+            var user = await _userManager.FindByIdAsync(userId.ToString());
+            var roleNames = await _userManager.GetRolesAsync(user);
+            var roles = await _roleManager.Roles.Where(x => roleNames.Contains(x.Name)).ToListAsync();
+
+            var childFileStorage = await Context.Set<FileStorage>()
+                .FirstOrDefaultAsync(x => x.Id == childId
+                            && x.IsActive
+                            && ((!x.ClientId.HasValue && !x.OwnerId.HasValue && roles.Any(y => y.RoleType == RoleType.SuperAdmin))
+                                || (x.ClientId.HasValue && !x.OwnerId.HasValue && x.ClientId.Value == clientId && roles.Any(y => y.RoleType == RoleType.ClientAdmin))
+                                || (!x.ClientId.HasValue && x.OwnerId.HasValue && x.OwnerId.Value == userId)
+                                || x.Permissions.Any(y => y.RecipientId == userId && !y.EndDate.HasValue)));
+
+            var parentFileStorage = childFileStorage.ParentFileStorage;
+
+            if (parentFileStorage != null && parentFileStorage.IsActive 
+                && ((parentFileStorage.Owner == null && parentFileStorage.Client == null && roles.Any(y => y.RoleType == RoleType.SuperAdmin))
+                            || (parentFileStorage.Owner == null && parentFileStorage.Client != null && roles.Any(y => y.RoleType == RoleType.ClientAdmin) && parentFileStorage.ClientId == clientId)
+                            || (parentFileStorage.Owner != null && parentFileStorage.Client == null && (roles.Any(y => y.RoleType == RoleType.DepartmentHead)
+                            || roles.Any(y => y.RoleType == RoleType.Employee) || parentFileStorage.OwnerId == userId))
+                            || parentFileStorage.Permissions.Any(y => y.RecipientId == userId && !y.EndDate.HasValue && y.Type == PermissionType.ReadAndWrite)))
+            {
+                return parentFileStorage;
+            }
+
+            return null;
+        }
+
         public async Task<IEnumerable<FileStorage>> GetByParentId(int parentId, int userId, int clientId)
         {
             if (parentId == 1)
@@ -48,10 +77,10 @@ namespace SaphirCloudBox.Data.Repositories
                 .Where(x => x.ParentFileStorageId == parentId
                             && x.IsDirectory
                             && x.IsActive
-                            && ((!x.ClientId.HasValue && !x.OwnerId.HasValue && roles.Any(y => y.RoleType == RoleType.SuperAdmin))
-                                || (x.ClientId.HasValue && !x.OwnerId.HasValue && x.ClientId.Value == clientId && roles.Any(y => y.RoleType == RoleType.ClientAdmin))
+                            && ((!x.ClientId.HasValue && !x.OwnerId.HasValue && (roles.Any(y => y.RoleType == RoleType.SuperAdmin)) || x.ParentFileStorageId == 1)
+                                || (x.ClientId.HasValue && !x.OwnerId.HasValue && x.ClientId.Value == clientId && (roles.Any(y => y.RoleType == RoleType.ClientAdmin) || x.ParentFileStorageId == 1))
                                 || (!x.ClientId.HasValue && x.OwnerId.HasValue && x.OwnerId.Value == userId)
-                                || (x.Permissions.Any(y => y.RecipientId == userId && !y.EndDate.HasValue))))
+                                || x.Permissions.Any(y => y.RecipientId == userId && !y.EndDate.HasValue)))
                 .OrderBy(ord => !ord.IsDirectory)
                 .ThenBy(ord => ord.Name)
                 .ToListAsync();

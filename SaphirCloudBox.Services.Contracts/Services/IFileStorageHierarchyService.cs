@@ -9,5 +9,7 @@ namespace SaphirCloudBox.Services.Contracts.Services
     public interface IFileStorageHierarchyService
     {
         Task<IEnumerable<FolderDto>> GetByParentId(int parentId, int userId, int clientId);
+
+        Task<FolderDto> GetByChildId(int childId, int userId, int clientId);
     }
 }

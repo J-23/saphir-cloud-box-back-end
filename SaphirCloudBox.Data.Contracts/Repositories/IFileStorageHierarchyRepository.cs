@@ -12,5 +12,7 @@ namespace SaphirCloudBox.Data.Contracts.Repositories
         Task<IEnumerable<FileStorage>> GetByParentId(int parentId, int userId, int clientId);
 
         Task<int> GetNewFileCountByParentId(int id, int userId, int clientId);
+
+        Task<FileStorage> GetByChildId(int childId, int userId, int clientId);
     }
 }
