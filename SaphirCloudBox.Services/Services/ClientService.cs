@@ -2,6 +2,7 @@
 using Anthill.Common.Services;
 using SaphirCloudBox.Data.Contracts;
 using SaphirCloudBox.Data.Contracts.Repositories;
+using SaphirCloudBox.Enums;
 using SaphirCloudBox.Models;
 using SaphirCloudBox.Services.Contracts.Dtos;
 using SaphirCloudBox.Services.Contracts.Exceptions;
@@ -53,6 +54,21 @@ namespace SaphirCloudBox.Services.Services
             var clientRepository = DataContextManager.CreateRepository<IClientRepository>();
 
             var clients = await clientRepository.GetAll();
+
+            return MapperFactory.CreateMapper<IClientMapper>().MapCollectionToModel(clients);
+        }
+
+        public async Task<IEnumerable<ClientDto>> GetAll(int userId, int clientId)
+        {
+            var user = await _userService.GetById(userId);
+
+            IEnumerable<Client> clients = new List<Client>();
+
+            if (user.Role.RoleType == RoleType.SuperAdmin)
+            {
+                var clientRepository = DataContextManager.CreateRepository<IClientRepository>();
+                clients = await clientRepository.GetAll();
+            }
 
             return MapperFactory.CreateMapper<IClientMapper>().MapCollectionToModel(clients);
         }

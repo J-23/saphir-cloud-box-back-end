@@ -17,5 +17,7 @@ namespace SaphirCloudBox.Services.Contracts.Services
         Task Remove(RemoveClientDto clientDto);
 
         Task<IEnumerable<ClientDto>> GetByUserId(int userId);
+
+        Task<IEnumerable<ClientDto>> GetAll(int userId, int clientId);
     }
 }

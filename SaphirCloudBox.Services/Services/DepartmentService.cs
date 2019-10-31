@@ -2,6 +2,7 @@
 using Anthill.Common.Services;
 using SaphirCloudBox.Data.Contracts;
 using SaphirCloudBox.Data.Contracts.Repositories;
+using SaphirCloudBox.Enums;
 using SaphirCloudBox.Models;
 using SaphirCloudBox.Services.Contracts.Dtos;
 using SaphirCloudBox.Services.Contracts.Exceptions;
@@ -63,11 +64,11 @@ namespace SaphirCloudBox.Services.Services
 
             IEnumerable<Department> departments = new List<Department>();
 
-            if (currentUser.Role.RoleType == Enums.RoleType.SuperAdmin)
+            if (currentUser.Role.RoleType == RoleType.SuperAdmin)
             {
                 departments = await departmentRepository.GetAll();
             }
-            else
+            else if (currentUser.Role.RoleType == RoleType.ClientAdmin)
             {
                 departments = await departmentRepository.GetByClientId(clientId);
             }

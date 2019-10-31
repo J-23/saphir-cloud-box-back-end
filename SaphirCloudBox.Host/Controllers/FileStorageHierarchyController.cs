@@ -37,18 +37,5 @@ namespace SaphirCloudBox.Host.Controllers
             var folders = await _fileStorageHierarchyService.GetByParentId(parentId, UserId, ClientId);
             return Ok(folders);
         }
-
-        [HttpGet]
-        [Route("by-child/{childId}")]
-        public async Task<ActionResult> Get(int childId)
-        {
-            if (!IsAvailableOperation())
-            {
-                return BadRequest();
-            }
-
-            var folder = await _fileStorageHierarchyService.GetByChildId(childId, UserId, ClientId);
-            return Ok(folder);
-        }
     }
 }

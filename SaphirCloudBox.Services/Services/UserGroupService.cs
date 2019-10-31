@@ -57,6 +57,30 @@ namespace SaphirCloudBox.Services.Services
             return newGroup.Id;
         }
 
+        public async Task<IEnumerable<UserGroupDto>> GetAll(int userId, int clientId)
+        {
+            var user = await _userService.GetById(userId);
+
+            var userGroupRepository = DataContextManager.CreateRepository<IUserGroupRepository>();
+
+            IEnumerable<Group> groups = new List<Group>();
+
+            if (user.Role.RoleType == Enums.RoleType.SuperAdmin)
+            {
+                groups = await userGroupRepository.GetAll();
+            }
+            else if (user.Role.RoleType == Enums.RoleType.ClientAdmin)
+            {
+                groups = await userGroupRepository.GetByClientIds(user.Client.Id);
+            }
+            else
+            {
+                groups = await userGroupRepository.GetGroups(user.Id);
+            }
+
+            return MapperFactory.CreateMapper<IUserGroupMapper>().MapCollectionToModel(groups);
+        }
+
         public async Task<UserGroupDto> GetById(int groupId, int userId)
         {
             var userGroupRepository = DataContextManager.CreateRepository<IUserGroupRepository>();

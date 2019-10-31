@@ -118,17 +118,22 @@ namespace SaphirCloudBox.Services.Services
             var users = new List<User>();
 
             var allClientUsers = await _userManager.Users.Where(x => x.ClientId == currentUser.Client.Id && x.IsActive).ToListAsync();
-            var clientAdminRole = await _roleManager.Roles.FirstOrDefaultAsync(x => x.RoleType == Enums.RoleType.ClientAdmin);
+            var clientAdminRole = await _roleManager.Roles.FirstOrDefaultAsync(x => x.RoleType == RoleType.ClientAdmin);
 
             switch (currentUser.Role.RoleType)
             {
-                case Enums.RoleType.SuperAdmin:
+                case RoleType.SuperAdmin:
                     users = await _userManager.Users.Where(x => x.IsActive).ToListAsync();
                     break;
-                case Enums.RoleType.ClientAdmin:
+                case RoleType.ClientAdmin:
                     users = await _userManager.Users.Where(x => x.ClientId == currentUser.Client.Id && x.IsActive).ToListAsync();
                     break;
-                case Enums.RoleType.DepartmentHead:
+                case RoleType.DepartmentHead:
+
+                    if (currentUser.Department != null)
+                    {
+                        users.AddRange(await _userManager.Users.Where(x => x.ClientId == currentUser.Client.Id && x.DepartmentId == currentUser.Department.Id && x.IsActive).ToListAsync());
+                    }
 
                     foreach (var user in allClientUsers)
                     {
@@ -140,28 +145,21 @@ namespace SaphirCloudBox.Services.Services
                         }
                     }
 
-                    if (currentUser.Department != null)
-                    {
-                        users.AddRange(await _userManager.Users.Where(x => x.ClientId == currentUser.Client.Id && x.DepartmentId == currentUser.Department.Id && x.IsActive).ToListAsync());
-                    }
-
                     break;
-                case Enums.RoleType.Employee:
+                case RoleType.Employee:
 
                     if (currentUser.Department != null)
                     {
                         users.AddRange(await _userManager.Users.Where(x => x.ClientId == currentUser.Client.Id && x.DepartmentId == currentUser.Department.Id && x.IsActive).ToListAsync());
                     }
-                    else
-                    {
-                        foreach (var user in allClientUsers)
-                        {
-                            var isInRole = await _userManager.IsInRoleAsync(user, clientAdminRole.Name);
 
-                            if (isInRole)
-                            {
-                                users.Add(user);
-                            }
+                    foreach (var user in allClientUsers)
+                    {
+                        var isInRole = await _userManager.IsInRoleAsync(user, clientAdminRole.Name);
+
+                        if (isInRole)
+                        {
+                            users.Add(user);
                         }
                     }
 

@@ -21,6 +21,22 @@ namespace SaphirCloudBox.Data.Repositories
             await Context.SaveChangesAsync();
         }
 
+        public async Task<IEnumerable<Group>> GetAll()
+        {
+            return await Context.Set<Group>()
+                .Where(x => x.IsActive)
+                .OrderBy(ord => ord.Name)
+                .ToListAsync();
+        }
+
+        public async Task<IEnumerable<Group>> GetByClientIds(int clientId)
+        {
+            return await Context.Set<Group>()
+                .Where(x => x.IsActive && x.Owner.ClientId == clientId)
+                .OrderBy(ord => ord.Name)
+                .ToListAsync();
+        }
+
         public async Task<Group> GetById(int groupId, int userId)
         {
             return await Context.Set<Group>()
