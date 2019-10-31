@@ -1,4 +1,5 @@
 ﻿using SaphirCloudBox.Enums;
+using SaphirCloudBox.Services.Contracts.Dtos.UserGroup;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -18,6 +19,8 @@ namespace SaphirCloudBox.Services.Contracts.Dtos
         public string Name { get; set; }
 
         public IEnumerable<StorageDto> Storages { get; set; }
+
+        public PermissionInfoDto PermissionInfo { get; set; }
 
         public IEnumerable<StorageDto.PermissionDto> Permissions { get; set; }
 
@@ -47,20 +50,29 @@ namespace SaphirCloudBox.Services.Contracts.Dtos
 
             public FileDto File { get; set; }
 
-            public IEnumerable<PermissionDto> Permissions { get; set; }
+            public PermissionInfoDto PermissionInfo { get; set; }
 
-            public int NewFileCount { get; set; }
+            public IEnumerable<PermissionDto> Permissions { get; set; }
 
             public bool IsViewed { get; set; }
 
             public class PermissionDto
             {
-                public UserDto Sender { get; set; }
-
                 public UserDto Recipient { get; set; }
 
                 public PermissionType Type { get; set; }
             }
+        }
+
+        public class PermissionInfoDto
+        {
+            public IEnumerable<UserDto> Recipients { get; set; }
+
+            public IEnumerable<ClientDto> Clients { get; set; }
+
+            public IEnumerable<UserGroupDto> Groups { get; set; }
+
+            public PermissionType Type { get; set; }
         }
     }
 }

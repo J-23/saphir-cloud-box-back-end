@@ -22,6 +22,8 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Transactions;
 using Unity;
+using static SaphirCloudBox.Services.Contracts.Dtos.FileStorageDto;
+using static SaphirCloudBox.Services.Contracts.Dtos.FileStorageDto.StorageDto;
 
 namespace SaphirCloudBox.Services.Services
 {
@@ -157,9 +159,14 @@ namespace SaphirCloudBox.Services.Services
 
             var storages = MapperFactory.CreateMapper<IFileStorageMapper>().MapCollectionToModel(childFileStorages);
 
-            foreach (var storage in storages.Where(x => x.IsDirectory).ToList())
+            foreach (var storage in storages)
             {
-                storage.NewFileCount = await fileStorageRepository.GetNewFileCountByParentId(storage.Id, userId, clientId);
+                var fileStorage = childFileStorages.FirstOrDefault(x => x.Id == storage.Id);
+
+                if (fileStorage != null)
+                {
+                    storage.PermissionInfo = await GroupPermissions(fileStorage.Permissions);
+                }
             }
 
             childFileStorages.Where(x => !x.IsDirectory && (x.FileViewings.Any(y => y.IsActive && y.ViewById == userId) 
@@ -180,7 +187,80 @@ namespace SaphirCloudBox.Services.Services
                 Owner = MapperFactory.CreateMapper<IUserMapper>().MapToModel(parentFileStorage.Owner),
                 Permissions = MapperFactory.CreateMapper<IPermissionMapper>()
                     .MapCollectionToModel(parentFileStorage.Permissions.Where(x => !x.EndDate.HasValue)),
-                Storages = storages
+                Storages = storages,
+                PermissionInfo = await GroupPermissions(parentFileStorage.Permissions)
+            };
+        }
+
+        private async Task<PermissionInfoDto> GroupPermissions(IEnumerable<FileStoragePermission> permissions)
+        {
+            var users = permissions.Where(x => !x.EndDate.HasValue)
+                .Select(s => s.Recipient).GroupBy(grp => grp.Id)
+                .Select(s => s.FirstOrDefault())
+                .ToList();
+
+            var permissionType = permissions.Where(x => !x.EndDate.HasValue)
+                .GroupBy(grp => grp.Type)
+                .OrderBy(ord => ord.Count()).Select(s => s.Key)
+                .FirstOrDefault();
+
+            var clientIds = users.Select(s => s.ClientId).ToList();
+            var groupIds = users.SelectMany(s => s.UserInGroups.Select(ss => ss.GroupId)).ToList();
+
+            var clientRepository = DataContextManager.CreateRepository<IClientRepository>();
+            var userGroupRepository = DataContextManager.CreateRepository<IUserGroupRepository>();
+
+            var clients = await clientRepository.GetByIds(clientIds);
+            var groups = await userGroupRepository.GetByIds(groupIds);
+
+            var selectedClients = new List<Client>();
+
+            foreach (var client in clients)
+            {
+                var isClientToAdd = true;
+
+                foreach (var user in client.Users)
+                {
+                    if (!users.Select(s => s.Id).Contains(user.Id))
+                    {
+                        isClientToAdd = false;
+                        break;
+                    }
+                }
+
+                if (isClientToAdd)
+                {
+                    selectedClients.Add(client);
+                }
+            }
+
+            var selectedGroups = new List<Group>();
+
+            foreach (var group in groups)
+            {
+                var isGroupToAdd = true;
+
+                foreach (var userInGroup in group.UsersInGroup)
+                {
+                    if (!users.Select(s => s.Id).Contains(userInGroup.UserId))
+                    {
+                        isGroupToAdd = false;
+                        break;
+                    }
+                }
+
+                if (isGroupToAdd)
+                {
+                    selectedGroups.Add(group);
+                }
+            }
+
+            return new PermissionInfoDto
+            {
+                Type = permissionType,
+                Recipients = MapperFactory.CreateMapper<IUserMapper>().MapCollectionToModel(users),
+                Groups = MapperFactory.CreateMapper<IUserGroupMapper>().MapCollectionToModel(selectedGroups),
+                Clients = MapperFactory.CreateMapper<IClientMapper>().MapCollectionToModel(selectedClients)
             };
         }
 

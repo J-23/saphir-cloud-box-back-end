@@ -40,6 +40,13 @@ namespace SaphirCloudBox.Data.Repositories
             return await Context.Set<Client>().FirstOrDefaultAsync(x => x.Id == clientId && x.IsActive);
         }
 
+        public async Task<IEnumerable<Client>> GetByIds(List<int> clientIds)
+        {
+            return await Context.Set<Client>()
+                .Where(x => x.IsActive && clientIds.Contains(x.Id))
+                .ToListAsync();
+        }
+
         public async Task<Client> GetByName(string clientName)
         {
             return await Context.Set<Client>().FirstOrDefaultAsync(x => x.Name.Equals(clientName) && x.IsActive);

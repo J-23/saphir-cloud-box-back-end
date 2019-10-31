@@ -21,5 +21,7 @@ namespace SaphirCloudBox.Services.Contracts.Dtos
         public DepartmentDto Department { get; set; }
 
         public RoleDto Role { get; set; }
+
+        public IEnumerable<int> GroupIds { get; set; }
     }
 }

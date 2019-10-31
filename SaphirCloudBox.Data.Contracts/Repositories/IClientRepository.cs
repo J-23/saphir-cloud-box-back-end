@@ -20,5 +20,7 @@ namespace SaphirCloudBox.Data.Contracts.Repositories
         Task Remove(Client client);
 
         Task<IEnumerable<Client>> GetAll();
+
+        Task<IEnumerable<Client>> GetByIds(List<int> clientIds);
     }
 }

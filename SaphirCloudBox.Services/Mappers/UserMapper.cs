@@ -5,6 +5,7 @@ using SaphirCloudBox.Services.Contracts.Dtos;
 using SaphirCloudBox.Services.Contracts.Mappers;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 
 namespace SaphirCloudBox.Services.Mappers
@@ -36,7 +37,8 @@ namespace SaphirCloudBox.Services.Mappers
                     .ForMember(x => x.Client, y => y.MapFrom(z => z.Client))
                     .ForMember(x => x.Department, y => y.MapFrom(z => z.Department))
                     .ForMember(x => x.CreateDate, y => y.MapFrom(z => z.CreateDate))
-                    .ForMember(x => x.UpdateDate, y => y.MapFrom(z => z.UpdateDate));
+                    .ForMember(x => x.UpdateDate, y => y.MapFrom(z => z.UpdateDate))
+                    .ForMember(x => x.GroupIds, y => y.MapFrom(z => z.UserInGroups.Select(s => s.GroupId).ToList()));
             });
 
 
