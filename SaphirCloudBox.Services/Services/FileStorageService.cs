@@ -294,7 +294,7 @@ namespace SaphirCloudBox.Services.Services
         public async Task RemoveFile(RemoveFileStorageDto fileDto, int userId, int clientId)
         {
             var fileStorageRepository = DataContextManager.CreateRepository<IFileStorageRepository>();
-            var fileStorage = await fileStorageRepository.GetById(fileDto.Id, userId, 1);
+            var fileStorage = await fileStorageRepository.GetById(fileDto.Id, userId, clientId);
 
             if (fileStorage == null || fileStorage != null && fileStorage.IsDirectory)
             {
